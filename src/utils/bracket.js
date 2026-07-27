@@ -9,6 +9,50 @@ export function shuffleArr(arr) {
   return a;
 }
 
+/**
+ * 标准种子签位序：[1,n] 两端相遇于决赛。
+ * 递归算法：[1] → [1,4] → [1,4,2,3] → [1,4,2,3,5,8,6,7] ...
+ * 保证同档种子在决赛前不相遇。支持任意 2 的幂。
+ * @param {number} n - 签表大小（必须是 2 的幂）
+ * @returns {number[]} 种子号排列，如 n=4 → [1,4,2,3]
+ */
+export function bracketOrder(n) {
+  let arr = [1];
+  while (arr.length < n) {
+    const m = arr.length * 2;
+    const next = [];
+    for (const s of arr) next.push(s, m + 1 - s);
+    arr = next;
+  }
+  return arr;
+}
+
+/**
+ * 分档抽签保护（经典模式）：按每 4 首一档、档内打乱。
+ * 保证前两热门不会首轮内战（0% 概率）。
+ * @param {number} n - 总参赛数
+ * @returns {number[]} 种子位 → 热门度名次的排列
+ */
+export function drawSeats(n) {
+  const seats = Array.from({ length: n }, (_, i) => i);
+  for (let p = 0; p < n; p += 4) {
+    const pot = shuffleArr(seats.slice(p, p + 4));
+    seats.splice(p, pot.length, ...pot);
+  }
+  return seats;
+}
+
+/**
+ * 纯淘汰赛签表（无小组赛）：按标准蛇形把种子位落到签表上。
+ * @param {number} n - 签表大小
+ * @param {number[]} [seats] - 可选的种子位排列，缺省则用 drawSeats 生成
+ * @returns {number[]} 签表位置 → 种子号(0-indexed)
+ */
+export function seedBracketFlat(n, seats) {
+  const s = seats && seats.length === n ? seats : drawSeats(n);
+  return bracketOrder(n).map(x => s[x - 1]);
+}
+
 export function generateTiers(N) {
   const tiers = [];
   const maxTiers = Math.min(Math.log2(N) - 1, 5);
@@ -25,33 +69,11 @@ export function generateTiers(N) {
 
 export function generateSeededBracket(entrants, seeds, bracketSize) {
   const N = bracketSize;
-  const pos = new Array(N).fill(null);
-  const tiers = generateTiers(N);
-  const numSeeds = tiers.reduce((s, t) => s + t.count, 0);
-
-  let seedPtr = 0;
-  for (const tier of tiers) {
-    const tierSeeds = [];
-    for (let i = 0; i < tier.count; i++) tierSeeds.push(seeds[seedPtr++]);
-    const shuffled = shuffleArr(tierSeeds);
-    for (let i = 0; i < tier.count; i++) {
-      const zonePos = tier.zones[i];
-      const finalPos = Math.random() < 0.5 ? Math.floor(zonePos) : Math.floor(zonePos) + 1;
-      pos[finalPos] = shuffled[i];
-    }
-  }
-
-  // Fill remaining slots with non-seeded entrants
-  const rest = [];
-  for (let i = numSeeds; i < seeds.length && rest.length < N - numSeeds; i++) rest.push(seeds[i]);
-  const shuffledRest = shuffleArr(rest);
-  let ri = 0;
-  for (let i = 0; i < N; i++) {
-    if (pos[i] === null) pos[i] = shuffledRest[ri++];
-  }
-
-  return pos.map(idx => {
-    const e = entrants[idx];
+  // 使用分档保护算法：每4首一档、档内打乱 + 标准蛇形落位
+  const order = seedBracketFlat(N);
+  return order.map(idx => {
+    const seedIdx = seeds[idx];
+    const e = entrants[seedIdx];
     return e ? { ...e } : null;
   }).filter(Boolean);
 }

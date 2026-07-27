@@ -55,7 +55,34 @@ export const GROUP_LETTERS = 'ABCDEFGHIJKL'.split('');
 export const WC_KO_TEAMS = 32;
 export const WC_TOTAL_MATCHES = 12 * 6 + 31; // 72 group + 31 KO = 103
 export const RR_SCHEDULE = [[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]];
-export const SEED_TO_POS_32 = [0,31,15,16,7,24,8,23,3,28,12,19,4,27,11,20,1,30,14,17,6,25,9,22,2,29,13,18,5,26,10,21];
+
+// 灵活赛制规模定义：根据可用歌曲数自动选择
+// n=参赛歌曲数, groups=小组数(每组4首选2), bracket=淘汰赛规模, wild=外卡复活名额
+export const TOURNAMENT_SIZES = [
+  { n: 128, groups: 12, bracket: 32, wild: 8 },   // 标准128强世界杯
+  { n: 64,  groups: 12, bracket: 32, wild: 8 },   // 64强世界杯(取前48分组)
+  { n: 48,  groups: 12, bracket: 32, wild: 8 },   // 48首世界杯
+  { n: 32,  groups: 8,  bracket: 16, wild: 0 },   // 32首世界杯
+  { n: 16,  groups: 0,  bracket: 16, wild: 0 },   // 纯淘汰赛
+  { n: 8,   groups: 0,  bracket: 8,  wild: 0 },   // 纯淘汰赛
+];
+
+// 经典模式可选规模（2的幂）
+export const CLASSIC_BRACKETS = [128, 64, 32, 16, 8, 4];
+
+/**
+ * 根据可用歌曲数选择最大可用赛制
+ */
+export function pickTournamentSize(avail) {
+  return TOURNAMENT_SIZES.find(x => avail >= x.n) || TOURNAMENT_SIZES[TOURNAMENT_SIZES.length - 1];
+}
+
+/**
+ * 获取经典模式可用规模列表
+ */
+export function classicOptions(avail) {
+  return CLASSIC_BRACKETS.filter(b => b <= avail);
+}
 
 // Audio API constants
 export const BYFUNS_API = 'https://api.byfuns.top/1/?id=';

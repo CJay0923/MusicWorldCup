@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TrophySvg from './TrophySvg.jsx';
 import SingerSelector from './SingerSelector.jsx';
 import ModeSelector from './ModeSelector.jsx';
+import { classicOptions } from '../data/singers.js';
 
 /**
  * Start / hero screen.
@@ -15,6 +16,8 @@ import ModeSelector from './ModeSelector.jsx';
  * @param {object} singers - SINGERS object
  * @param {string} currentSinger - current singer id
  * @param {(id: string) => void} onSelectSinger - singer selection callback
+ * @param {number} selectedSize - selected classic bracket size
+ * @param {(size: number) => void} onSelectSize - bracket size selection callback
  */
 export default function StartScreen({
   singer,
@@ -27,8 +30,12 @@ export default function StartScreen({
   singers,
   currentSinger,
   onSelectSinger,
+  selectedSize,
+  onSelectSize,
 }) {
-  const bracketSize = singer?.bracketSize || 128;
+  const maxBracket = singer?.bracketSize || 128;
+  const availableSizes = classicOptions(maxBracket);
+  const bracketSize = selectedSize || availableSizes[0] || maxBracket;
   const isClassic = selectedMode === 'classic';
 
   // Decide whether to show the resume button and its label
@@ -51,7 +58,9 @@ export default function StartScreen({
       <TrophySvg size={104} />
       <h1>{singer?.name}歌曲世界杯</h1>
       <p className="sub">
-        {bracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军
+        {isClassic
+          ? <>{bracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军</>
+          : <>48 首歌曲 · 小组赛+淘汰赛 · <b>二选一</b> 决出终极冠军</>}
       </p>
 
       {/* Classic rules */}
@@ -99,6 +108,25 @@ export default function StartScreen({
         onSelect={onSelectMode}
         bracketSize={bracketSize}
       />
+
+      {/* 经典模式：规模选择器（仅当有多种规模可选时显示） */}
+      {isClassic && availableSizes.length > 1 && (
+        <div className="size-selector">
+          <span className="size-label">淘汰赛规模</span>
+          <div className="size-btns">
+            {availableSizes.map(size => (
+              <button
+                key={size}
+                className={`size-btn${bracketSize === size ? ' active' : ''}`}
+                onClick={() => onSelectSize(size)}
+                type="button"
+              >
+                {size}强
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <button className="btn primary start-cta" onClick={onStart} type="button">
         {selectedMode === 'wc' ? '⚽ 开始世界杯' : `🏆 开始 ${bracketSize} 强`}

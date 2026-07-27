@@ -8,14 +8,15 @@ import { freshRounds, generateRoundNames } from '../utils/bracket.js';
 import { slimE, restoreE } from '../utils/format.js';
 
 const PICK_DELAY = 750;
-const storageKey = (id) => 'song_cup_' + id;
+const storageKey = (id, bs) => 'song_cup_' + id + '_' + bs;
 
 /**
  * @param {string} singerId - 歌手ID (stefanie / jj)
  * @param {object} singerData - SINGERS[singerId]，包含 { name, bracketSize, entrants, seeds, seedRank }
+ * @param {number} [bracketSizeOverride] - 用户自选的经典模式淘汰赛规模
  */
-export function useGameState(singerId, singerData) {
-  const bracketSize = singerData?.bracketSize || 128;
+export function useGameState(singerId, singerData, bracketSizeOverride) {
+  const bracketSize = bracketSizeOverride || singerData?.bracketSize || 128;
   const entrants = singerData?.entrants || [];
   const seeds = singerData?.seeds || [];
 
@@ -37,6 +38,7 @@ export function useGameState(singerId, singerData) {
 
   const timerRef = useRef(null);
   const prevSingerRef = useRef(singerId);
+  const prevBracketRef = useRef(bracketSize);
 
   // 歌手切换时重置整盘
   useEffect(() => {
@@ -56,6 +58,25 @@ export function useGameState(singerId, singerData) {
     setLastPick(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [singerId]);
+
+  // 淘汰赛规模切换时重置整盘
+  useEffect(() => {
+    if (bracketSize === prevBracketRef.current) return;
+    prevBracketRef.current = bracketSize;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setRounds(freshRounds(bracketSize, entrants, seeds));
+    setCurRound(0);
+    setCurMatch(0);
+    setHistory([]);
+    setBusy(false);
+    setShowTransition(false);
+    setChampion(null);
+    setLastPick(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bracketSize]);
 
   // 卸载时清理定时器
   useEffect(() => () => {
@@ -77,15 +98,15 @@ export function useGameState(singerId, singerData) {
         })),
         done: !!done,
       };
-      localStorage.setItem(storageKey(singerId), JSON.stringify(payload));
+      localStorage.setItem(storageKey(singerId, bracketSize), JSON.stringify(payload));
     } catch (e) {
       /* ignore quota / privacy errors */
     }
-  }, [singerId]);
+  }, [singerId, bracketSize]);
 
   const loadSaved = useCallback(() => {
     try {
-      const raw = localStorage.getItem(storageKey(singerId));
+      const raw = localStorage.getItem(storageKey(singerId, bracketSize));
       if (!raw) return null;
       const d = JSON.parse(raw);
       const rs = (s) => (s ? restoreE(s) : null);
@@ -104,15 +125,15 @@ export function useGameState(singerId, singerData) {
     } catch (e) {
       return null;
     }
-  }, [singerId]);
+  }, [singerId, bracketSize]);
 
   const hasSaved = useCallback(() => {
     try {
-      return !!localStorage.getItem(storageKey(singerId));
+      return !!localStorage.getItem(storageKey(singerId, bracketSize));
     } catch (e) {
       return false;
     }
-  }, [singerId]);
+  }, [singerId, bracketSize]);
 
   // ---------- 控制 ----------
   const startGame = useCallback((useSaved) => {
@@ -150,7 +171,7 @@ export function useGameState(singerId, singerData) {
       timerRef.current = null;
     }
     try {
-      localStorage.removeItem(storageKey(singerId));
+      localStorage.removeItem(storageKey(singerId, bracketSize));
     } catch (e) {
       /* ignore */
     }

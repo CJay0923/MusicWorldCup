@@ -10,6 +10,7 @@ import { useAudioPlayer } from './hooks/useAudioPlayer.js';
 import StartScreen from './components/StartScreen.jsx';
 import MatchStage from './components/MatchStage.jsx';
 import ChampionScreen from './components/ChampionScreen.jsx';
+import ChampionShare from './components/ChampionShare.jsx';
 import AudioPlayer from './components/AudioPlayer.jsx';
 import RoundOverlay from './components/RoundOverlay.jsx';
 import ProgressBar from './components/ProgressBar.jsx';
@@ -19,7 +20,7 @@ import DrawScreen from './components/wc/DrawScreen.jsx';
 import WildcardScreen from './components/wc/WildcardScreen.jsx';
 import GroupResultScreen from './components/wc/GroupResultScreen.jsx';
 import KOBracket from './components/wc/KOBracket.jsx';
-import { WC_TOTAL_MATCHES } from './data/singers.js';
+import { WC_TOTAL_MATCHES, WC_KO_TEAMS, classicOptions } from './data/singers.js';
 
 const KO_ROUND_NAMES = ['32强', '16强', '8强', '4强', '决赛'];
 const KO_ROUND_ICONS = ['🔥', '⚡', '💪', '💪', '🏆'];
@@ -27,12 +28,18 @@ const KO_ROUND_ICONS = ['🔥', '⚡', '💪', '💪', '🏆'];
 function App() {
   const [currentSinger, setCurrentSinger] = useState('stefanie');
   const [selectedMode, setSelectedMode] = useState('classic');
+  const [selectedSize, setSelectedSize] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const confettiRef = useRef(null);
 
   const singerData = SINGERS[currentSinger];
 
-  const gameState = useGameState(currentSinger, singerData);
+  // 经典模式可选规模（根据歌手可用歌曲数动态计算）
+  const maxBracket = singerData?.bracketSize || 128;
+  const availableSizes = classicOptions(maxBracket);
+  const classicSize = selectedSize || availableSizes[0] || maxBracket;
+
+  const gameState = useGameState(currentSinger, singerData, classicSize);
   const wcState = useWorldCup(currentSinger, singerData);
   const audio = useAudioPlayer();
 
@@ -145,11 +152,16 @@ function App() {
   const handleSelectSinger = useCallback((id) => {
     if (id === currentSinger) return;
     setCurrentSinger(id);
+    setSelectedSize(null);
     setGameStarted(false);
   }, [currentSinger]);
 
   const handleSelectMode = useCallback((mode) => {
     setSelectedMode(mode);
+  }, []);
+
+  const handleSelectSize = useCallback((size) => {
+    setSelectedSize(size);
   }, []);
 
   // ---------- 进度条 seek ----------
@@ -342,6 +354,8 @@ function App() {
           singers={SINGERS}
           currentSinger={currentSinger}
           onSelectSinger={handleSelectSinger}
+          selectedSize={classicSize}
+          onSelectSize={handleSelectSize}
         />
       )}
 
@@ -407,18 +421,37 @@ function App() {
 
       {/* 冠军界面 */}
       {isChampion && (
-        <ChampionScreen
-          champion={selectedMode === 'wc' ? wcState.champion : gameState.champion}
-          singerName={singerData.name}
-          history={selectedMode === 'wc'
-            ? (wcState.wc?.history || []).map(h => ({
-                roundName: h.phase === 'group' ? `${h.group}组` : KO_ROUND_NAMES[h.round] || '',
-                winner: h.winner, loser: h.loser,
-              }))
-            : gameState.history}
-          onAgain={handleAgain}
-          confettiRef={confettiRef}
-        />
+        <>
+          <ChampionScreen
+            champion={selectedMode === 'wc' ? wcState.champion : gameState.champion}
+            singerName={singerData.name}
+            history={selectedMode === 'wc'
+              ? (wcState.wc?.history || []).map(h => ({
+                  roundName: h.phase === 'group' ? `${h.group}组` : KO_ROUND_NAMES[h.round] || '',
+                  winner: h.winner, loser: h.loser,
+                }))
+              : gameState.history}
+            onAgain={handleAgain}
+            confettiRef={confettiRef}
+          />
+          {/* 冠军晋级之路分享图 */}
+          <ChampionShare
+            champion={selectedMode === 'wc' ? wcState.champion : gameState.champion}
+            history={selectedMode === 'wc'
+              ? (wcState.wc?.history || []).map(h => ({
+                  roundName: h.phase === 'group' ? `${h.group}组` : KO_ROUND_NAMES[h.round] || '',
+                  winner: h.winner, loser: h.loser,
+                }))
+              : gameState.history}
+            rounds={selectedMode === 'wc'
+              ? (wcState.wc?.ko?.rounds || [])
+              : gameState.rounds}
+            singerName={singerData.name}
+            bracketSize={selectedMode === 'wc'
+              ? WC_KO_TEAMS
+              : classicSize}
+          />
+        </>
       )}
 
       {/* WC 抽签结果 */}

@@ -21,9 +21,8 @@ import {
   GROUP_LETTERS,
   WC_KO_TEAMS,
   RR_SCHEDULE,
-  SEED_TO_POS_32,
 } from '../data/singers.js';
-import { shuffleArr } from '../utils/bracket.js';
+import { shuffleArr, bracketOrder } from '../utils/bracket.js';
 import { slimE, restoreE } from '../utils/format.js';
 
 const PICK_DELAY = 750;
@@ -97,13 +96,40 @@ function buildKnockout(wc) {
   const all = winners.concat(runnerUps, wc.wildcards); // 32
   all.sort((a, b) => (a.seedRank || 999) - (b.seedRank || 999));
 
-  // 按 seedRank 排序后，用 SEED_TO_POS_32 落入对阵位置（保证种子分隔）
-  const bracket = new Array(WC_KO_TEAMS).fill(null);
-  for (let i = 0; i < WC_KO_TEAMS && i < all.length; i++) {
-    bracket[SEED_TO_POS_32[i]] = all[i];
+  // 用递归算法生成标准蛇形种子位（替换硬编码的 SEED_TO_POS_32）
+  const order = bracketOrder(WC_KO_TEAMS);
+  const placed = order.map(s => all[s - 1]);
+
+  // 构建歌曲 → 小组名 映射，用于避免同组首轮相遇
+  const groupOf = {};
+  wc.groups.forEach((g) => {
+    [g.winner, g.runnerUp, g.thirdPlace, g.fourthPlace].forEach((e) => {
+      if (e) groupOf[e.id] = g.name;
+    });
+  });
+
+  // 两轮局部交换：尽量避免同组出线的两首歌在首轮相遇
+  for (let pass = 0; pass < 2; pass++) {
+    for (let i = 0; i < placed.length; i += 2) {
+      const a = placed[i], b = placed[i + 1];
+      if (!a || !b) continue;
+      if (groupOf[a.id] !== groupOf[b.id]) continue;
+      // 同组相遇，尝试与另一对交换
+      for (let j = 0; j < placed.length; j += 2) {
+        if (j === i) continue;
+        const c = placed[j], d = placed[j + 1];
+        if (!c || !d) continue;
+        // 交换 b 和 d，检查交换后两对都不再同组
+        if (groupOf[a.id] !== groupOf[d.id] && groupOf[c.id] !== groupOf[b.id]) {
+          placed[i + 1] = d;
+          placed[j + 1] = b;
+          break;
+        }
+      }
+    }
   }
 
-  const rounds = [bracket];
+  const rounds = [placed];
   let sz = WC_KO_TEAMS;
   for (let r = 1; r < KO_ROUNDS; r++) {
     sz /= 2;

@@ -1389,6 +1389,235 @@ const JJ_ENTRANTS = JJ_LEFT.concat(JJ_RIGHT).map((name, i) => {
   };
 });
 
+// 陶喆 (36 songs)
+const DAVID_LEFT = [
+  '就是爱你',
+  '爱很简单',
+  '普通朋友',
+  '寂寞的季节',
+  '天天',
+  '飞机场的10:30',
+  '黑色柳丁',
+  '小镇姑娘',
+  'Susan说',
+  '爱·我还是他',
+  '今天你要嫁给我',
+  '月亮代表谁的心',
+  '找自己',
+  '宫保鸡丁',
+  '二十二',
+  '雪落下的声音 (陶喆版)',
+  '似曾相识',
+  'Catherin',
+];
+const DAVID_RIGHT = [
+  '望春风',
+  '王八蛋',
+  '鬼',
+  '蝴蝶',
+  '孙子兵法',
+  '忘不了',
+  '关于陶喆',
+  '一念之间',
+  '圣诞之吻',
+  '我喜欢',
+  '说走就走',
+  '拥抱的快乐',
+  '太美丽',
+  'Angeline',
+  '祷告',
+  '长安夜市',
+  '蜘蛛',
+  '你的歌',
+];
+const DAVID_NIDS = [
+  null, null, null, null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null,
+  null, null, null, null, null, null,
+];
+const DAVID_PICS = [
+  '', '', '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '',
+];
+const DAVID_CHORUS = {
+  0: 38.5,
+  1: 28.2,
+  2: 42.0,
+  10: 35.5,
+};
+
+const DAVID_ENTRANTS = DAVID_LEFT.concat(DAVID_RIGHT).map((name, i) => {
+  const nid = DAVID_NIDS[i];
+  const sr = i + 1;
+  return {
+    name,
+    id: i,
+    side: i < DAVID_LEFT.length ? 'L' : 'R',
+    seed: i + 1,
+    nid: nid || null,
+    pic: DAVID_PICS[i] || '',
+    chorus: DAVID_CHORUS[i] || null,
+    seedRank: sr,
+    isSeed: sr <= 32,
+  };
+});
+
+// 周杰伦 (36 songs)
+const JAY_LEFT = [
+  '晴天',
+  '七里香',
+  '简单爱',
+  '夜曲',
+  '稻香',
+  '青花瓷',
+  '一路向北',
+  '蒲公英的约定',
+  '听妈妈的话',
+  '告白气球',
+  '不能说的秘密',
+  '搁浅',
+  '蜗牛',
+  '安静',
+  '轨迹',
+  '发如雪',
+  '黑色毛衣',
+  '龙卷风',
+];
+const JAY_RIGHT = [
+  '借口',
+  '开不了口',
+  '退后',
+  '回到过去',
+  '最后的战役',
+  '爱在西元前',
+  '屋顶',
+  '半岛铁盒',
+  '东风破',
+  '枫',
+  '暗号',
+  '你听得到',
+  '珊瑚海',
+  '心雨',
+  '菊花台',
+  '千里之外',
+  '霍元甲',
+  '等你下课',
+];
+const JAY_NIDS = [
+  null, null, null, null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null,
+  null, null, null, null, null, null,
+];
+const JAY_PICS = [
+  '', '', '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '',
+];
+const JAY_CHORUS = {
+  0: 32.0,
+  1: 28.5,
+  2: 35.0,
+  3: 26.5,
+  9: 30.0,
+};
+
+const JAY_ENTRANTS = JAY_LEFT.concat(JAY_RIGHT).map((name, i) => {
+  const nid = JAY_NIDS[i];
+  const sr = i + 1;
+  return {
+    name,
+    id: i,
+    side: i < JAY_LEFT.length ? 'L' : 'R',
+    seed: i + 1,
+    nid: nid || null,
+    pic: JAY_PICS[i] || '',
+    chorus: JAY_CHORUS[i] || null,
+    seedRank: sr,
+    isSeed: sr <= 32,
+  };
+});
+
+// 蔡依林 (36 songs)
+const JOLIN_LEFT = [
+  '日不落',
+  '说爱你',
+  '倒带',
+  '舞娘',
+  '看我72变',
+  '爱情36计',
+  '妥协',
+  '假装',
+  '心形的地图',
+  '就是爱',
+  '柠檬草的味道',
+  '天空',
+  '布拉格广场',
+  '独占神话',
+  '我知道你很难过',
+  '怪美的',
+  '你也很爱他',
+  '诗人漫步',
+];
+const JOLIN_RIGHT = [
+  '特务J',
+  '花蝴蝶',
+  '大艺术家',
+  'Play我呸',
+  '美人计',
+  '第三人称',
+  '我和我',
+  '玫瑰少年',
+  '脑袋空空',
+  '我愿为你',
+  '依赖',
+  '想要',
+  '我是个孩子',
+  '浪漫',
+  '独占',
+  '你住在我心上',
+  '我曾爱过的男孩',
+  '全新的一天',
+];
+const JOLIN_NIDS = [
+  null, null, null, null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null,
+  null, null, null, null, null, null,
+];
+const JOLIN_PICS = [
+  '', '', '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '',
+];
+const JOLIN_CHORUS = {
+  0: 30.5,
+  1: 28.0,
+  2: 35.5,
+  3: 40.0,
+};
+
+const JOLIN_ENTRANTS = JOLIN_LEFT.concat(JOLIN_RIGHT).map((name, i) => {
+  const nid = JOLIN_NIDS[i];
+  const sr = i + 1;
+  return {
+    name,
+    id: i,
+    side: i < JOLIN_LEFT.length ? 'L' : 'R',
+    seed: i + 1,
+    nid: nid || null,
+    pic: JOLIN_PICS[i] || '',
+    chorus: JOLIN_CHORUS[i] || null,
+    seedRank: sr,
+    isSeed: sr <= 32,
+  };
+});
+
 export const SINGERS = {
   stefanie: {
     name: '孙燕姿',
@@ -1406,9 +1635,33 @@ export const SINGERS = {
     seeds: JJ_ENTRANTS.map((_, i) => i),
     seedRank: Object.fromEntries(JJ_ENTRANTS.map((e, i) => [i, i + 1])),
   },
+  david: {
+    name: '陶喆',
+    nameEn: 'DAVID',
+    bracketSize: 32,
+    entrants: DAVID_ENTRANTS,
+    seeds: DAVID_ENTRANTS.map((_, i) => i),
+    seedRank: Object.fromEntries(DAVID_ENTRANTS.map((e, i) => [i, i + 1])),
+  },
+  jay: {
+    name: '周杰伦',
+    nameEn: 'JAY',
+    bracketSize: 32,
+    entrants: JAY_ENTRANTS,
+    seeds: JAY_ENTRANTS.map((_, i) => i),
+    seedRank: Object.fromEntries(JAY_ENTRANTS.map((e, i) => [i, i + 1])),
+  },
+  jolin: {
+    name: '蔡依林',
+    nameEn: 'JOLIN',
+    bracketSize: 32,
+    entrants: JOLIN_ENTRANTS,
+    seeds: JOLIN_ENTRANTS.map((_, i) => i),
+    seedRank: Object.fromEntries(JOLIN_ENTRANTS.map((e, i) => [i, i + 1])),
+  },
 };
 
-export const SINGER_ICONS = { stefanie: '🎵', jj: '🎶' };
+export const SINGER_ICONS = { stefanie: '🎵', jj: '🎶', david: '🎸', jay: '🎹', jolin: '💃' };
 
 // World Cup constants
 export const WC_GROUPS = 12;
@@ -1416,15 +1669,8 @@ export const WC_GROUP_SIZE = 4;
 export const WC_WILDCARDS = 8;
 export const GROUP_LETTERS = 'ABCDEFGHIJKL'.split('');
 export const WC_KO_TEAMS = 32;
-export const WC_TOTAL_MATCHES = 12 * 6 + 31; // 72 group + 31 KO = 103
-export const RR_SCHEDULE = [
-  [0, 1],
-  [2, 3],
-  [0, 2],
-  [1, 3],
-  [0, 3],
-  [1, 2],
-];
+// 四选二赛制：12 组每组 1 次多选 + 31 场淘汰赛 = 43 步
+export const WC_TOTAL_MATCHES = WC_GROUPS + 31;
 
 // 灵活赛制规模定义：根据可用歌曲数自动选择
 // n=参赛歌曲数, groups=小组数(每组4首选2), bracket=淘汰赛规模, wild=外卡复活名额

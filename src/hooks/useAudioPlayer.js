@@ -1,16 +1,17 @@
 // useAudioPlayer.js
-// 音乐播放器状态管理 Hook
+// 音乐播放器状态管理 Hook（内联版，无弹窗）
 //
 // 负责:
-//   - openAudition(ent, artistName): 打开试听
+//   - openAudition(ent, artistName): 开始试听某首歌
 //       若 ent.nid 存在 -> 先尝试 BYFUNS_API 获取完整 URL，失败则用 METING_API
 //       loadedmetadata 时若有 chorus 且 duration>35s 则 seek 到 chorus 位置
 //       canplay 时自动播放
-//       若 ent.nid 不存在 -> 打开 QQ 音乐搜索
-//   - 播放/暂停、进度条 seek、"从头播放"、关闭播放器
+//       若 ent.nid 不存在 -> 尝试 iTunes 预览，再不行打开 QQ 音乐搜索
+//   - 播放/暂停、进度条 seek、"从头播放"、停止试听
+//   - playingId 标识当前正在播放的 entrant.id，供卡片高亮
 //
 // 注意: 组件需在 DOM 中常驻一个 <audio ref={audioRef} preload="metadata" /> 元素
-//       (即使播放器 overlay 隐藏也保留)，以保证事件监听能正确绑定。
+//       以保证事件监听能正确绑定。
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BYFUNS_API, METING_API } from '../data/singers.js';
@@ -21,8 +22,8 @@ const QQ_SEARCH = 'https://y.qq.com/n/ryqq/search?w=';
 export function useAudioPlayer() {
   const audioRef = useRef(null);
 
-  const [visible, setVisible] = useState(false);
   const [currentSong, setCurrentSong] = useState(null);
+  const [playingId, setPlayingId] = useState(null);
   const [artist, setArtist] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -91,8 +92,6 @@ export function useAudioPlayer() {
           findITunesPreview(artist, song.name)
             .then((result) => {
               if (result && result.preview && audio) {
-                // iTunes 预览只有30秒，chorus 可能不在片段内，
-                // 但仍然播放——有声音比没声音好
                 try {
                   audio.src = result.preview;
                   audio.load();
@@ -100,7 +99,6 @@ export function useAudioPlayer() {
                   /* ignore */
                 }
               } else {
-                // iTunes 也找不到，停止 loading
                 setIsLoading(false);
                 setIsPlaying(false);
               }
@@ -140,9 +138,28 @@ export function useAudioPlayer() {
     };
   }, []);
 
-  // ---------- 打开试听 ----------
+  // ---------- 开始试听 ----------
   const openAudition = useCallback(async (ent, artistName) => {
     if (!ent) return;
+
+    // 若点击的是当前正在播放的歌，切换播放/暂停
+    if (
+      currentSongRef.current &&
+      currentSongRef.current.id === ent.id &&
+      audioRef.current?.src
+    ) {
+      const audio = audioRef.current;
+      if (audio.paused) {
+        audio
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch(() => setIsPlaying(false));
+      } else {
+        audio.pause();
+        setIsPlaying(false);
+      }
+      return;
+    }
 
     // 重置每首歌的标记
     nidRef.current = ent.nid;
@@ -152,8 +169,8 @@ export function useAudioPlayer() {
     currentSongRef.current = ent;
 
     setCurrentSong(ent);
+    setPlayingId(ent.id);
     setArtist(artistName || '');
-    setVisible(true);
     setIsPlaying(false);
     setIsLoading(true);
     setCurrentTime(0);
@@ -162,12 +179,11 @@ export function useAudioPlayer() {
 
     const audio = audioRef.current;
 
-    // 无 nid -> 直接尝试 iTunes 预览（不再只跳转 QQ 搜索）
+    // 无 nid -> 直接尝试 iTunes 预览
     if (!ent.nid) {
       try {
         const itunesResult = await findITunesPreview(artistName, ent.name);
         if (itunesResult && itunesResult.preview && audio) {
-          // iTunes 预览只有30秒，不 seek chorus
           triedITunesRef.current = true;
           audio.src = itunesResult.preview;
           audio.load();
@@ -183,7 +199,7 @@ export function useAudioPlayer() {
       } catch {
         /* ignore popup block */
       }
-      setVisible(false);
+      setPlayingId(null);
       setIsLoading(false);
       return;
     }
@@ -201,7 +217,6 @@ export function useAudioPlayer() {
             (j.data && (j.data.url || j.data)) ||
             (typeof j === 'string' ? j : null);
         } catch {
-          // 非JSON，按纯文本URL处理
           url = txt.trim();
         }
       }
@@ -209,10 +224,9 @@ export function useAudioPlayer() {
       /* 网络错误，回退 meting */
     }
 
-    // 失败则用 METING_API 直链
     if (!url) {
       url = METING_API + ent.nid;
-      triedMetingRef.current = true; // 已是回退，不再二次回退
+      triedMetingRef.current = true;
     }
 
     if (audio && url) {
@@ -225,8 +239,8 @@ export function useAudioPlayer() {
     }
   }, []);
 
-  // ---------- 关闭播放器 ----------
-  const closePlayer = useCallback(() => {
+  // ---------- 停止试听（替代原 closePlayer） ----------
+  const stopAudition = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
       try {
@@ -241,13 +255,13 @@ export function useAudioPlayer() {
         /* ignore */
       }
     }
-    setVisible(false);
     setIsPlaying(false);
     setIsLoading(false);
     setCurrentTime(0);
     setDuration(0);
     setChorusTime(null);
     setCurrentSong(null);
+    setPlayingId(null);
     setArtist('');
     currentSongRef.current = null;
     nidRef.current = null;
@@ -306,14 +320,10 @@ export function useAudioPlayer() {
 
   // ---------- 派生值 ----------
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const fallbackNE = currentSong?.nid ? METING_API + currentSong.nid : '';
-  const fallbackQQ = currentSong
-    ? QQ_SEARCH + encodeURIComponent((currentSong.name || '') + ' ' + (artist || ''))
-    : '';
 
   return {
-    visible,
     currentSong,
+    playingId,
     artist,
     isPlaying,
     isLoading,
@@ -322,12 +332,10 @@ export function useAudioPlayer() {
     chorusTime,
     progress,
     openAudition,
-    closePlayer,
+    stopAudition,
     togglePlay,
     seek,
     restart,
-    fallbackNE,
-    fallbackQQ,
     audioRef,
   };
 }

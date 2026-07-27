@@ -18,7 +18,8 @@ export default function ChampionScreen({
   onAgain,
   confettiRef,
 }) {
-  const [showRecap, setShowRecap] = useState(false);
+  // 默认展开夺冠之路
+  const [showRecap, setShowRecap] = useState(true);
 
   // Champion name gradient based on which half they came from
   const champNameStyle =
@@ -77,12 +78,27 @@ export default function ChampionScreen({
             {steps.map((s, i) => (
               <div className="step" key={i}>
                 <span className="r">{s.roundName}</span>
-                <span>
-                  <b>{s.winner.name}</b>
-                </span>
-                <span className="beat">
-                  击败 <s>{s.loser?.name}</s>
-                </span>
+                <div className="step-covers">
+                  <div className={clsx('step-cover', { empty: !s.winner?.pic })}>
+                    {s.winner?.pic && (
+                      <img src={s.winner.pic} alt="胜者封面" loading="lazy" />
+                    )}
+                  </div>
+                  <span className="step-vs">VS</span>
+                  <div className={clsx('step-cover loser', { empty: !s.loser?.pic })}>
+                    {s.loser?.pic && (
+                      <img src={s.loser?.pic} alt="败者封面" loading="lazy" />
+                    )}
+                  </div>
+                </div>
+                <div className="step-info">
+                  <span className="step-winner">
+                    <b>{s.winner.name}</b>
+                  </span>
+                  <span className="beat">
+                    击败 <s>{s.loser?.name}</s>
+                  </span>
+                </div>
               </div>
             ))}
           </div>

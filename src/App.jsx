@@ -11,11 +11,10 @@ import StartScreen from './components/StartScreen.jsx';
 import MatchStage from './components/MatchStage.jsx';
 import ChampionScreen from './components/ChampionScreen.jsx';
 import ChampionShare from './components/ChampionShare.jsx';
-import AudioPlayer from './components/AudioPlayer.jsx';
 import RoundOverlay from './components/RoundOverlay.jsx';
 import ProgressBar from './components/ProgressBar.jsx';
 import WCPhaseBar from './components/wc/WCPhaseBar.jsx';
-import GroupStandings from './components/wc/GroupStandings.jsx';
+import GroupPickStage from './components/wc/GroupPickStage.jsx';
 import DrawScreen from './components/wc/DrawScreen.jsx';
 import WildcardScreen from './components/wc/WildcardScreen.jsx';
 import GroupResultScreen from './components/wc/GroupResultScreen.jsx';
@@ -81,12 +80,8 @@ function App() {
       const wc = wcState.wc;
       if (!wc) return [null, null];
       if (wc.phase === 'group') {
-        const g = wc.groups[wc.curGroup];
-        if (!g || g.done) return [null, null];
-        const [i, j] = g.schedule[g.curMatch];
-        const a = singerData.entrants[g.members[i]];
-        const b = singerData.entrants[g.members[j]];
-        return [a || null, b || null];
+        // 四选二阶段无 1v1 对局
+        return [null, null];
       }
       if (wc.phase === 'knockout') {
         const ko = wc.ko;
@@ -115,12 +110,11 @@ function App() {
     [selectedMode, wcState.lastPick, wcState.busy, gameState.lastPick, gameState.busy],
   );
 
-  // ---------- 选择胜者 ----------
+  // ---------- 选择胜者（仅 KO / 经典模式） ----------
   const handlePick = useCallback(
     (slot) => {
       if (selectedMode === 'wc') {
-        if (wcState.phase === 'group') wcState.wcPick(slot);
-        else if (wcState.phase === 'knockout') wcState.koPick(slot);
+        if (wcState.phase === 'knockout') wcState.koPick(slot);
       } else {
         gameState.pick(slot);
       }
@@ -128,7 +122,26 @@ function App() {
     [selectedMode, wcState, gameState],
   );
 
-  // ---------- 试听 ----------
+  // ---------- 四选二：切换/确认/试听 ----------
+  const handleGroupToggle = useCallback(
+    (memberIdx) => {
+      if (selectedMode === 'wc') wcState.wcTogglePick(memberIdx);
+    },
+    [selectedMode, wcState],
+  );
+
+  const handleGroupConfirm = useCallback(() => {
+    if (selectedMode === 'wc') wcState.wcConfirmPicks();
+  }, [selectedMode, wcState]);
+
+  const handleGroupPreview = useCallback(
+    (entrant) => {
+      if (entrant) audio.openAudition(entrant, baseSingerData.name);
+    },
+    [audio, baseSingerData],
+  );
+
+  // ---------- 试听（1v1 对局） ----------
   const handlePreview = useCallback(
     (slot) => {
       const pair = getCurrentMatchPair();
@@ -136,6 +149,45 @@ function App() {
       if (ent) audio.openAudition(ent, baseSingerData.name);
     },
     [getCurrentMatchPair, audio, baseSingerData],
+  );
+
+  // ---------- 切换播放/暂停 或 停止试听 ----------
+  const handleTogglePlay = useCallback(
+    (arg) => {
+      if (arg && arg.stop) audio.stopAudition();
+      else audio.togglePlay();
+    },
+    [audio],
+  );
+
+  // ---------- chorusPct（需先于 audioCardState 计算） ----------
+  const chorusPct =
+    audio.duration > 0 && audio.chorusTime != null
+      ? (audio.chorusTime / audio.duration) * 100
+      : 0;
+
+  // ---------- 传递给卡片/舞台的 audio 状态对象 ----------
+  const audioCardState = useMemo(
+    () => ({
+      playingId: audio.playingId,
+      isPlaying: audio.isPlaying,
+      isLoading: audio.isLoading,
+      progress: audio.progress,
+      currentTime: audio.currentTime,
+      duration: audio.duration,
+      chorusTime: audio.chorusTime,
+      chorusPct,
+    }),
+    [
+      audio.playingId,
+      audio.isPlaying,
+      audio.isLoading,
+      audio.progress,
+      audio.currentTime,
+      audio.duration,
+      audio.chorusTime,
+      chorusPct,
+    ],
   );
 
   // ---------- 开始 / 继续 / 重置 ----------
@@ -181,6 +233,13 @@ function App() {
         wcState.wc.phase === 'draw' ||
         wcState.wc.phase === 'wildcard';
       if (overlayShown) return false;
+      // 四选二：当前组若已有选中，用户应自行点击卡片取消；
+      // 仅当当前组未选且有历史时允许回退到上一组
+      if (wcState.wc.phase === 'group') {
+        const g = wcState.wc.groups[wcState.wc.curGroup];
+        if (g && g.picks.length > 0) return false;
+        return wcState.wc.history.length > 0;
+      }
       return wcState.wc.history.length > 0;
     }
     if (gameState.showTransition) return false;
@@ -228,14 +287,13 @@ function App() {
   // ---------- 键盘 ----------
   useEffect(() => {
     const handler = (e) => {
-      // Escape 关闭播放器
-      if (e.key === 'Escape' && audio.visible) {
-        audio.closePlayer();
+      // Escape 停止试听
+      if (e.key === 'Escape' && audio.playingId != null) {
+        audio.stopAudition();
         return;
       }
-      if (audio.visible) return;
 
-      // Enter 处理各类浮层
+      // Enter 处理各类浮层 + 四选二确认
       if (e.key === 'Enter') {
         if (selectedMode === 'wc') {
           if (wcState.currentGroupResult) {
@@ -249,6 +307,15 @@ function App() {
           if (wcState.wc?.phase === 'wildcard') {
             wcState.proceedFromWildcard();
             return;
+          }
+          // 四选二：选满 2 首时确认晋级
+          if (wcState.wc?.phase === 'group' && !wcState.busy) {
+            const g = wcState.wc.groups[wcState.wc.curGroup];
+            if (g && g.picks.length === 2) {
+              e.preventDefault();
+              wcState.wcConfirmPicks();
+              return;
+            }
           }
         }
         if (gameState.showTransition) {
@@ -272,10 +339,22 @@ function App() {
           : gameState.showTransition;
       if (isBusy || overlayShown || isChampion || !gameStarted) return;
 
+      // 四选二阶段：1/2/3/4 切换选中
+      if (selectedMode === 'wc' && wcState.phase === 'group') {
+        const g = wcState.wc?.groups?.[wcState.wc.curGroup];
+        if (!g) return;
+        const num = parseInt(e.key, 10);
+        if (num >= 1 && num <= 4) {
+          e.preventDefault();
+          wcState.wcTogglePick(num - 1);
+        }
+        return;
+      }
+
       // 判断是否在可选择的阶段
       const canPick =
         selectedMode === 'wc'
-          ? wcState.phase === 'group' || wcState.phase === 'knockout'
+          ? wcState.phase === 'knockout'
           : true;
       if (!canPick) return;
 
@@ -300,9 +379,9 @@ function App() {
       if (wc.phase === 'group') {
         const g = wc.groups[wc.curGroup];
         return {
-          roundName: `${g?.name || ''}组`,
-          matchIdx: (g?.curMatch || 0) + 1,
-          matchTotal: 6,
+          roundName: `${g?.name || ''}组 · 四选二`,
+          matchIdx: (wc.curGroup || 0) + 1,
+          matchTotal: 12,
           doneCnt: wc.history.length,
           progTotal: WC_TOTAL_MATCHES,
         };
@@ -393,12 +472,6 @@ function App() {
       ? wcState.phase === 'group' || wcState.phase === 'knockout'
       : true);
 
-  // ---------- chorusPct ----------
-  const chorusPct =
-    audio.duration > 0 && audio.chorusTime != null
-      ? (audio.chorusTime / audio.duration) * 100
-      : 0;
-
   // ==================== 渲染 ====================
   return (
     <div className="wrap">
@@ -473,31 +546,40 @@ function App() {
               </button>
             </div>
           )}
-          <MatchStage
-            leftEntrant={leftE}
-            rightEntrant={rightE}
-            leftState={getCardState(0)}
-            rightState={getCardState(1)}
-            showSideTag={selectedMode !== 'wc'}
-            showPreview={true}
-            onPick={handlePick}
-            onPreview={handlePreview}
-          >
-            {/* WC 小组积分榜 */}
-            {selectedMode === 'wc' &&
-              wcState.wc?.phase === 'group' &&
-              wcState.wc.groups[wcState.wc.curGroup] && (
-                <GroupStandings
-                  group={wcState.wc.groups[wcState.wc.curGroup]}
-                  entrants={singerData.entrants}
-                  seedRank={singerData.seedRank}
-                />
-              )}
-            {/* WC 淘汰赛对阵总览 */}
-            {selectedMode === 'wc' &&
-              wcState.wc?.phase === 'knockout' &&
-              wcState.wc.ko?.rounds?.length > 0 && <KOBracket ko={wcState.wc.ko} />}
-          </MatchStage>
+          {/* WC 四选二小组赛舞台 */}
+          {selectedMode === 'wc' && wcState.wc?.phase === 'group' && (
+            <GroupPickStage
+              group={wcState.wc.groups[wcState.wc.curGroup]}
+              entrants={singerData.entrants}
+              onToggle={handleGroupToggle}
+              onConfirm={handleGroupConfirm}
+              onPreview={handleGroupPreview}
+              audio={audioCardState}
+              onTogglePlay={handleTogglePlay}
+              onSeek={seekHandler}
+            />
+          )}
+          {/* 1v1 对局（经典模式 / WC 淘汰赛） */}
+          {(selectedMode !== 'wc' || wcState.wc?.phase === 'knockout') && (
+            <MatchStage
+              leftEntrant={leftE}
+              rightEntrant={rightE}
+              leftState={getCardState(0)}
+              rightState={getCardState(1)}
+              showSideTag={selectedMode !== 'wc'}
+              showPreview={true}
+              onPick={handlePick}
+              onPreview={handlePreview}
+              audio={audioCardState}
+              onTogglePlay={handleTogglePlay}
+              onSeek={seekHandler}
+            >
+              {/* WC 淘汰赛对阵总览 */}
+              {selectedMode === 'wc' &&
+                wcState.wc?.phase === 'knockout' &&
+                wcState.wc.ko?.rounds?.length > 0 && <KOBracket ko={wcState.wc.ko} />}
+            </MatchStage>
+          )}
         </section>
       )}
 
@@ -509,14 +591,27 @@ function App() {
             singerName={singerData.name}
             history={
               selectedMode === 'wc'
-                ? (wcState.wc?.history || []).map((h) => ({
-                    roundName:
-                      h.phase === 'group'
-                        ? `${h.group}组`
-                        : KO_ROUND_NAMES[h.round] || '',
-                    winner: h.winner,
-                    loser: h.loser,
-                  }))
+                ? (wcState.wc?.history || []).map((h) => {
+                    if (h.phase === 'group') {
+                      // 四选二：让冠军所在小组的条目以冠军为 winner
+                      const champId = wcState.champion?.id;
+                      const pair = h.picks || [h.winner, h.loser];
+                      const champInGroup =
+                        pair.find((e) => e?.id === champId) || null;
+                      return {
+                        roundName: `${h.group}组`,
+                        winner: champInGroup || h.winner,
+                        loser: champInGroup
+                          ? pair.find((e) => e?.id !== champId) || h.loser
+                          : h.loser,
+                      };
+                    }
+                    return {
+                      roundName: KO_ROUND_NAMES[h.round] || '',
+                      winner: h.winner,
+                      loser: h.loser,
+                    };
+                  })
                 : gameState.history
             }
             onAgain={handleAgain}
@@ -527,14 +622,26 @@ function App() {
             champion={selectedMode === 'wc' ? wcState.champion : gameState.champion}
             history={
               selectedMode === 'wc'
-                ? (wcState.wc?.history || []).map((h) => ({
-                    roundName:
-                      h.phase === 'group'
-                        ? `${h.group}组`
-                        : KO_ROUND_NAMES[h.round] || '',
-                    winner: h.winner,
-                    loser: h.loser,
-                  }))
+                ? (wcState.wc?.history || []).map((h) => {
+                    if (h.phase === 'group') {
+                      const champId = wcState.champion?.id;
+                      const pair = h.picks || [h.winner, h.loser];
+                      const champInGroup =
+                        pair.find((e) => e?.id === champId) || null;
+                      return {
+                        roundName: `${h.group}组`,
+                        winner: champInGroup || h.winner,
+                        loser: champInGroup
+                          ? pair.find((e) => e?.id !== champId) || h.loser
+                          : h.loser,
+                      };
+                    }
+                    return {
+                      roundName: KO_ROUND_NAMES[h.round] || '',
+                      winner: h.winner,
+                      loser: h.loser,
+                    };
+                  })
                 : gameState.history
             }
             rounds={
@@ -592,27 +699,8 @@ function App() {
         />
       )}
 
-      {/* 音频播放器 */}
-      <AudioPlayer
-        visible={audio.visible}
-        closePlayer={audio.closePlayer}
-        cover={audio.currentSong?.pic || ''}
-        title={audio.currentSong?.name || ''}
-        artist={audio.artist}
-        isLoading={audio.isLoading}
-        isPlaying={audio.isPlaying}
-        togglePlay={audio.togglePlay}
-        progress={audio.progress}
-        currentTime={audio.currentTime}
-        duration={audio.duration}
-        chorusTime={audio.chorusTime}
-        chorusPct={chorusPct}
-        seekHandler={seekHandler}
-        restart={audio.restart}
-        fallbackNE={audio.fallbackNE}
-        fallbackQQ={audio.fallbackQQ}
-        audioRef={audio.audioRef}
-      />
+      {/* 音频元素（常驻 DOM，供 useAudioPlayer 绑定事件） */}
+      <audio ref={audio.audioRef} preload="metadata" crossOrigin="anonymous" />
     </div>
   );
 }

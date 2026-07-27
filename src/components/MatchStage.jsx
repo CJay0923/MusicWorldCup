@@ -11,6 +11,9 @@ import MatchCard from './MatchCard.jsx';
  * @param {boolean} showPreview - whether to show preview buttons
  * @param {(slot: 0|1) => void} onPick - called with 0 (left) or 1 (right) when a card is picked
  * @param {(slot: 0|1) => void} onPreview - called with 0 (left) or 1 (right) for preview
+ * @param {object} audio - audio state object {playingId, isPlaying, isLoading, progress, currentTime, duration, chorusTime, chorusPct}
+ * @param {(arg?) => void} onTogglePlay - toggle play/pause (or stop if {stop:true})
+ * @param {(e) => void} onSeek - seek when clicking progress bar
  * @param {React.ReactNode} children - extra content (WC group panel, etc.)
  */
 export default function MatchStage({
@@ -22,8 +25,27 @@ export default function MatchStage({
   showPreview = true,
   onPick,
   onPreview,
+  audio,
+  onTogglePlay,
+  onSeek,
   children,
 }) {
+  const renderAudioProps = (ent) => {
+    if (!ent || !audio) return {};
+    const active = audio.playingId === ent.id;
+    return {
+      isPlaying: active && audio.isPlaying,
+      isLoading: active && audio.isLoading,
+      progress: active ? audio.progress : 0,
+      currentTime: active ? audio.currentTime : 0,
+      duration: active ? audio.duration : 0,
+      chorusTime: active ? audio.chorusTime : null,
+      chorusPct: active ? audio.chorusPct : 0,
+      onTogglePlay,
+      onSeek,
+    };
+  };
+
   return (
     <>
       <div className="match">
@@ -35,6 +57,7 @@ export default function MatchStage({
           showPreview={showPreview}
           onPick={() => onPick?.(0)}
           onPreview={() => onPreview?.(0)}
+          {...renderAudioProps(leftEntrant)}
         />
         <div className="vs">
           <div className="vs-badge">VS</div>
@@ -48,6 +71,7 @@ export default function MatchStage({
           showPreview={showPreview}
           onPick={() => onPick?.(1)}
           onPreview={() => onPreview?.(1)}
+          {...renderAudioProps(rightEntrant)}
         />
       </div>
       {children}

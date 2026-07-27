@@ -1100,99 +1100,26 @@ body::after {
   font-size: 14px;
 }
 
-.player-overlay {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 70;
-  background: rgba(6, 8, 20, 0.82);
-  backdrop-filter: blur(12px);
-}
-.player-overlay.show {
-  display: flex;
-  animation: fade 0.3s ease;
-}
-.player-panel {
-  width: min(460px, 92vw);
-  padding: 26px 24px 18px;
-  border-radius: 22px;
-  background: var(--bg2);
-  border: 1px solid var(--rule);
-  box-shadow: var(--shadow);
-  position: relative;
-  animation: pop 0.35s cubic-bezier(0.22, 1.3, 0.36, 1);
-}
-.player-panel .pp-head {
+/* ---------- 卡片内嵌迷你播放条 (MiniPlayer) ---------- */
+.mini-player {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 210, 74, 0.35);
+  margin-top: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
-.player-panel .pp-cover {
-  width: 54px;
-  height: 54px;
-  border-radius: 10px;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: var(--bg3);
+.mini-player.gp {
+  gap: 6px;
+  padding: 5px 6px;
 }
-.player-panel .pp-info {
-  flex: 1;
-  min-width: 0;
-}
-.player-panel .pp-title {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.player-panel .pp-sub {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-.player-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--rule);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    background 0.2s,
-    transform 0.15s;
-}
-.player-close:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: rotate(90deg);
-}
-.audio-player {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 4px;
-}
-.ap-main {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.ap-play-btn {
-  width: 52px;
-  height: 52px;
+.mp-play {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
@@ -1200,178 +1127,119 @@ body::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 13px;
   color: #1a0d00;
   background: linear-gradient(135deg, var(--accent), #ffb13d);
-  box-shadow: 0 8px 24px rgba(255, 177, 61, 0.4);
+  box-shadow: 0 4px 14px rgba(255, 177, 61, 0.4);
   transition:
     transform 0.15s,
     box-shadow 0.2s;
 }
-.ap-play-btn:hover {
+.mini-player.gp .mp-play {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+}
+.mp-play:hover {
   transform: scale(1.08);
-  box-shadow: 0 10px 30px rgba(255, 177, 61, 0.55);
 }
-.ap-play-btn:active {
-  transform: scale(0.96);
+.mp-play:active {
+  transform: scale(0.94);
 }
-.ap-play-btn.loading {
+.mp-play.loading {
   background: var(--bg3);
   color: var(--muted);
   box-shadow: none;
   cursor: default;
 }
-.ap-play-btn.loading .spin {
-  width: 20px;
-  height: 20px;
+.mp-play .spin {
+  width: 14px;
+  height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.15);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+  display: inline-block;
 }
-.ap-progress-wrap {
+.mp-body {
   flex: 1;
   min-width: 0;
 }
-.ap-bar {
-  height: 6px;
+.mp-bar {
+  height: 5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   cursor: pointer;
   position: relative;
   transition: height 0.15s;
 }
-.ap-bar:hover {
-  height: 8px;
+.mp-bar:hover {
+  height: 7px;
 }
-.ap-bar .fill {
+.mp-fill {
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--accent2), var(--accent));
   width: 0;
   transition: width 0.15s linear;
-  position: relative;
 }
-.ap-bar .fill::after {
-  content: '';
-  position: absolute;
-  right: -6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 2px 8px rgba(255, 210, 74, 0.5);
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-.ap-bar:hover .fill::after {
-  opacity: 1;
-}
-.ap-time {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 6px;
-  font-variant-numeric: tabular-nums;
-}
-.chorus-mark {
+.mp-chorus {
   position: absolute;
   top: 50%;
-  width: 3px;
-  height: 14px;
+  width: 2px;
+  height: 10px;
   border-radius: 2px;
   background: var(--accent2);
   transform: translate(-50%, -50%);
-  opacity: 0;
-  transition: opacity 0.2s;
   pointer-events: none;
-  z-index: 2;
-  box-shadow: 0 0 6px rgba(255, 92, 138, 0.6);
+  box-shadow: 0 0 5px rgba(255, 92, 138, 0.7);
 }
-.chorus-mark.show {
-  opacity: 0.9;
-}
-.chorus-mark::after {
-  content: '♪';
-  position: absolute;
-  top: -18px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  color: var(--accent2);
-  font-weight: 700;
-}
-.ap-chorus-row {
+.mp-time {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 10px;
-}
-.ap-chorus-row.hidden {
-  display: none;
-}
-.chorus-badge {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--accent2);
-  letter-spacing: 0.5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.ap-restart {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--rule);
-  padding: 4px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition:
-    color 0.2s,
-    background 0.2s;
-}
-.ap-restart:hover {
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.12);
-}
-.player-hint {
-  font-size: 11.5px;
-  color: var(--muted);
-  text-align: center;
-  margin-top: 10px;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0.3px;
 }
-.player-fallback {
-  margin-top: 8px;
-  text-align: center;
+.mini-player.gp .mp-time {
+  font-size: 9px;
 }
-.player-fallback a {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 14px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-  text-decoration: none;
+.mp-stop {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--rule);
   background: rgba(255, 255, 255, 0.06);
   color: var(--muted);
-  border: 1px solid var(--rule);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition:
-    color 0.2s,
-    background 0.2s;
+    background 0.2s,
+    color 0.2s;
 }
-.player-fallback a:hover {
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.12);
+.mp-stop:hover {
+  background: rgba(255, 92, 138, 0.18);
+  color: var(--accent2);
+  border-color: rgba(255, 92, 138, 0.4);
 }
-.player-fallback a + a {
-  margin-left: 6px;
+
+/* 卡片播放中高亮态 */
+.card.playing,
+.gp-card.playing {
+  border-color: rgba(255, 210, 74, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(255, 210, 74, 0.35),
+    0 14px 32px rgba(255, 210, 74, 0.18);
+}
+.card.playing .album-wrap,
+.gp-card.playing .gp-art {
+  box-shadow: 0 0 0 2px rgba(255, 210, 74, 0.5);
 }
 
 .champion {
@@ -1499,6 +1367,70 @@ body::after {
 }
 .recap .step .beat s {
   color: #5a5f80;
+}
+/* 夺冠之路：封面缩略图布局 */
+.recap .step-covers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.recap .step-cover {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 210, 74, 0.6);
+  box-shadow: 0 0 8px rgba(255, 210, 74, 0.25);
+}
+.recap .step-cover.loser {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  opacity: 0.55;
+}
+.recap .step-cover.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 16px;
+}
+.recap .step-cover.empty::before {
+  content: '♪';
+}
+.recap .step-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.recap .step-vs {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+.recap .step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.recap .step-winner {
+  font-size: 14px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recap .step-winner b {
+  color: var(--ink);
+}
+.recap .step .beat {
+  margin-left: 0;
 }
 #confetti {
   position: fixed;
@@ -1944,6 +1876,199 @@ body::after {
   color: var(--good);
 }
 
+/* ---------- 四选二小组赛舞台 ---------- */
+.gp-stage {
+  margin-top: 6px;
+  padding: 18px 18px 22px;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  background: rgba(255, 255, 255, 0.025);
+}
+.gp-head {
+  text-align: center;
+  margin-bottom: 14px;
+}
+.gp-head h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+.gp-head .gp-name {
+  color: var(--accent);
+  font-size: 22px;
+  margin-right: 2px;
+}
+.gp-head .gp-tip {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.gp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.gp-card {
+  position: relative;
+  border-radius: 14px;
+  padding: 18px 12px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid var(--rule);
+  background: var(--bg2);
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.22s,
+    box-shadow 0.22s,
+    opacity 0.22s;
+  overflow: hidden;
+  min-height: 220px;
+}
+.gp-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 210, 74, 0.45);
+}
+.gp-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.gp-card.disabled:hover {
+  transform: none;
+  border-color: var(--rule);
+}
+.gp-card.selected {
+  border-color: var(--good);
+  box-shadow: 0 0 0 1px var(--good), 0 12px 30px rgba(55, 226, 165, 0.18);
+  background: rgba(55, 226, 165, 0.06);
+}
+.gp-seed {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.gp-card.selected .gp-seed {
+  color: var(--good);
+}
+.gp-art {
+  width: 78px;
+  height: 78px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 6px 0 10px;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.gp-art.empty::before {
+  content: '♪';
+  font-size: 28px;
+  color: var(--muted);
+}
+.gp-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gp-card.selected .gp-art {
+  box-shadow: 0 0 0 2px rgba(55, 226, 165, 0.4);
+}
+.gp-song {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+.gp-pick-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-top: auto;
+}
+.gp-card.selected .gp-pick-label {
+  color: var(--good);
+  font-weight: 800;
+}
+.gp-preview {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  transition: background 0.18s, border-color 0.18s, transform 0.15s;
+  user-select: none;
+}
+.gp-preview:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 210, 74, 0.55);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+.gp-preview .ico {
+  font-size: 12px;
+  line-height: 1;
+}
+.gp-check {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--good);
+  color: #0b0f24;
+  font-size: 13px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.gp-foot {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.gp-count {
+  font-size: 14px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+.gp-count b {
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 900;
+}
+@media (max-width: 720px) {
+  .gp-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gp-card {
+    min-height: 200px;
+  }
+}
+
 .wc-ko-overview {
   display: none;
   margin-top: 14px;
@@ -2106,6 +2231,310 @@ body::after {
   object-fit: contain;
   background: var(--bg2);
 }
+
+/* ========================================
+   响应式布局补全（平板 1024 / 大手机 640 / 小屏 380）
+   ======================================== */
+
+/* ---------- 平板 (≤ 1024px) ---------- */
+@media (max-width: 1024px) {
+  .wrap {
+    max-width: 960px;
+    padding: 24px 18px 70px;
+  }
+  .song-card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .wc-draw-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+  .wc-wc-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+}
+
+/* ---------- 大手机 (≤ 640px) ---------- */
+@media (max-width: 640px) {
+  /* 顶栏 */
+  .topbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .brand .cup {
+    font-size: 18px;
+  }
+  .brand small {
+    font-size: 10px;
+  }
+
+  /* SongPicker（最大隐患：原固定 3 列） */
+  .song-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 8px 6px 10px;
+  }
+  .song-card {
+    min-height: 76px;
+    padding: 8px 6px;
+  }
+  .song-card-name {
+    font-size: 11.5px;
+  }
+  .album-card-list {
+    max-height: 70vh;
+  }
+  .album-section-header {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 12px;
+  }
+  .album-section-name {
+    font-size: 13px;
+  }
+  .album-section-count {
+    font-size: 11px;
+  }
+  .album-section-thumb {
+    width: 34px;
+    height: 34px;
+  }
+  .album-section-desc {
+    font-size: 12px;
+  }
+
+  /* ChampionScreen */
+  .champ-cover-wrap {
+    width: 116px;
+    height: 116px;
+  }
+  .champion .trophy-svg {
+    width: 96px;
+    height: 96px;
+  }
+  .champion h1 {
+    font-size: clamp(32px, 8vw, 48px);
+  }
+  .champion .winner-side {
+    font-size: 13px;
+  }
+  .champion .actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .champion .actions button {
+    width: 100%;
+  }
+  .recap {
+    max-width: 100%;
+    padding: 14px 12px;
+  }
+  .recap .path {
+    gap: 6px;
+  }
+  .recap .step {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .recap .step .r {
+    font-size: 11px;
+  }
+
+  /* RoundOverlay */
+  .overlay .panel {
+    padding: 28px 20px;
+    max-width: 92vw;
+  }
+  .overlay .panel .big {
+    font-size: 44px;
+  }
+  .overlay .panel h2 {
+    font-size: 20px;
+  }
+  .overlay .panel p {
+    font-size: 12px;
+  }
+
+  /* KOBracket / WCPhaseBar / GroupResultScreen */
+  .wc-ko-bracket {
+    font-size: 10px;
+  }
+  .wc-ko-bracket .ko-match {
+    gap: 4px;
+  }
+  .wc-ko-bracket .ko-sd {
+    min-width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+  .wc-gtab {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+  .wc-phase {
+    font-size: 11px;
+    white-space: normal;
+  }
+  .wc-standings {
+    font-size: 10px;
+  }
+  .wc-standings .st-rank {
+    min-width: 16px;
+  }
+  .wc-standings .st-wins {
+    min-width: 16px;
+  }
+  .wc-standings .st-name {
+    max-width: 100px;
+  }
+
+  /* 四选二卡片 */
+  .gp-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gp-card {
+    min-height: 188px;
+    padding: 14px 10px 12px;
+  }
+  .gp-art {
+    width: 66px;
+    height: 66px;
+  }
+  .gp-song {
+    font-size: 13px;
+  }
+  .gp-head h3 {
+    font-size: 16px;
+  }
+  .gp-head .gp-name {
+    font-size: 19px;
+  }
+
+  /* 分享弹窗 */
+  .share-modal {
+    padding: 12px;
+  }
+  .share-preview {
+    max-height: 60vh;
+  }
+
+  /* Hero 区 / 首页 */
+  .hero .trophy-svg {
+    width: 84px;
+    height: 84px;
+  }
+  .rules {
+    max-width: 100%;
+    padding: 16px 14px;
+  }
+  .rules h3 {
+    font-size: 14px;
+  }
+  .rules li {
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  /* 通用按钮 */
+  .btn {
+    padding: 11px 16px;
+    font-size: 13px;
+  }
+  .mode-btn {
+    min-width: 140px;
+    padding: 14px 18px;
+  }
+  .singer-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+/* ---------- 小屏手机 (≤ 380px) ---------- */
+@media (max-width: 380px) {
+  .wrap {
+    padding: 16px 10px 60px;
+  }
+  .brand small {
+    display: none;
+  }
+  .brand .cup {
+    font-size: 16px;
+  }
+
+  /* SongPicker 单列 */
+  .song-card-grid {
+    grid-template-columns: 1fr;
+  }
+  .song-card {
+    min-height: 64px;
+  }
+
+  /* 四选二单列 */
+  .gp-grid {
+    grid-template-columns: 1fr;
+  }
+  .gp-card {
+    min-height: 160px;
+  }
+  .gp-art {
+    width: 56px;
+    height: 56px;
+  }
+
+  /* 冠军页 */
+  .champ-cover-wrap {
+    width: 96px;
+    height: 96px;
+  }
+  .champion .trophy-svg {
+    width: 80px;
+    height: 80px;
+  }
+  .champion h1 {
+    font-size: clamp(26px, 7vw, 36px);
+  }
+
+  /* 1v1 对局卡片进一步缩小 */
+  .card {
+    min-height: 180px;
+    padding: 18px 12px;
+  }
+  .card .song {
+    font-size: 22px;
+  }
+  .album-wrap {
+    width: 80px;
+    height: 80px;
+  }
+
+  /* 轮次过渡 */
+  .overlay .panel {
+    padding: 22px 14px;
+  }
+  .overlay .panel .big {
+    font-size: 36px;
+  }
+  .overlay .panel h2 {
+    font-size: 17px;
+  }
+
+  /* 模式/歌手按钮单列 */
+  .mode-select,
+  .singer-select {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mode-btn,
+  .singer-btn {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
 .share-loading {
   color: var(--muted);
   font-size: 15px;

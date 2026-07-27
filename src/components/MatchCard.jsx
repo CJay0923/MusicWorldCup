@@ -1,5 +1,6 @@
 import React from 'react';
 import { clsx } from 'clsx';
+import MiniPlayer from './MiniPlayer.jsx';
 
 /**
  * A single song battle card.
@@ -9,6 +10,15 @@ import { clsx } from 'clsx';
  * @param {boolean} showSideTag - whether to show the left/right half tag (hidden in WC mode)
  * @param {() => void} onPick - called when the card is clicked to pick a winner
  * @param {() => void} onPreview - called when the preview button is clicked
+ * @param {boolean} isPlaying - this card's song is currently playing
+ * @param {boolean} isLoading - this card's song is currently loading
+ * @param {number} progress - playback progress 0-100
+ * @param {number} currentTime - seconds
+ * @param {number} duration - seconds
+ * @param {number|null} chorusTime - seconds
+ * @param {number} chorusPct - 0-100
+ * @param {() => void} onTogglePlay - toggle play/pause
+ * @param {(e) => void} onSeek - seek when clicking progress bar
  */
 export default function MatchCard({
   entrant,
@@ -18,8 +28,29 @@ export default function MatchCard({
   onPick,
   onPreview,
   showPreview = true,
+  isPlaying = false,
+  isLoading = false,
+  progress = 0,
+  currentTime = 0,
+  duration = 0,
+  chorusTime = null,
+  chorusPct = 0,
+  onTogglePlay,
+  onSeek,
 }) {
-  const classes = clsx('card', side, state, { 'seed-card': entrant?.isSeed });
+  const isActive = isPlaying || isLoading;
+  const classes = clsx('card', side, state, {
+    'seed-card': entrant?.isSeed,
+    playing: isActive,
+  });
+
+  const handleStop = (arg) => {
+    if (arg && arg.stop) {
+      onTogglePlay?.({ stop: true });
+    } else {
+      onTogglePlay?.();
+    }
+  };
 
   return (
     <div className={classes} onClick={onPick}>
@@ -37,7 +68,7 @@ export default function MatchCard({
       <div className="song">{entrant?.name || '—'}</div>
       <div className="ko">点击选择晋级</div>
       <div className="pick-hint">{side === 'left' ? '← 我选这首' : '我选这首 →'}</div>
-      {showPreview && (
+      {showPreview && !isActive && (
         <button
           className="preview-btn"
           type="button"
@@ -50,6 +81,20 @@ export default function MatchCard({
           <span className="ico">♪</span>
           <span className="txt">试听</span>
         </button>
+      )}
+      {showPreview && isActive && (
+        <MiniPlayer
+          isLoading={isLoading}
+          isPlaying={isPlaying}
+          onTogglePlay={handleStop}
+          progress={progress}
+          currentTime={currentTime}
+          duration={duration}
+          chorusTime={chorusTime}
+          chorusPct={chorusPct}
+          onSeek={onSeek}
+          variant="card"
+        />
       )}
       <div className="check" style={{ opacity: state === 'win' ? 1 : 0 }}>
         ✓

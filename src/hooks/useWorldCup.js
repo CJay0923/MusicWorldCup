@@ -1,15 +1,15 @@
 // useWorldCup.js
-// 世界杯模式(小组赛 + 淘汰赛)的状态管理 Hook
+// 世界杯模式(四选二小组赛 + 淘汰赛)的状态管理 Hook
 //
 // WC 状态结构:
 //   wc = {
 //     phase: "draw"|"group"|"wildcard"|"knockout"|"champion",
-//     groups: [{ name, members[4], schedule, curMatch, wins[4], results[],
-//                winner, runnerUp, thirdPlace, fourthPlace, done }],
+//     groups: [{ name, members[4], picks[], winner, runnerUp,
+//                thirdPlace, fourthPlace, done }],
 //     curGroup: number,
 //     wildcards: [entrant...],   // 8 个外卡
 //     ko: { rounds[6], curRound, curMatch, phase:"r32"|"r16"|"qf"|"sf"|"final" },
-//     history: [{ phase, group, round, winner, loser }],
+//     history: [{ phase, group, picks, winner, loser }],
 //     champion: entrant | null,
 //   }
 
@@ -20,7 +20,6 @@ import {
   WC_WILDCARDS,
   GROUP_LETTERS,
   WC_KO_TEAMS,
-  RR_SCHEDULE,
 } from '../data/singers.js';
 import { shuffleArr, bracketOrder } from '../utils/bracket.js';
 import { slimE, restoreE } from '../utils/format.js';
@@ -54,10 +53,7 @@ function makeDraw(singerData) {
         shuffledPots[2][g],
         shuffledPots[3][g],
       ],
-      schedule: RR_SCHEDULE, // [[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]]
-      curMatch: 0,
-      wins: [0, 0, 0, 0],
-      results: [],
+      picks: [], // 四选二：用户选中的 member 索引（最多 2 个）
       winner: null,
       runnerUp: null,
       thirdPlace: null,
@@ -77,21 +73,13 @@ function makeDraw(singerData) {
   };
 }
 
-// ---------- 纯函数：小组排名 ----------
-// members 存的是 id 索引，需传入 entrants 来查找实际对象
-function rankGroup(g, entrants) {
-  const order = [0, 1, 2, 3].sort((x, y) => {
-    if (g.wins[y] !== g.wins[x]) return g.wins[y] - g.wins[x]; // 胜场降序
-    const srX = entrants[g.members[x]]?.seedRank || 999;
-    const srY = entrants[g.members[y]]?.seedRank || 999;
-    return srX - srY; // 种子排名升序
+// ---------- 纯函数：按 seedRank 升序排序 member 索引 ----------
+function rankByIdx(idxs, g, entrants) {
+  return idxs.slice().sort((a, b) => {
+    const ra = entrants[g.members[a]]?.seedRank || 999;
+    const rb = entrants[g.members[b]]?.seedRank || 999;
+    return ra - rb;
   });
-  return {
-    winner: entrants[g.members[order[0]]],
-    runnerUp: entrants[g.members[order[1]]],
-    thirdPlace: entrants[g.members[order[2]]],
-    fourthPlace: entrants[g.members[order[3]]],
-  };
 }
 
 // ---------- 纯函数：构建 32 队淘汰赛对阵 ----------
@@ -153,11 +141,8 @@ function serializeWC(wc) {
     phase: wc.phase,
     groups: wc.groups.map((g) => ({
       name: g.name,
-      members: g.members, // 数字数组，直接序列化
-      schedule: g.schedule,
-      curMatch: g.curMatch,
-      wins: g.wins,
-      results: g.results, // 数字数组，直接序列化
+      members: g.members,
+      picks: g.picks,
       winner: sE(g.winner),
       runnerUp: sE(g.runnerUp),
       thirdPlace: sE(g.thirdPlace),
@@ -175,9 +160,11 @@ function serializeWC(wc) {
     history: wc.history.map((h) => ({
       phase: h.phase,
       group: h.group,
-      round: h.round,
+      picks: (h.picks || []).map(sE),
       winner: sE(h.winner),
       loser: sE(h.loser),
+      round: h.round,
+      match: h.match,
     })),
     champion: sE(wc.champion),
   };
@@ -190,11 +177,8 @@ function deserializeWC(d) {
     phase: d.phase,
     groups: d.groups.map((g) => ({
       name: g.name,
-      members: g.members, // 数字数组，直接反序列化
-      schedule: g.schedule,
-      curMatch: g.curMatch,
-      wins: g.wins,
-      results: g.results || [], // 数字数组，直接反序列化
+      members: g.members,
+      picks: g.picks || [],
       winner: rE(g.winner),
       runnerUp: rE(g.runnerUp),
       thirdPlace: rE(g.thirdPlace),
@@ -212,9 +196,11 @@ function deserializeWC(d) {
     history: (d.history || []).map((h) => ({
       phase: h.phase,
       group: h.group,
-      round: h.round,
+      picks: (h.picks || []).map(rE),
       winner: rE(h.winner),
       loser: rE(h.loser),
+      round: h.round,
+      match: h.match,
     })),
     champion: rE(d.champion),
   };
@@ -341,91 +327,91 @@ export function useWorldCup(singerId, singerData) {
   }, [wc, saveWC]);
 
   /**
-   * 小组赛选择
-   * @param {0|1} slot 0=左侧胜, 1=右侧胜
+   * 四选二：切换当前组内某首歌的选中状态（最多选 2 首）
+   * @param {number} memberIdx - 组内成员索引 (0..3)
    */
-  const wcPick = useCallback(
-    (slot) => {
+  const wcTogglePick = useCallback(
+    (memberIdx) => {
       if (busy) return;
       if (!wc || wc.phase !== 'group') return;
       const g = wc.groups[wc.curGroup];
       if (!g || g.done) return;
-      const pair = g.schedule[g.curMatch];
-      if (!pair) return;
-      const [i, j] = pair;
-      // members 存的是 id 索引，需从 entrants 中查找实际对象
-      const a = singerData.entrants[g.members[i]];
-      const b = singerData.entrants[g.members[j]];
-      if (!a || !b) return;
-
-      const winner = slot === 0 ? a : b;
-      const loser = slot === 0 ? b : a;
-      const winnerIdx = slot === 0 ? i : j;
-
-      const ng = {
-        ...g,
-        wins: g.wins.slice(),
-        results: g.results.concat(winnerIdx), // 存储 winner 的 member 索引
-        curMatch: g.curMatch + 1,
-      };
-      ng.wins[winnerIdx]++;
-
-      let groupDone = false;
-      if (ng.curMatch >= RR_SCHEDULE.length) {
-        const r = rankGroup(ng, singerData.entrants);
-        ng.winner = r.winner;
-        ng.runnerUp = r.runnerUp;
-        ng.thirdPlace = r.thirdPlace;
-        ng.fourthPlace = r.fourthPlace;
-        ng.done = true;
-        groupDone = true;
-      }
 
       const newGroups = wc.groups.slice();
+      const ng = { ...g, picks: g.picks.slice() };
+      const pos = ng.picks.indexOf(memberIdx);
+      if (pos >= 0) {
+        ng.picks.splice(pos, 1);
+      } else {
+        if (ng.picks.length >= 2) return; // 最多 2 个
+        ng.picks.push(memberIdx);
+      }
       newGroups[wc.curGroup] = ng;
-      const newWc = {
-        ...wc,
-        groups: newGroups,
-        history: wc.history.concat({
-          phase: 'group',
-          group: g.name,
-          round: g.curMatch,
-          winner,
-          loser,
-        }),
-      };
+      const newWc = { ...wc, groups: newGroups };
       setWc(newWc);
-      setBusy(true);
-      setLastPick({
+      saveWC(newWc);
+    },
+    [busy, wc, saveWC],
+  );
+
+  /**
+   * 四选二：确认当前组的选择（必须已选满 2 首）
+   * 排名规则：选中的 2 首按 seedRank 升序 → 小组第一/第二
+   *          未选中的 2 首按 seedRank 升序 → 小组第三/第四
+   */
+  const wcConfirmPicks = useCallback(() => {
+    if (busy) return;
+    if (!wc || wc.phase !== 'group') return;
+    const g = wc.groups[wc.curGroup];
+    if (!g || g.done) return;
+    if (g.picks.length !== 2) return;
+
+    const [wIdx, rIdx] = rankByIdx(g.picks, g, singerData.entrants);
+    const unpicked = [0, 1, 2, 3].filter((i) => !g.picks.includes(i));
+    const [tIdx, fIdx] = rankByIdx(unpicked, g, singerData.entrants);
+
+    const winner = singerData.entrants[g.members[wIdx]];
+    const runnerUp = singerData.entrants[g.members[rIdx]];
+    const thirdPlace = singerData.entrants[g.members[tIdx]];
+    const fourthPlace = singerData.entrants[g.members[fIdx]];
+
+    const ng = {
+      ...g,
+      winner,
+      runnerUp,
+      thirdPlace,
+      fourthPlace,
+      done: true,
+    };
+    const newGroups = wc.groups.slice();
+    newGroups[wc.curGroup] = ng;
+
+    const allDone = newGroups.every((x) => x.done);
+
+    const newWc = {
+      ...wc,
+      groups: newGroups,
+      history: wc.history.concat({
         phase: 'group',
         group: g.name,
-        match: g.curMatch,
-        slot,
-        winner,
-        loser,
-      });
-
-      timerRef.current = setTimeout(() => {
-        if (groupDone) {
-          const allDone = newWc.groups.every((x) => x.done);
-          setCurrentGroupResult({
-            name: ng.name,
-            winner: ng.winner,
-            runnerUp: ng.runnerUp,
-            thirdPlace: ng.thirdPlace,
-            allDone,
-          });
-          setShowTransition(true);
-          saveWC(newWc);
-          // busy 保持为 true，直到 proceedFromGroupResult
-        } else {
-          saveWC(newWc);
-          setBusy(false);
-        }
-      }, PICK_DELAY);
-    },
-    [busy, wc, saveWC, singerData],
-  );
+        picks: [winner, runnerUp], // 两首出线歌曲（用于冠军之路展示）
+        winner, // 兼容字段：seedRank 更优的出线者
+        loser: runnerUp, // 兼容字段：另一名出线者
+      }),
+    };
+    setWc(newWc);
+    setBusy(true);
+    setCurrentGroupResult({
+      name: ng.name,
+      winner: ng.winner,
+      runnerUp: ng.runnerUp,
+      thirdPlace: ng.thirdPlace,
+      allDone,
+    });
+    setShowTransition(true);
+    saveWC(newWc);
+    // busy 保持为 true，直到 proceedFromGroupResult
+  }, [busy, wc, saveWC, singerData]);
 
   // 从小组结果继续：进入下一组 或 进入外卡阶段
   const proceedFromGroupResult = useCallback(() => {
@@ -560,7 +546,7 @@ export function useWorldCup(singerId, singerData) {
   }, []);
 
   /**
-   * 回退上一场对决（撤销最后一次 wcPick / koPick）
+   * 回退上一步（撤销最后一次 wcConfirmPicks / koPick）
    */
   const undoWC = useCallback(() => {
     if (busy) return;
@@ -600,24 +586,15 @@ export function useWorldCup(singerId, singerData) {
         },
       };
     } else if (lastEntry.phase === 'group') {
-      // ---- 回退小组赛 ----
-      const groupName = lastEntry.group;
-      const groupIdx = wc.groups.findIndex((g) => g.name === groupName);
+      // ---- 回退四选二小组赛 ----
+      const groupIdx = wc.groups.findIndex((g) => g.name === lastEntry.group);
       if (groupIdx < 0) return;
 
       const g = wc.groups[groupIdx];
       const newGroups = wc.groups.slice();
-      const lastResultIdx = g.results.length - 1;
-      const winnerIdx = g.results[lastResultIdx];
-      const newWins = g.wins.slice();
-      newWins[winnerIdx]--;
-      const newResults = g.results.slice(0, -1);
-
       newGroups[groupIdx] = {
         ...g,
-        wins: newWins,
-        results: newResults,
-        curMatch: g.curMatch - 1,
+        picks: [],
         winner: null,
         runnerUp: null,
         thirdPlace: null,
@@ -651,7 +628,8 @@ export function useWorldCup(singerId, singerData) {
     busy,
     lastPick,
     startWorldCup,
-    wcPick,
+    wcTogglePick,
+    wcConfirmPicks,
     koPick,
     undoWC,
     proceedFromDraw,

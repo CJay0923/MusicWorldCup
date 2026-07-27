@@ -196,8 +196,9 @@ function drawCard(ctx, opts) {
   }
 }
 
-// 绘制一场比赛的连接线(子->父)
+// 绘制一场比赛的连接线(子->父) — 使用平滑贝塞尔曲线
 // childEdgeX: 子卡片朝向父侧的边缘 x；parentEdgeX: 父卡片朝向子侧的边缘 x
+// direction: 'L' 左半区（向右延伸）| 'R' 右半区（向左延伸）
 function drawConnector(
   ctx,
   childEdgeAX,
@@ -209,21 +210,38 @@ function drawConnector(
   yw,
   isChampPath,
   lineW,
+  direction = 'L',
 ) {
   ctx.save();
   ctx.strokeStyle = isChampPath ? GOLD : 'rgba(255,255,255,0.3)';
   ctx.lineWidth = isChampPath ? Math.max(2.4, lineW * 1.8) : lineW;
   ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(childEdgeAX, ya);
-  ctx.lineTo(jointX, ya);
-  ctx.moveTo(childEdgeBX, yb);
-  ctx.lineTo(jointX, yb);
-  ctx.moveTo(jointX, ya);
-  ctx.lineTo(jointX, yb);
-  ctx.moveTo(jointX, yw);
-  ctx.lineTo(parentEdgeX, yw);
-  ctx.stroke();
+  ctx.lineJoin = 'round';
+
+  // 用三次贝塞尔曲线代替直角拐弯，视觉更柔和
+  // 控制点偏移量：水平方向上取子-父距离的一半
+  const drawCurve = (x1, y1, x2, y2) => {
+    const dx = Math.abs(x2 - x1);
+    const cpOffset = dx * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    if (direction === 'L') {
+      // 左半区：从子向右延伸到父
+      ctx.bezierCurveTo(x1 + cpOffset, y1, x2 - cpOffset, y2, x2, y2);
+    } else {
+      // 右半区：从子向左延伸到父
+      ctx.bezierCurveTo(x1 - cpOffset, y1, x2 + cpOffset, y2, x2, y2);
+    }
+    ctx.stroke();
+  };
+
+  // 子 A -> joint 中点
+  drawCurve(childEdgeAX, ya, jointX, yw);
+  // 子 B -> joint 中点
+  drawCurve(childEdgeBX, yb, jointX, yw);
+  // joint -> 父
+  drawCurve(jointX, yw, parentEdgeX, yw);
+
   ctx.restore();
 }
 
@@ -411,6 +429,7 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
         yW,
         isChampPath,
         connLineW,
+        'L',
       );
     }
 
@@ -438,6 +457,7 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
         yW,
         isChampPath,
         connLineW,
+        'R',
       );
     }
   }
@@ -642,10 +662,21 @@ export default function ChampionShare({
   const [previewUrl, setPreviewUrl] = useState(null);
   const canvasRef = useRef(null); // 保留绘制好的画布用于下载
 
+  // 缓存：以 champion id + bracketSize 为 key，避免重复渲染
+  const cacheRef = useRef({ key: null, canvas: null, url: null });
+
   const canShare = !!(champion && rounds && rounds.length > 1);
 
   const handleShare = async () => {
     if (!canShare) return;
+    // 命中缓存：直接复用
+    const cacheKey = `${champion?.id || ''}-${bracketSize || ''}`;
+    if (cacheRef.current.key === cacheKey && cacheRef.current.canvas) {
+      canvasRef.current = cacheRef.current.canvas;
+      setPreviewUrl(cacheRef.current.url);
+      setState('ready');
+      return;
+    }
     setState('loading');
     setPreviewUrl(null);
     try {
@@ -657,11 +688,13 @@ export default function ChampionShare({
       });
       canvasRef.current = canvas;
       const url = canvas.toDataURL('image/jpeg', 0.92);
+      // 写入缓存
+      cacheRef.current = { key: cacheKey, canvas, url };
       setPreviewUrl(url);
       setState('ready');
-    } catch {
+    } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('[ChampionShare] render failed:', e);
+      console.error('[ChampionShare] render failed:', err);
       setState('error');
     }
   };

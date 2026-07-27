@@ -34,8 +34,8 @@ src/
 │   ├── TrophySvg.jsx        # 奖杯 SVG
 │   └── wc/                  # 世界杯模式专用组件
 │       ├── DrawScreen.jsx
+│       ├── GroupPickStage.jsx   # 四选二小组赛舞台
 │       ├── GroupResultScreen.jsx
-│       ├── GroupStandings.jsx
 │       ├── KOBracket.jsx
 │       ├── WCPhaseBar.jsx
 │       └── WildcardScreen.jsx
@@ -76,7 +76,8 @@ npm run preview      # 预览构建产物
 - **世界杯模式**: 小组赛 → 外卡复活 → 淘汰赛
 
 ### 核心功能
-- 二选一对投票决定晋级
+- 世界杯小组赛采用「四选二」：每组 4 首直接选 2 首晋级（键盘 1/2/3/4 切换、Enter 确认）
+- 淘汰赛阶段为二选一对投票决定晋级（← 选左，→ 选右）
 - 支持歌曲试听（高潮片段自动播放）
-- 键盘操作（← 选左，→ 选右，Enter 确认，Esc 关闭播放器）
+- 键盘操作（Esc 关闭播放器，Enter 处理浮层/确认）
 - 存档/续玩（localStorage 持久化）

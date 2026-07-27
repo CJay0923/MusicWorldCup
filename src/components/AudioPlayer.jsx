@@ -1,4 +1,5 @@
 import React from 'react';
+import { clsx } from 'clsx';
 import { fmtTime } from '../utils/format.js';
 
 /**
@@ -51,10 +52,7 @@ export default function AudioPlayer({
   };
 
   return (
-    <div
-      className={`player-overlay${visible ? ' show' : ''}`}
-      onClick={closeOnBackdrop}
-    >
+    <div className={clsx('player-overlay', { show: visible })} onClick={closeOnBackdrop}>
       <div className="player-panel">
         <button
           className="player-close"
@@ -81,27 +79,18 @@ export default function AudioPlayer({
         <div className="audio-player">
           <div className="ap-main">
             <button
-              className={`ap-play-btn${isLoading ? ' loading' : ''}`}
+              className={clsx('ap-play-btn', { loading: isLoading })}
               onClick={togglePlay}
               type="button"
               aria-label="播放/暂停"
             >
-              {isLoading ? (
-                <span className="spin" />
-              ) : isPlaying ? (
-                '⏸'
-              ) : (
-                '▶'
-              )}
+              {isLoading ? <span className="spin" /> : isPlaying ? '⏸' : '▶'}
             </button>
             <div className="ap-progress-wrap">
               <div className="ap-bar" onClick={seekHandler}>
                 <div className="fill" style={{ width: `${progress}%` }} />
                 {chorusTime != null && (
-                  <div
-                    className="chorus-mark show"
-                    style={{ left: `${chorusPct}%` }}
-                  />
+                  <div className="chorus-mark show" style={{ left: `${chorusPct}%` }} />
                 )}
               </div>
               <div className="ap-time">
@@ -113,20 +102,14 @@ export default function AudioPlayer({
 
           {chorusTime != null && (
             <div className="ap-chorus-row">
-              <span className="chorus-badge">
-                ♪ 高潮片段 {fmtTime(chorusTime)}
-              </span>
+              <span className="chorus-badge">♪ 高潮片段 {fmtTime(chorusTime)}</span>
               <button className="ap-restart" onClick={restart} type="button">
                 从头播放
               </button>
             </div>
           )}
 
-          <audio
-            ref={audioRef}
-            preload="metadata"
-            crossOrigin="anonymous"
-          />
+          <audio ref={audioRef} preload="metadata" crossOrigin="anonymous" />
         </div>
 
         <div className="player-fallback">
@@ -138,9 +121,7 @@ export default function AudioPlayer({
           </a>
         </div>
 
-        <div className="player-hint">
-          完整播放 · 自动跳转高潮片段 · 可边听边选
-        </div>
+        <div className="player-hint">完整播放 · 自动跳转高潮片段 · 可边听边选</div>
       </div>
     </div>
   );

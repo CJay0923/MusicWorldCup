@@ -1,4 +1,6 @@
 // 世界杯阶段栏：显示当前阶段 + 小组标签 / 淘汰赛轮次标签
+import { clsx } from 'clsx';
+
 export default function WCPhaseBar({
   phase,
   groups,
@@ -21,29 +23,27 @@ export default function WCPhaseBar({
     <div className="wc-bar show">
       <span className="wc-phase">{phase}</span>
       <div className="wc-group-tabs">
-        {koMode ? (
-          // 淘汰赛：显示 32强/16强/8强/4强/决赛 标签
-          phases.map((p) => (
-            <div
-              key={p.n}
-              className={`wc-gtab ${p.done ? 'done' : ''} ${p.current ? 'current' : ''}`}
-              style={{ width: 'auto', padding: '0 8px' }}
-            >
-              {p.n}
-            </div>
-          ))
-        ) : (
-          // 小组赛：显示 A-L 标签
-          groups.map((g, i) => (
-            <div
-              key={i}
-              className={`wc-gtab ${g.done ? 'done' : ''} ${i === curGroup ? 'current' : ''}`}
-              onClick={() => onGroupClick(i)}
-            >
-              {g.name}
-            </div>
-          ))
-        )}
+        {koMode
+          ? // 淘汰赛：显示 32强/16强/8强/4强/决赛 标签
+            phases.map((p) => (
+              <div
+                key={p.n}
+                className={clsx('wc-gtab', { done: p.done, current: p.current })}
+                style={{ width: 'auto', padding: '0 8px' }}
+              >
+                {p.n}
+              </div>
+            ))
+          : // 小组赛：显示 A-L 标签
+            groups.map((g, i) => (
+              <div
+                key={i}
+                className={clsx('wc-gtab', { done: g.done, current: i === curGroup })}
+                onClick={() => onGroupClick(i)}
+              >
+                {g.name}
+              </div>
+            ))}
       </div>
     </div>
   );

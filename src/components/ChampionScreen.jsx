@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { clsx } from 'clsx';
 import TrophySvg from './TrophySvg.jsx';
 import Confetti from './Confetti.jsx';
 
@@ -10,7 +11,13 @@ import Confetti from './Confetti.jsx';
  * @param {() => void} onAgain - called when the "再战一届" button is clicked
  * @param {React.RefObject<HTMLCanvasElement>} confettiRef - ref for the confetti canvas
  */
-export default function ChampionScreen({ champion, singerName, history, onAgain, confettiRef }) {
+export default function ChampionScreen({
+  champion,
+  singerName,
+  history,
+  onAgain,
+  confettiRef,
+}) {
   const [showRecap, setShowRecap] = useState(false);
 
   // Champion name gradient based on which half they came from
@@ -31,7 +38,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
 
   // Champion's path: matches where champion was the winner
   const steps = (history || []).filter(
-    (h) => h.winner && champion && h.winner.id === champion.id
+    (h) => h.winner && champion && h.winner.id === champion.id,
   );
 
   const toggleRecap = () => setShowRecap((v) => !v);
@@ -42,7 +49,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
 
       <TrophySvg size={128} />
 
-      <div className={`champ-cover-wrap${champion?.pic ? '' : ' empty'}`}>
+      <div className={clsx('champ-cover-wrap', { empty: !champion?.pic })}>
         {champion?.pic && <img src={champion.pic} alt="冠军专辑封面" />}
       </div>
 

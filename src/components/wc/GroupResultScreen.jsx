@@ -1,7 +1,9 @@
 // 小组完赛结果浮层
+import { clsx } from 'clsx';
+
 export default function GroupResultScreen({ show, group, allDone, onContinue }) {
   return (
-    <div className={`wc-screen ${show ? 'show' : ''}`}>
+    <div className={clsx('wc-screen', { show })}>
       <div className="wc-panel">
         <h2>{group.name}组完赛</h2>
         <p className="wc-sub">

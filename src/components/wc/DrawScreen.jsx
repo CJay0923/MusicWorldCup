@@ -1,7 +1,9 @@
 // 抽签结果浮层
+import { clsx } from 'clsx';
+
 export default function DrawScreen({ show, groups, entrants, seedRank, onContinue }) {
   return (
-    <div className={`wc-screen ${show ? 'show' : ''}`}>
+    <div className={clsx('wc-screen', { show })}>
       <div className="wc-panel">
         <h2>⚽ 抽签结果</h2>
         <p className="wc-sub">48 首歌已按收藏量分 4 档抽入 12 个小组，每组 1 个种子</p>

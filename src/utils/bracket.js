@@ -50,7 +50,7 @@ export function drawSeats(n) {
  */
 export function seedBracketFlat(n, seats) {
   const s = seats && seats.length === n ? seats : drawSeats(n);
-  return bracketOrder(n).map(x => s[x - 1]);
+  return bracketOrder(n).map((x) => s[x - 1]);
 }
 
 export function generateTiers(N) {
@@ -71,17 +71,27 @@ export function generateSeededBracket(entrants, seeds, bracketSize) {
   const N = bracketSize;
   // 使用分档保护算法：每4首一档、档内打乱 + 标准蛇形落位
   const order = seedBracketFlat(N);
-  return order.map(idx => {
-    const seedIdx = seeds[idx];
-    const e = entrants[seedIdx];
-    return e ? { ...e } : null;
-  }).filter(Boolean);
+  return order
+    .map((idx) => {
+      const seedIdx = seeds[idx];
+      const e = entrants[seedIdx];
+      return e ? { ...e } : null;
+    })
+    .filter(Boolean);
 }
 
 export function generateRoundNames(bracketSize) {
   const names = [];
   let sz = bracketSize;
-  const nm = { 2: '决赛', 4: '4强', 8: '8强', 16: '16强', 32: '32强', 64: '64强', 128: '128强' };
+  const nm = {
+    2: '决赛',
+    4: '4强',
+    8: '8强',
+    16: '16强',
+    32: '32强',
+    64: '64强',
+    128: '128强',
+  };
   while (sz > 1) {
     names.push(nm[sz] || sz + '强');
     sz /= 2;

@@ -15,7 +15,8 @@
 import React, { useRef, useState } from 'react';
 
 // ---------------- 常量 ----------------
-const FONT = '"PingFang SC","Microsoft YaHei","Noto Sans CJK SC","Hiragino Sans GB",sans-serif';
+const FONT =
+  '"PingFang SC","Microsoft YaHei","Noto Sans CJK SC","Hiragino Sans GB",sans-serif';
 const GOLD = '#ffd24a';
 const IMG_TIMEOUT = 8000;
 
@@ -104,7 +105,7 @@ function drawCover(ctx, x, y, size, img, isChampPath) {
   if (img && img.complete && img.naturalWidth > 0) {
     try {
       ctx.drawImage(img, x, y, size, size);
-    } catch (e) {
+    } catch {
       drawPlaceholder(ctx, x, y, size);
     }
   } else {
@@ -119,48 +120,99 @@ function drawCover(ctx, x, y, size, img, isChampPath) {
 
 // 绘制单张对阵卡片
 function drawCard(ctx, opts) {
-  const { x, y, w, h, entrant, side, isChampPath, isWinner, imgMap, coverSize } = opts;
+  const {
+    x,
+    y,
+    w,
+    h,
+    entrant,
+    side,
+    isChampPath,
+    isWinner,
+    imgMap,
+    coverSize,
+    vertical,
+  } = opts;
   if (!entrant) return;
 
-  // 背景
+  // 背景（提高非冠军路径的可见度）
   roundRect(ctx, x, y, w, h, 5);
   if (isChampPath) {
     ctx.fillStyle = 'rgba(255,210,74,0.18)';
   } else if (isWinner) {
     ctx.fillStyle = 'rgba(255,255,255,0.10)';
   } else {
-    ctx.fillStyle = 'rgba(255,255,255,0.028)';
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
   }
   ctx.fill();
   ctx.lineWidth = isChampPath ? 1.6 : 1;
-  ctx.strokeStyle = isChampPath ? GOLD : 'rgba(255,255,255,0.10)';
+  ctx.strokeStyle = isChampPath
+    ? GOLD
+    : isWinner
+      ? 'rgba(255,255,255,0.2)'
+      : 'rgba(255,255,255,0.13)';
   ctx.stroke();
 
-  // 封面
-  const cs = coverSize;
-  const cy = y + (h - cs) / 2;
-  const cx = side === 'L' ? x + 3 : x + w - cs - 3;
   const img = entrant.pic ? imgMap[entrant.pic] : null;
-  drawCover(ctx, cx, cy, cs, img, isChampPath);
 
-  // 歌名
-  const pad = 6;
-  const nameX = side === 'L' ? cx + cs + pad : cx - pad;
-  const nameMaxW = w - cs - pad * 2 - 2;
-  const fontSize = Math.max(10, Math.min(13, h - 8));
-  ctx.fillStyle = isChampPath ? '#ffffff' : isWinner ? '#f1f2fb' : 'rgba(200,206,236,0.55)';
-  ctx.font = `${isChampPath ? 700 : 600} ${fontSize}px ${FONT}`;
-  ctx.textAlign = side === 'L' ? 'left' : 'right';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(fitText(ctx, entrant.name, nameMaxW), nameX, y + h / 2);
+  if (vertical) {
+    // 竖向布局：封面在上、歌名在下（小规模时用，给文字更多宽度）
+    const cs = Math.min(coverSize, w - 8);
+    const cx = x + (w - cs) / 2;
+    const cy = y + 4;
+    drawCover(ctx, cx, cy, cs, img, isChampPath);
+
+    const textAreaH = h - cs - 8;
+    const fontSize = Math.max(10, Math.min(14, textAreaH - 4));
+    ctx.fillStyle = isChampPath
+      ? '#ffffff'
+      : isWinner
+        ? '#f1f2fb'
+        : 'rgba(200,206,236,0.72)';
+    ctx.font = `${isChampPath ? 700 : 600} ${fontSize}px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(fitText(ctx, entrant.name, w - 6), x + w / 2, cy + cs + textAreaH / 2);
+  } else {
+    // 横向布局：封面在侧、歌名在另一侧（大规模时用）
+    const cs = coverSize;
+    const cy = y + (h - cs) / 2;
+    const cx = side === 'L' ? x + 3 : x + w - cs - 3;
+    drawCover(ctx, cx, cy, cs, img, isChampPath);
+
+    const pad = 6;
+    const nameX = side === 'L' ? cx + cs + pad : cx - pad;
+    const nameMaxW = w - cs - pad * 2 - 2;
+    const fontSize = Math.max(10, Math.min(16, h - 8));
+    ctx.fillStyle = isChampPath
+      ? '#ffffff'
+      : isWinner
+        ? '#f1f2fb'
+        : 'rgba(200,206,236,0.6)';
+    ctx.font = `${isChampPath ? 700 : 600} ${fontSize}px ${FONT}`;
+    ctx.textAlign = side === 'L' ? 'left' : 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(fitText(ctx, entrant.name, nameMaxW), nameX, y + h / 2);
+  }
 }
 
 // 绘制一场比赛的连接线(子->父)
 // childEdgeX: 子卡片朝向父侧的边缘 x；parentEdgeX: 父卡片朝向子侧的边缘 x
-function drawConnector(ctx, childEdgeAX, ya, childEdgeBX, yb, jointX, parentEdgeX, yw, isChampPath) {
+function drawConnector(
+  ctx,
+  childEdgeAX,
+  ya,
+  childEdgeBX,
+  yb,
+  jointX,
+  parentEdgeX,
+  yw,
+  isChampPath,
+  lineW,
+) {
   ctx.save();
-  ctx.strokeStyle = isChampPath ? GOLD : 'rgba(255,255,255,0.16)';
-  ctx.lineWidth = isChampPath ? 2.4 : 1;
+  ctx.strokeStyle = isChampPath ? GOLD : 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = isChampPath ? Math.max(2.4, lineW * 1.8) : lineW;
   ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(childEdgeAX, ya);
@@ -181,34 +233,75 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   const numRounds = Math.log2(bs); // 7 for 128, 6 for 64, 5 for 32
   const matches = buildMatches(rounds);
 
-  // ---- 布局常量 ----
-  const W = 1080;
+  // ---- 布局常量（根据参赛规模动态调整）----
+  // 核心思路：小规模(≤8)用竖向卡片(封面上文字下)避免歌名截断，
+  // 中大规模用横向卡片(封面侧文字侧)保证紧凑性。
+  const useVertical = bs <= 8;
+  const halfCount = bs / 2;
   const margin = 22;
   const headerH = 96;
   const footerH = 64;
-  const halfCount = bs / 2; // 每半区首轮参赛者数
-  const rowH = bs >= 128 ? 34 : bs >= 64 ? 52 : 64;
+
+  // 行高：竖向布局需要更高（封面+文字堆叠），横向布局可以矮
+  const rowH =
+    bs >= 128
+      ? 34
+      : bs >= 64
+        ? 42
+        : bs >= 32
+          ? 50
+          : bs >= 16
+            ? 62
+            : bs >= 8
+              ? useVertical
+                ? 95
+                : 82
+              : useVertical
+                ? 120
+                : 105;
   const sideSpan = halfCount * rowH;
   const H = headerH + sideSpan + footerH;
+
+  // 冠军块大小：小规模时比例更小（避免占据过多画布）
+  const champRatio = bs <= 8 ? 0.38 : bs <= 16 ? 0.42 : bs <= 32 ? 0.46 : 0.5;
+  const champCover = Math.min(168, Math.max(72, Math.round(sideSpan * champRatio)));
+  const champHalfW = Math.max(72, Math.round(champCover * 0.6 + 18));
+
+  // 列间距
+  const colGap = bs >= 64 ? 8 : 14;
+
+  // 画布宽度
+  const sideCols = numRounds;
+  const targetCardW = bs >= 64 ? 55 : bs >= 32 ? 75 : bs >= 16 ? 95 : bs >= 8 ? 115 : 135;
+  const idealSideWidth = sideCols * (targetCardW + colGap);
+  const maxW = bs <= 8 ? 760 : bs <= 16 ? 860 : bs <= 32 ? 950 : 1080;
+  const W = Math.max(520, Math.min(maxW, 2 * (margin + idealSideWidth + champHalfW)));
   const centerX = W / 2;
   const centerY = headerH + sideSpan / 2;
 
-  const champCover = 168;
-  const champHalfW = 96; // 冠军块半宽(留出与半区的间距)
-  const sideCols = numRounds; // 每半区列数 0..numRounds-1 (最后一列为决赛选手)
+  // 实际侧区宽度
   const sideWidth = centerX - champHalfW - margin;
   const colWidth = sideWidth / sideCols;
-  const colGap = 6;
   const cardW = colWidth - colGap;
   const cardH = rowH - 4;
 
   const leftColX = (c) => margin + c * colWidth;
   const rightColX = (c) => W - margin - (c + 1) * colWidth;
-  // 第 r 轮第 j 个(半区内索引)参赛者的 y 坐标
   const yOf = (r, j) => headerH + (j + 0.5) * rowH * Math.pow(2, r);
-  const halfCountR = (r) => bs >> (r + 1); // 第 r 轮每半区参赛者数
+  const halfCountR = (r) => bs >> (r + 1);
 
-  const coverSize = (r) => Math.min(cardH - 4, Math.max(16, Math.round(colWidth * 0.42 + r * 1.5)));
+  // 封面尺寸：竖向时基于卡片宽度，横向时基于卡片高度
+  const coverSize = (r) =>
+    useVertical
+      ? Math.min(Math.round(cardW * 0.55), Math.max(20, cardH - 30))
+      : Math.min(
+          cardH - 4,
+          Math.max(14, Math.round(Math.min(cardH, cardW) * 0.5 + r * 1.5)),
+        );
+
+  // 连接线线宽：小规模用更粗的线增强可见性
+  const connLineW = bs >= 64 ? 1.2 : bs >= 16 ? 1.5 : 1.8;
+  const champConnLineW = Math.max(2.4, connLineW * 1.8);
 
   // ---- 加载封面图 ----
   const imgMap = {};
@@ -221,7 +314,13 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   }
   const urls = [...urlSet];
   await Promise.race([
-    Promise.all(urls.map((u) => loadImage(u).then((img) => { if (img) imgMap[u] = img; }))),
+    Promise.all(
+      urls.map((u) =>
+        loadImage(u).then((img) => {
+          if (img) imgMap[u] = img;
+        }),
+      ),
+    ),
     new Promise((r) => setTimeout(r, IMG_TIMEOUT)),
   ]);
 
@@ -243,7 +342,14 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  const glow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(360, sideSpan * 0.35));
+  const glow = ctx.createRadialGradient(
+    centerX,
+    centerY,
+    0,
+    centerX,
+    centerY,
+    Math.max(360, sideSpan * 0.35),
+  );
   glow.addColorStop(0, 'rgba(255,210,74,0.10)');
   glow.addColorStop(1, 'rgba(255,210,74,0)');
   ctx.fillStyle = glow;
@@ -294,7 +400,18 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
       const jointX = childEdge + colGap / 2;
       const parentEdge = leftColX(r + 1);
       const isChampPath = !!(mk.winner && champId != null && mk.winner.id === champId);
-      drawConnector(ctx, childEdge, yA, childEdge, yB, jointX, parentEdge, yW, isChampPath);
+      drawConnector(
+        ctx,
+        childEdge,
+        yA,
+        childEdge,
+        yB,
+        jointX,
+        parentEdge,
+        yW,
+        isChampPath,
+        connLineW,
+      );
     }
 
     // 右半区
@@ -310,7 +427,18 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
       const jointX = childEdge - colGap / 2;
       const parentEdge = rightColX(r + 1) + cardW;
       const isChampPath = !!(mk.winner && champId != null && mk.winner.id === champId);
-      drawConnector(ctx, childEdge, yA, childEdge, yB, jointX, parentEdge, yW, isChampPath);
+      drawConnector(
+        ctx,
+        childEdge,
+        yA,
+        childEdge,
+        yB,
+        jointX,
+        parentEdge,
+        yW,
+        isChampPath,
+        connLineW,
+      );
     }
   }
 
@@ -324,8 +452,8 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   // 左侧决赛选手 -> 冠军
   if (leftFinalist) {
     const isChamp = leftFinalist.id === champId;
-    ctx.strokeStyle = isChamp ? GOLD : 'rgba(255,255,255,0.16)';
-    ctx.lineWidth = isChamp ? 2.6 : 1;
+    ctx.strokeStyle = isChamp ? GOLD : 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = isChamp ? champConnLineW : connLineW;
     ctx.beginPath();
     ctx.moveTo(leftColX(numRounds - 1) + cardW, centerY);
     ctx.lineTo(champLeft, centerY);
@@ -334,8 +462,8 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   // 右侧决赛选手 -> 冠军
   if (rightFinalist) {
     const isChamp = rightFinalist.id === champId;
-    ctx.strokeStyle = isChamp ? GOLD : 'rgba(255,255,255,0.16)';
-    ctx.lineWidth = isChamp ? 2.6 : 1;
+    ctx.strokeStyle = isChamp ? GOLD : 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = isChamp ? champConnLineW : connLineW;
     ctx.beginPath();
     ctx.moveTo(rightColX(numRounds - 1), centerY);
     ctx.lineTo(champRight, centerY);
@@ -345,7 +473,7 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
 
   // ---- 画卡片 ----
   for (let r = 0; r < numRounds; r++) {
-    const lc = halfCountR(r); // 每半区该轮参赛者数
+    const lc = halfCountR(r);
     const cs = coverSize(r);
     for (let j = 0; j < lc; j++) {
       const eL = rounds[r] ? rounds[r][j] : null;
@@ -354,16 +482,34 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
         const isChamp = eL.id === champId;
         const isWinner = r === numRounds - 1 ? true : isAdvancer(rounds, r, eL);
         drawCard(ctx, {
-          x: leftColX(r), y: yOf(r, j) - cardH / 2, w: cardW, h: cardH,
-          entrant: eL, side: 'L', isChampPath: isChamp, isWinner, imgMap, coverSize: cs,
+          x: leftColX(r),
+          y: yOf(r, j) - cardH / 2,
+          w: cardW,
+          h: cardH,
+          entrant: eL,
+          side: 'L',
+          isChampPath: isChamp,
+          isWinner,
+          imgMap,
+          coverSize: cs,
+          vertical: useVertical,
         });
       }
       if (eR) {
         const isChamp = eR.id === champId;
         const isWinner = r === numRounds - 1 ? true : isAdvancer(rounds, r, eR);
         drawCard(ctx, {
-          x: rightColX(r), y: yOf(r, j) - cardH / 2, w: cardW, h: cardH,
-          entrant: eR, side: 'R', isChampPath: isChamp, isWinner, imgMap, coverSize: cs,
+          x: rightColX(r),
+          y: yOf(r, j) - cardH / 2,
+          w: cardW,
+          h: cardH,
+          entrant: eR,
+          side: 'R',
+          isChampPath: isChamp,
+          isWinner,
+          imgMap,
+          coverSize: cs,
+          vertical: useVertical,
         });
       }
     }
@@ -371,7 +517,12 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
 
   // ---- 中央冠军块 ----
   drawChampionBlock(ctx, {
-    centerX, centerY, size: champCover, champion, imgMap, singerName,
+    centerX,
+    centerY,
+    size: champCover,
+    champion,
+    imgMap,
+    singerName,
   });
 
   // ---- 底部品牌标识 ----
@@ -379,7 +530,11 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
   ctx.font = `600 12px ${FONT}`;
-  ctx.fillText(`🎵 ${singerName || ''}歌曲世界杯 · MUSIC CUP`, centerX, H - footerH / 2 - 4);
+  ctx.fillText(
+    `🎵 ${singerName || ''}歌曲世界杯 · MUSIC CUP`,
+    centerX,
+    H - footerH / 2 - 4,
+  );
   ctx.fillStyle = 'rgba(255,255,255,0.22)';
   ctx.font = `500 10px ${FONT}`;
   ctx.fillText('CHAMPION BRACKET SHARE', centerX, H - footerH / 2 + 14);
@@ -395,34 +550,52 @@ function isAdvancer(rounds, r, entrant) {
 }
 
 // 绘制中央冠军块
-function drawChampionBlock(ctx, { centerX, centerY, size, champion, imgMap, singerName }) {
+function drawChampionBlock(
+  ctx,
+  { centerX, centerY, size, champion, imgMap, singerName },
+) {
   const half = size / 2;
   const coverY = centerY - half - 6;
+  // 字号随封面尺寸缩放
+  const crownFont = Math.max(20, Math.min(30, Math.round(size * 0.18)));
+  const nameFont = Math.max(15, Math.min(22, Math.round(size * 0.13)));
+  const labelFont = Math.max(11, Math.min(14, Math.round(size * 0.085)));
+  const nameOffset = Math.max(16, Math.round(size * 0.13));
+  const labelOffset = Math.max(20, Math.round(size * 0.16));
 
   // 外层光晕
-  const halo = ctx.createRadialGradient(centerX, coverY + half, 4, centerX, coverY + half, half + 26);
+  const haloR = half + Math.max(20, size * 0.15);
+  const halo = ctx.createRadialGradient(
+    centerX,
+    coverY + half,
+    4,
+    centerX,
+    coverY + half,
+    haloR,
+  );
   halo.addColorStop(0, 'rgba(255,210,74,0.30)');
   halo.addColorStop(1, 'rgba(255,210,74,0)');
   ctx.fillStyle = halo;
   ctx.beginPath();
-  ctx.arc(centerX, coverY + half, half + 26, 0, Math.PI * 2);
+  ctx.arc(centerX, coverY + half, haloR, 0, Math.PI * 2);
   ctx.fill();
 
   // 皇冠
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = `30px ${FONT}`;
-  ctx.fillText('👑', centerX, coverY - 16);
+  ctx.font = `${crownFont}px ${FONT}`;
+  ctx.fillText('👑', centerX, coverY - crownFont * 0.55);
 
   // 封面
   const img = champion && champion.pic ? imgMap[champion.pic] : null;
+  const cornerR = Math.max(8, Math.round(size * 0.1));
   ctx.save();
-  roundRect(ctx, centerX - half, coverY, size, size, 16);
+  roundRect(ctx, centerX - half, coverY, size, size, cornerR);
   ctx.clip();
   if (img && img.complete && img.naturalWidth > 0) {
     try {
       ctx.drawImage(img, centerX - half, coverY, size, size);
-    } catch (e) {
+    } catch {
       drawPlaceholder(ctx, centerX - half, coverY, size);
     }
   } else {
@@ -431,23 +604,23 @@ function drawChampionBlock(ctx, { centerX, centerY, size, champion, imgMap, sing
   ctx.restore();
   ctx.lineWidth = 2.5;
   ctx.strokeStyle = GOLD;
-  roundRect(ctx, centerX - half, coverY, size, size, 16);
+  roundRect(ctx, centerX - half, coverY, size, size, cornerR);
   ctx.stroke();
 
   // 歌名
-  const nameY = coverY + size + 22;
+  const nameY = coverY + size + nameOffset;
   ctx.fillStyle = '#ffffff';
-  ctx.font = `800 22px ${FONT}`;
+  ctx.font = `800 ${nameFont}px ${FONT}`;
   const name = champion ? champion.name : '—';
   ctx.fillText(fitText(ctx, name, 320), centerX, nameY);
 
   // "🏆 冠军" 标签药丸
-  const labelY = nameY + 26;
+  const labelY = nameY + labelOffset;
   const label = '🏆 冠军';
-  ctx.font = `700 14px ${FONT}`;
-  const labelW = ctx.measureText(label).width + 26;
-  const labelH = 24;
-  roundRect(ctx, centerX - labelW / 2, labelY - labelH / 2, labelW, labelH, 12);
+  ctx.font = `700 ${labelFont}px ${FONT}`;
+  const labelW = ctx.measureText(label).width + 24;
+  const labelH = Math.max(20, labelFont + 10);
+  roundRect(ctx, centerX - labelW / 2, labelY - labelH / 2, labelW, labelH, labelH / 2);
   ctx.fillStyle = 'rgba(255,210,74,0.18)';
   ctx.fill();
   ctx.lineWidth = 1.2;
@@ -458,7 +631,13 @@ function drawChampionBlock(ctx, { centerX, centerY, size, champion, imgMap, sing
 }
 
 // ---------------- React 组件 ----------------
-export default function ChampionShare({ champion, history, rounds, singerName, bracketSize }) {
+export default function ChampionShare({
+  champion,
+  history,
+  rounds,
+  singerName,
+  bracketSize,
+}) {
   const [state, setState] = useState('idle'); // idle | loading | ready | error
   const [previewUrl, setPreviewUrl] = useState(null);
   const canvasRef = useRef(null); // 保留绘制好的画布用于下载
@@ -470,12 +649,17 @@ export default function ChampionShare({ champion, history, rounds, singerName, b
     setState('loading');
     setPreviewUrl(null);
     try {
-      const canvas = await renderShareCanvas({ champion, rounds, singerName, bracketSize });
+      const canvas = await renderShareCanvas({
+        champion,
+        rounds,
+        singerName,
+        bracketSize,
+      });
       canvasRef.current = canvas;
       const url = canvas.toDataURL('image/jpeg', 0.92);
       setPreviewUrl(url);
       setState('ready');
-    } catch (e) {
+    } catch {
       // eslint-disable-next-line no-console
       console.error('[ChampionShare] render failed:', e);
       setState('error');
@@ -485,18 +669,22 @@ export default function ChampionShare({ champion, history, rounds, singerName, b
   const handleDownload = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const safeName = (champion && champion.name) ? champion.name : 'champion';
-      a.href = url;
-      a.download = `${singerName || ''}歌曲世界杯-${safeName}-冠军晋级之路.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    }, 'image/jpeg', 0.92);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const safeName = champion && champion.name ? champion.name : 'champion';
+        a.href = url;
+        a.download = `${singerName || ''}歌曲世界杯-${safeName}-冠军晋级之路.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      },
+      'image/jpeg',
+      0.92,
+    );
   };
 
   const handleClose = () => {
@@ -544,8 +732,12 @@ export default function ChampionShare({ champion, history, rounds, singerName, b
               <>
                 <div className="share-loading">生成失败，请重试</div>
                 <div className="share-actions">
-                  <button className="btn" type="button" onClick={handleShare}>重试</button>
-                  <button className="btn" type="button" onClick={handleClose}>关闭</button>
+                  <button className="btn" type="button" onClick={handleShare}>
+                    重试
+                  </button>
+                  <button className="btn" type="button" onClick={handleClose}>
+                    关闭
+                  </button>
                 </div>
               </>
             )}

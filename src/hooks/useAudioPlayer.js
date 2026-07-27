@@ -49,7 +49,7 @@ export function useAudioPlayer() {
       if (cs && audio.duration > 35) {
         try {
           audio.currentTime = cs;
-        } catch (e) {
+        } catch {
           /* ignore seek errors */
         }
         setChorusTime(cs);
@@ -78,7 +78,7 @@ export function useAudioPlayer() {
         try {
           audio.src = METING_API + nid;
           audio.load();
-        } catch (e) {
+        } catch {
           /* ignore */
         }
       } else if (!triedITunesRef.current) {
@@ -88,25 +88,27 @@ export function useAudioPlayer() {
         const song = currentSongRef.current;
         const artist = artistRef.current;
         if (song && song.name) {
-          findITunesPreview(artist, song.name).then(result => {
-            if (result && result.preview && audio) {
-              // iTunes 预览只有30秒，chorus 可能不在片段内，
-              // 但仍然播放——有声音比没声音好
-              try {
-                audio.src = result.preview;
-                audio.load();
-              } catch (e) {
-                /* ignore */
+          findITunesPreview(artist, song.name)
+            .then((result) => {
+              if (result && result.preview && audio) {
+                // iTunes 预览只有30秒，chorus 可能不在片段内，
+                // 但仍然播放——有声音比没声音好
+                try {
+                  audio.src = result.preview;
+                  audio.load();
+                } catch {
+                  /* ignore */
+                }
+              } else {
+                // iTunes 也找不到，停止 loading
+                setIsLoading(false);
+                setIsPlaying(false);
               }
-            } else {
-              // iTunes 也找不到，停止 loading
+            })
+            .catch(() => {
               setIsLoading(false);
               setIsPlaying(false);
-            }
-          }).catch(() => {
-            setIsLoading(false);
-            setIsPlaying(false);
-          });
+            });
         } else {
           setIsLoading(false);
           setIsPlaying(false);
@@ -171,14 +173,14 @@ export function useAudioPlayer() {
           audio.load();
           return;
         }
-      } catch (e) {
+      } catch {
         /* iTunes 也搜不到，回退到 QQ 搜索页 */
       }
       // iTunes 也没有 -> 打开 QQ 音乐搜索
       const q = encodeURIComponent((ent.name || '') + ' ' + (artistName || ''));
       try {
         window.open(QQ_SEARCH + q, '_blank');
-      } catch (e) {
+      } catch {
         /* ignore popup block */
       }
       setVisible(false);
@@ -203,7 +205,7 @@ export function useAudioPlayer() {
           url = txt.trim();
         }
       }
-    } catch (e) {
+    } catch {
       /* 网络错误，回退 meting */
     }
 
@@ -217,7 +219,7 @@ export function useAudioPlayer() {
       try {
         audio.src = url;
         audio.load();
-      } catch (e) {
+      } catch {
         /* ignore */
       }
     }
@@ -229,13 +231,13 @@ export function useAudioPlayer() {
     if (audio) {
       try {
         audio.pause();
-      } catch (e) {
+      } catch {
         /* ignore */
       }
       audio.removeAttribute('src');
       try {
         audio.load();
-      } catch (e) {
+      } catch {
         /* ignore */
       }
     }
@@ -277,7 +279,7 @@ export function useAudioPlayer() {
     try {
       audio.currentTime = t;
       setCurrentTime(t);
-    } catch (e) {
+    } catch {
       /* ignore */
     }
   }, []);
@@ -288,7 +290,7 @@ export function useAudioPlayer() {
     if (!audio) return;
     try {
       audio.currentTime = 0;
-    } catch (e) {
+    } catch {
       /* ignore */
     }
     setCurrentTime(0);

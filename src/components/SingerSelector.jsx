@@ -1,4 +1,5 @@
 import React from 'react';
+import { clsx } from 'clsx';
 import { SINGER_ICONS } from '../data/singers.js';
 
 /**
@@ -16,7 +17,7 @@ export default function SingerSelector({ singers, current, onSelect }) {
         return (
           <button
             key={id}
-            className={`singer-btn${id === current ? ' active' : ''}`}
+            className={clsx('singer-btn', { active: id === current })}
             onClick={() => onSelect(id)}
             type="button"
           >

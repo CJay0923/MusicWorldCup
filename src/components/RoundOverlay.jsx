@@ -1,4 +1,5 @@
 import React from 'react';
+import { clsx } from 'clsx';
 
 /**
  * Round transition overlay.
@@ -10,7 +11,7 @@ import React from 'react';
  */
 export default function RoundOverlay({ show, icon, title, sub, onContinue }) {
   return (
-    <div className={`overlay${show ? ' show' : ''}`}>
+    <div className={clsx('overlay', { show })}>
       <div className="panel">
         <div className="big">{icon}</div>
         <h2>{title}</h2>

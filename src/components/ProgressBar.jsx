@@ -8,7 +8,13 @@ import React from 'react';
  * @param {number} doneCnt - number of matches decided overall
  * @param {number} progTotal - total matches in the whole tournament
  */
-export default function ProgressBar({ roundName, matchIdx, matchTotal, doneCnt, progTotal }) {
+export default function ProgressBar({
+  roundName,
+  matchIdx,
+  matchTotal,
+  doneCnt,
+  progTotal,
+}) {
   const pct = Math.min(100, progTotal > 0 ? (doneCnt / progTotal) * 100 : 0);
 
   return (
@@ -18,7 +24,8 @@ export default function ProgressBar({ roundName, matchIdx, matchTotal, doneCnt, 
         <i style={{ width: `${pct}%` }} />
       </div>
       <span className="progress-meta">
-        第 <b>{matchIdx}</b>/<b>{matchTotal}</b> 场 · 已决出 <b>{doneCnt}</b>/<b>{progTotal}</b>
+        第 <b>{matchIdx}</b>/<b>{matchTotal}</b> 场 · 已决出 <b>{doneCnt}</b>/
+        <b>{progTotal}</b>
       </span>
     </div>
   );

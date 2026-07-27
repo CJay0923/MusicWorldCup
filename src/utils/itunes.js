@@ -14,12 +14,25 @@ let cbSeq = 0;
 
 function jsonp(url, timeout = 10000) {
   return new Promise((resolve, reject) => {
-    const cb = '__mcup_cb_' + (++cbSeq);
+    const cb = '__mcup_cb_' + ++cbSeq;
     const script = document.createElement('script');
-    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, timeout);
-    function cleanup() { clearTimeout(timer); delete window[cb]; script.remove(); }
-    window[cb] = data => { cleanup(); resolve(data); };
-    script.onerror = () => { cleanup(); reject(new Error('jsonp failed')); };
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('timeout'));
+    }, timeout);
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cb];
+      script.remove();
+    }
+    window[cb] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('jsonp failed'));
+    };
     script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
     document.head.appendChild(script);
   });
@@ -37,7 +50,7 @@ async function get(url) {
       } finally {
         clearTimeout(timer);
       }
-    } catch (error) {
+    } catch {
       jsonpMode = true;
     }
   }
@@ -54,19 +67,10 @@ function foldST(s) {
 // 去括号注记后的纯净歌名，用于匹配
 function baseKey(name) {
   let s = foldST(String(name).normalize('NFKC').toLowerCase());
-  s = s.replace(/[(\[（【][^)\]）】]*[)\]）】]/g, ' ');
+  s = s.replace(/[([（【][^)\]）】]*[)\]）】]/g, ' ');
   s = s.split(/\s+[-–—]\s+/)[0];
   s = s.replace(/[\s''"""!！?？。，、·&+]/g, '');
   return s || String(name).toLowerCase();
-}
-
-// 展示用歌名：剥离括号注记
-function displayName(name) {
-  const s = String(name)
-    .replace(/\s*[(\[（【][^)\]）】]*[)\]）】]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return s || String(name).trim();
 }
 
 /**
@@ -95,15 +99,16 @@ export async function findITunesPreview(artistName, songName) {
       const r = await get(url);
       anyOk = true;
 
-      const list = (r.results || []).filter(x => x.kind === 'song' && x.previewUrl);
+      const list = (r.results || []).filter((x) => x.kind === 'song' && x.previewUrl);
 
       // 优先精确匹配（歌名 + 歌手名都对上）
-      const exact = list.find(x =>
-        baseKey(x.trackName) === nk &&
-        foldST(String(x.artistName).normalize('NFKC').toLowerCase()) === af
+      const exact = list.find(
+        (x) =>
+          baseKey(x.trackName) === nk &&
+          foldST(String(x.artistName).normalize('NFKC').toLowerCase()) === af,
       );
       // 退而求其次：只匹配歌名
-      const byName = list.find(x => baseKey(x.trackName) === nk);
+      const byName = list.find((x) => baseKey(x.trackName) === nk);
       // 再退：取第一条有预览的
       const first = list[0];
 
@@ -115,7 +120,7 @@ export async function findITunesPreview(artistName, songName) {
           album: hit.collectionName || '',
         };
       }
-    } catch (e) {
+    } catch {
       // 换下一个商店
     }
   }

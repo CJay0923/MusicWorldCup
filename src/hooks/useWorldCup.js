@@ -48,7 +48,12 @@ function makeDraw(singerData) {
   for (let g = 0; g < WC_GROUPS; g++) {
     groups.push({
       name: GROUP_LETTERS[g],
-      members: [shuffledPots[0][g], shuffledPots[1][g], shuffledPots[2][g], shuffledPots[3][g]],
+      members: [
+        shuffledPots[0][g],
+        shuffledPots[1][g],
+        shuffledPots[2][g],
+        shuffledPots[3][g],
+      ],
       schedule: RR_SCHEDULE, // [[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]]
       curMatch: 0,
       wins: [0, 0, 0, 0],
@@ -98,7 +103,7 @@ function buildKnockout(wc) {
 
   // 用递归算法生成标准蛇形种子位（替换硬编码的 SEED_TO_POS_32）
   const order = bracketOrder(WC_KO_TEAMS);
-  const placed = order.map(s => all[s - 1]);
+  const placed = order.map((s) => all[s - 1]);
 
   // 构建歌曲 → 小组名 映射，用于避免同组首轮相遇
   const groupOf = {};
@@ -111,13 +116,15 @@ function buildKnockout(wc) {
   // 两轮局部交换：尽量避免同组出线的两首歌在首轮相遇
   for (let pass = 0; pass < 2; pass++) {
     for (let i = 0; i < placed.length; i += 2) {
-      const a = placed[i], b = placed[i + 1];
+      const a = placed[i],
+        b = placed[i + 1];
       if (!a || !b) continue;
       if (groupOf[a.id] !== groupOf[b.id]) continue;
       // 同组相遇，尝试与另一对交换
       for (let j = 0; j < placed.length; j += 2) {
         if (j === i) continue;
-        const c = placed[j], d = placed[j + 1];
+        const c = placed[j],
+          d = placed[j + 1];
         if (!c || !d) continue;
         // 交换 b 和 d，检查交换后两对都不再同组
         if (groupOf[a.id] !== groupOf[d.id] && groupOf[c.id] !== groupOf[b.id]) {
@@ -241,29 +248,34 @@ export function useWorldCup(singerId, singerData) {
     setShowTransition(false);
     setCurrentGroupResult(null);
     setLastPick(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [singerId]);
 
   // 卸载时清理定时器
-  useEffect(() => () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    },
+    [],
+  );
 
   // ---------- localStorage ----------
-  const saveWC = useCallback((wcVal) => {
-    try {
-      localStorage.setItem(storageKey(singerId), JSON.stringify(serializeWC(wcVal)));
-    } catch (e) {
-      /* ignore */
-    }
-  }, [singerId]);
+  const saveWC = useCallback(
+    (wcVal) => {
+      try {
+        localStorage.setItem(storageKey(singerId), JSON.stringify(serializeWC(wcVal)));
+      } catch {
+        /* ignore */
+      }
+    },
+    [singerId],
+  );
 
   const loadSavedWC = useCallback(() => {
     try {
       const raw = localStorage.getItem(storageKey(singerId));
       if (!raw) return null;
       return deserializeWC(JSON.parse(raw));
-    } catch (e) {
+    } catch {
       return null;
     }
   }, [singerId]);
@@ -271,34 +283,37 @@ export function useWorldCup(singerId, singerData) {
   const hasSavedWC = useCallback(() => {
     try {
       return !!localStorage.getItem(storageKey(singerId));
-    } catch (e) {
+    } catch {
       return false;
     }
   }, [singerId]);
 
   // ---------- 控制 ----------
-  const startWorldCup = useCallback((useSaved) => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    if (useSaved) {
-      const saved = loadSavedWC();
-      if (saved) {
-        setWc(saved);
-        setBusy(false);
-        setShowTransition(false);
-        setCurrentGroupResult(null);
-        setLastPick(null);
-        return;
+  const startWorldCup = useCallback(
+    (useSaved) => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
-    }
-    setWc(makeDraw(singerData));
-    setBusy(false);
-    setShowTransition(false);
-    setCurrentGroupResult(null);
-    setLastPick(null);
-  }, [loadSavedWC, singerData]);
+      if (useSaved) {
+        const saved = loadSavedWC();
+        if (saved) {
+          setWc(saved);
+          setBusy(false);
+          setShowTransition(false);
+          setCurrentGroupResult(null);
+          setLastPick(null);
+          return;
+        }
+      }
+      setWc(makeDraw(singerData));
+      setBusy(false);
+      setShowTransition(false);
+      setCurrentGroupResult(null);
+      setLastPick(null);
+    },
+    [loadSavedWC, singerData],
+  );
 
   const resetWC = useCallback(() => {
     if (timerRef.current) {
@@ -307,7 +322,7 @@ export function useWorldCup(singerId, singerData) {
     }
     try {
       localStorage.removeItem(storageKey(singerId));
-    } catch (e) {
+    } catch {
       /* ignore */
     }
     setWc(makeDraw(singerData));
@@ -329,78 +344,88 @@ export function useWorldCup(singerId, singerData) {
    * 小组赛选择
    * @param {0|1} slot 0=左侧胜, 1=右侧胜
    */
-  const wcPick = useCallback((slot) => {
-    if (busy) return;
-    if (!wc || wc.phase !== 'group') return;
-    const g = wc.groups[wc.curGroup];
-    if (!g || g.done) return;
-    const pair = g.schedule[g.curMatch];
-    if (!pair) return;
-    const [i, j] = pair;
-    // members 存的是 id 索引，需从 entrants 中查找实际对象
-    const a = singerData.entrants[g.members[i]];
-    const b = singerData.entrants[g.members[j]];
-    if (!a || !b) return;
+  const wcPick = useCallback(
+    (slot) => {
+      if (busy) return;
+      if (!wc || wc.phase !== 'group') return;
+      const g = wc.groups[wc.curGroup];
+      if (!g || g.done) return;
+      const pair = g.schedule[g.curMatch];
+      if (!pair) return;
+      const [i, j] = pair;
+      // members 存的是 id 索引，需从 entrants 中查找实际对象
+      const a = singerData.entrants[g.members[i]];
+      const b = singerData.entrants[g.members[j]];
+      if (!a || !b) return;
 
-    const winner = slot === 0 ? a : b;
-    const loser = slot === 0 ? b : a;
-    const winnerIdx = slot === 0 ? i : j;
+      const winner = slot === 0 ? a : b;
+      const loser = slot === 0 ? b : a;
+      const winnerIdx = slot === 0 ? i : j;
 
-    const ng = {
-      ...g,
-      wins: g.wins.slice(),
-      results: g.results.concat(winnerIdx), // 存储 winner 的 member 索引
-      curMatch: g.curMatch + 1,
-    };
-    ng.wins[winnerIdx]++;
+      const ng = {
+        ...g,
+        wins: g.wins.slice(),
+        results: g.results.concat(winnerIdx), // 存储 winner 的 member 索引
+        curMatch: g.curMatch + 1,
+      };
+      ng.wins[winnerIdx]++;
 
-    let groupDone = false;
-    if (ng.curMatch >= RR_SCHEDULE.length) {
-      const r = rankGroup(ng, singerData.entrants);
-      ng.winner = r.winner;
-      ng.runnerUp = r.runnerUp;
-      ng.thirdPlace = r.thirdPlace;
-      ng.fourthPlace = r.fourthPlace;
-      ng.done = true;
-      groupDone = true;
-    }
+      let groupDone = false;
+      if (ng.curMatch >= RR_SCHEDULE.length) {
+        const r = rankGroup(ng, singerData.entrants);
+        ng.winner = r.winner;
+        ng.runnerUp = r.runnerUp;
+        ng.thirdPlace = r.thirdPlace;
+        ng.fourthPlace = r.fourthPlace;
+        ng.done = true;
+        groupDone = true;
+      }
 
-    const newGroups = wc.groups.slice();
-    newGroups[wc.curGroup] = ng;
-    const newWc = {
-      ...wc,
-      groups: newGroups,
-      history: wc.history.concat({
+      const newGroups = wc.groups.slice();
+      newGroups[wc.curGroup] = ng;
+      const newWc = {
+        ...wc,
+        groups: newGroups,
+        history: wc.history.concat({
+          phase: 'group',
+          group: g.name,
+          round: g.curMatch,
+          winner,
+          loser,
+        }),
+      };
+      setWc(newWc);
+      setBusy(true);
+      setLastPick({
         phase: 'group',
         group: g.name,
-        round: g.curMatch,
+        match: g.curMatch,
+        slot,
         winner,
         loser,
-      }),
-    };
-    setWc(newWc);
-    setBusy(true);
-    setLastPick({ phase: 'group', group: g.name, match: g.curMatch, slot, winner, loser });
+      });
 
-    timerRef.current = setTimeout(() => {
-      if (groupDone) {
-        const allDone = newWc.groups.every((x) => x.done);
-        setCurrentGroupResult({
-          name: ng.name,
-          winner: ng.winner,
-          runnerUp: ng.runnerUp,
-          thirdPlace: ng.thirdPlace,
-          allDone,
-        });
-        setShowTransition(true);
-        saveWC(newWc);
-        // busy 保持为 true，直到 proceedFromGroupResult
-      } else {
-        saveWC(newWc);
-        setBusy(false);
-      }
-    }, PICK_DELAY);
-  }, [busy, wc, saveWC, singerData]);
+      timerRef.current = setTimeout(() => {
+        if (groupDone) {
+          const allDone = newWc.groups.every((x) => x.done);
+          setCurrentGroupResult({
+            name: ng.name,
+            winner: ng.winner,
+            runnerUp: ng.runnerUp,
+            thirdPlace: ng.thirdPlace,
+            allDone,
+          });
+          setShowTransition(true);
+          saveWC(newWc);
+          // busy 保持为 true，直到 proceedFromGroupResult
+        } else {
+          saveWC(newWc);
+          setBusy(false);
+        }
+      }, PICK_DELAY);
+    },
+    [busy, wc, saveWC, singerData],
+  );
 
   // 从小组结果继续：进入下一组 或 进入外卡阶段
   const proceedFromGroupResult = useCallback(() => {
@@ -442,82 +467,92 @@ export function useWorldCup(singerId, singerData) {
    * 淘汰赛选择
    * @param {0|1} slot
    */
-  const koPick = useCallback((slot) => {
-    if (busy) return;
-    if (!wc || wc.phase !== 'knockout') return;
-    const ko = wc.ko;
-    const a = ko.rounds[ko.curRound]?.[ko.curMatch * 2];
-    const b = ko.rounds[ko.curRound]?.[ko.curMatch * 2 + 1];
-    if (!a || !b) return;
+  const koPick = useCallback(
+    (slot) => {
+      if (busy) return;
+      if (!wc || wc.phase !== 'knockout') return;
+      const ko = wc.ko;
+      const a = ko.rounds[ko.curRound]?.[ko.curMatch * 2];
+      const b = ko.rounds[ko.curRound]?.[ko.curMatch * 2 + 1];
+      if (!a || !b) return;
 
-    const winner = slot === 0 ? a : b;
-    const loser = slot === 0 ? b : a;
+      const winner = slot === 0 ? a : b;
+      const loser = slot === 0 ? b : a;
 
-    const newRounds = ko.rounds.slice();
-    newRounds[ko.curRound + 1] = newRounds[ko.curRound + 1].slice();
-    newRounds[ko.curRound + 1][ko.curMatch] = winner;
+      const newRounds = ko.rounds.slice();
+      newRounds[ko.curRound + 1] = newRounds[ko.curRound + 1].slice();
+      newRounds[ko.curRound + 1][ko.curMatch] = winner;
 
-    const matchesInRound = newRounds[ko.curRound].length / 2;
-    const capturedRound = ko.curRound;
-    const capturedMatch = ko.curMatch;
+      const matchesInRound = newRounds[ko.curRound].length / 2;
+      const capturedRound = ko.curRound;
+      const capturedMatch = ko.curMatch;
 
-    const baseWc = {
-      ...wc,
-      ko: { ...ko, rounds: newRounds },
-      history: wc.history.concat({
+      const baseWc = {
+        ...wc,
+        ko: { ...ko, rounds: newRounds },
+        history: wc.history.concat({
+          phase: ko.phase,
+          round: ko.curRound,
+          match: ko.curMatch,
+          winner,
+          loser,
+        }),
+      };
+      setWc(baseWc);
+      setBusy(true);
+      setLastPick({
         phase: ko.phase,
         round: ko.curRound,
         match: ko.curMatch,
+        slot,
         winner,
         loser,
-      }),
-    };
-    setWc(baseWc);
-    setBusy(true);
-    setLastPick({ phase: ko.phase, round: ko.curRound, match: ko.curMatch, slot, winner, loser });
+      });
 
-    timerRef.current = setTimeout(() => {
-      let nextRound = capturedRound;
-      let nextMatch = capturedMatch + 1;
-      let isChampion = false;
-      let transition = false;
+      timerRef.current = setTimeout(() => {
+        let nextRound = capturedRound;
+        let nextMatch = capturedMatch + 1;
+        let isChampion = false;
+        let transition = false;
 
-      if (nextMatch >= matchesInRound) {
-        nextRound = capturedRound + 1;
-        nextMatch = 0;
-        if (nextRound >= KO_ROUNDS - 1) {
-          // 决赛(round 4)结束后 nextRound=5，冠军产生
-          isChampion = true;
-        } else {
-          transition = true;
+        if (nextMatch >= matchesInRound) {
+          nextRound = capturedRound + 1;
+          nextMatch = 0;
+          if (nextRound >= KO_ROUNDS - 1) {
+            // 决赛(round 4)结束后 nextRound=5，冠军产生
+            isChampion = true;
+          } else {
+            transition = true;
+          }
         }
-      }
 
-      const updatedKo = {
-        rounds: newRounds,
-        curRound: nextRound,
-        curMatch: nextMatch,
-        phase: nextRound >= KO_ROUNDS - 1 ? 'champion' : KO_PHASES[nextRound],
-      };
+        const updatedKo = {
+          rounds: newRounds,
+          curRound: nextRound,
+          curMatch: nextMatch,
+          phase: nextRound >= KO_ROUNDS - 1 ? 'champion' : KO_PHASES[nextRound],
+        };
 
-      let next;
-      if (isChampion) {
-        const champ = newRounds[KO_ROUNDS - 1]?.[0] || winner;
-        next = { ...baseWc, ko: updatedKo, phase: 'champion', champion: champ };
-      } else {
-        next = { ...baseWc, ko: updatedKo };
-      }
-      setWc(next);
-      saveWC(next);
+        let next;
+        if (isChampion) {
+          const champ = newRounds[KO_ROUNDS - 1]?.[0] || winner;
+          next = { ...baseWc, ko: updatedKo, phase: 'champion', champion: champ };
+        } else {
+          next = { ...baseWc, ko: updatedKo };
+        }
+        setWc(next);
+        saveWC(next);
 
-      if (transition) {
-        setShowTransition(true);
-        // busy 保持为 true，直到 dismissTransition
-      } else {
-        setBusy(false);
-      }
-    }, PICK_DELAY);
-  }, [busy, wc, saveWC]);
+        if (transition) {
+          setShowTransition(true);
+          // busy 保持为 true，直到 dismissTransition
+        } else {
+          setBusy(false);
+        }
+      }, PICK_DELAY);
+    },
+    [busy, wc, saveWC],
+  );
 
   const dismissTransition = useCallback(() => {
     setShowTransition(false);

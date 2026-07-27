@@ -1,4 +1,6 @@
 // 小组积分榜 + 比赛列表面板
+import { clsx } from 'clsx';
+
 export default function GroupStandings({ group, entrants, seedRank }) {
   // 按 wins desc, seedRank asc 排序
   const ranked = group.members
@@ -15,12 +17,12 @@ export default function GroupStandings({ group, entrants, seedRank }) {
   const rn = ['R1', 'R1', 'R2', 'R2', 'R3', 'R3'];
 
   // 计算单个 slot 的 className
-  const slotClass = (mi, winIdx, isCurrent) => {
-    let cls = 'mb-slot';
-    if (winIdx !== undefined) cls += mi === winIdx ? ' win' : ' lose';
-    if (isCurrent) cls += ' current';
-    return cls;
-  };
+  const slotClass = (mi, winIdx, isCurrent) =>
+    clsx('mb-slot', {
+      win: winIdx !== undefined && mi === winIdx,
+      lose: winIdx !== undefined && mi !== winIdx,
+      current: isCurrent,
+    });
 
   return (
     <div className="wc-mini show">
@@ -38,7 +40,7 @@ export default function GroupStandings({ group, entrants, seedRank }) {
               <span className="st-wins">胜</span>
             </div>
             {ranked.map((r, i) => (
-              <div key={r.idx} className={`st-row ${i < 2 ? 'adv' : ''}`}>
+              <div key={r.idx} className={clsx('st-row', { adv: i < 2 })}>
                 <span className="st-rank">{i + 1}</span>
                 <span className="st-name">
                   {r.sr <= 32 && <span className="mb-seed">#{r.sr}</span>}

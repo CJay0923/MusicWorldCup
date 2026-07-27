@@ -8,6 +8,7 @@ import MatchCard from './MatchCard.jsx';
  * @param {'default'|'win'|'lose'|'locked'} leftState - left card state
  * @param {'default'|'win'|'lose'|'locked'} rightState - right card state
  * @param {boolean} showSideTag - whether to show half tags on the cards
+ * @param {boolean} showPreview - whether to show preview buttons
  * @param {(slot: 0|1) => void} onPick - called with 0 (left) or 1 (right) when a card is picked
  * @param {(slot: 0|1) => void} onPreview - called with 0 (left) or 1 (right) for preview
  * @param {React.ReactNode} children - extra content (WC group panel, etc.)
@@ -18,6 +19,7 @@ export default function MatchStage({
   leftState,
   rightState,
   showSideTag,
+  showPreview = true,
   onPick,
   onPreview,
   children,
@@ -30,6 +32,7 @@ export default function MatchStage({
           side="left"
           state={leftState}
           showSideTag={showSideTag}
+          showPreview={showPreview}
           onPick={() => onPick?.(0)}
           onPreview={() => onPreview?.(0)}
         />
@@ -42,6 +45,7 @@ export default function MatchStage({
           side="right"
           state={rightState}
           showSideTag={showSideTag}
+          showPreview={showPreview}
           onPick={() => onPick?.(1)}
           onPreview={() => onPreview?.(1)}
         />

@@ -2,8 +2,8 @@
 // 整合 useGameState / useWorldCup / useAudioPlayer 三个 hook，
 // 根据当前歌手、模式和游戏阶段渲染对应的界面。
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { SINGERS } from './data/singers.js';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { SINGERS, buildCustomSingerData, classicOptions } from './data/singers.js';
 import { useGameState } from './hooks/useGameState.js';
 import { useWorldCup } from './hooks/useWorldCup.js';
 import { useAudioPlayer } from './hooks/useAudioPlayer.js';
@@ -20,7 +20,7 @@ import DrawScreen from './components/wc/DrawScreen.jsx';
 import WildcardScreen from './components/wc/WildcardScreen.jsx';
 import GroupResultScreen from './components/wc/GroupResultScreen.jsx';
 import KOBracket from './components/wc/KOBracket.jsx';
-import { WC_TOTAL_MATCHES, WC_KO_TEAMS, classicOptions } from './data/singers.js';
+import { WC_TOTAL_MATCHES, WC_KO_TEAMS } from './data/singers.js';
 
 const KO_ROUND_NAMES = ['32强', '16强', '8强', '4强', '决赛'];
 const KO_ROUND_ICONS = ['🔥', '⚡', '💪', '💪', '🏆'];
@@ -30,23 +30,50 @@ function App() {
   const [selectedMode, setSelectedMode] = useState('classic');
   const [selectedSize, setSelectedSize] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const [customSelectedIds, setCustomSelectedIds] = useState(new Set());
   const confettiRef = useRef(null);
 
-  const singerData = SINGERS[currentSinger];
+  const baseSingerData = SINGERS[currentSinger];
+  const isCustom = selectedMode === 'custom';
+
+  // 自选模式：从选中的 entrant 构建数据
+  const customEntrants = useMemo(() => {
+    if (!isCustom || !baseSingerData) return [];
+    return baseSingerData.entrants.filter((e) => customSelectedIds.has(e.id));
+  }, [isCustom, baseSingerData, customSelectedIds]);
+
+  const customValidCount = customEntrants.length;
+  const customAvailableSizes = classicOptions(customValidCount);
+  const customBracketSize =
+    selectedSize && customAvailableSizes.includes(selectedSize)
+      ? selectedSize
+      : customAvailableSizes[0] || 4;
+
+  const customSingerData = useMemo(() => {
+    if (!isCustom) return null;
+    return buildCustomSingerData(customEntrants, customBracketSize, baseSingerData?.name);
+  }, [isCustom, customEntrants, customBracketSize, baseSingerData]);
+
+  // 当前生效的歌手数据 / 歌手 ID / 规模
+  const singerData = isCustom && customSingerData ? customSingerData : baseSingerData;
+  const effectiveSingerId = isCustom ? 'custom' : currentSinger;
 
   // 经典模式可选规模（根据歌手可用歌曲数动态计算）
-  const maxBracket = singerData?.bracketSize || 128;
+  const maxBracket = baseSingerData?.bracketSize || 128;
   const availableSizes = classicOptions(maxBracket);
   const classicSize = selectedSize || availableSizes[0] || maxBracket;
 
-  const gameState = useGameState(currentSinger, singerData, classicSize);
-  const wcState = useWorldCup(currentSinger, singerData);
+  const gameState = useGameState(
+    effectiveSingerId,
+    singerData,
+    isCustom ? customBracketSize : classicSize,
+  );
+  const wcState = useWorldCup(currentSinger, baseSingerData);
   const audio = useAudioPlayer();
 
   // ---------- 是否处于冠军界面 ----------
-  const isChampion = selectedMode === 'wc'
-    ? wcState.phase === 'champion'
-    : !!gameState.champion;
+  const isChampion =
+    selectedMode === 'wc' ? wcState.phase === 'champion' : !!gameState.champion;
 
   // ---------- 获取当前对局 ----------
   const getCurrentMatchPair = useCallback(() => {
@@ -76,31 +103,40 @@ function App() {
   const [leftE, rightE] = getCurrentMatchPair();
 
   // ---------- 卡片状态 ----------
-  const getCardState = useCallback((slot) => {
-    const isWC = selectedMode === 'wc';
-    const lp = isWC ? wcState.lastPick : gameState.lastPick;
-    const isBusy = isWC ? wcState.busy : gameState.busy;
-    if (isBusy && lp) return lp.slot === slot ? 'win' : 'lose';
-    if (isBusy) return 'locked';
-    return 'default';
-  }, [selectedMode, wcState.lastPick, wcState.busy, gameState.lastPick, gameState.busy]);
+  const getCardState = useCallback(
+    (slot) => {
+      const isWC = selectedMode === 'wc';
+      const lp = isWC ? wcState.lastPick : gameState.lastPick;
+      const isBusy = isWC ? wcState.busy : gameState.busy;
+      if (isBusy && lp) return lp.slot === slot ? 'win' : 'lose';
+      if (isBusy) return 'locked';
+      return 'default';
+    },
+    [selectedMode, wcState.lastPick, wcState.busy, gameState.lastPick, gameState.busy],
+  );
 
   // ---------- 选择胜者 ----------
-  const handlePick = useCallback((slot) => {
-    if (selectedMode === 'wc') {
-      if (wcState.phase === 'group') wcState.wcPick(slot);
-      else if (wcState.phase === 'knockout') wcState.koPick(slot);
-    } else {
-      gameState.pick(slot);
-    }
-  }, [selectedMode, wcState, gameState]);
+  const handlePick = useCallback(
+    (slot) => {
+      if (selectedMode === 'wc') {
+        if (wcState.phase === 'group') wcState.wcPick(slot);
+        else if (wcState.phase === 'knockout') wcState.koPick(slot);
+      } else {
+        gameState.pick(slot);
+      }
+    },
+    [selectedMode, wcState, gameState],
+  );
 
   // ---------- 试听 ----------
-  const handlePreview = useCallback((slot) => {
-    const pair = getCurrentMatchPair();
-    const ent = slot === 0 ? pair[0] : pair[1];
-    if (ent) audio.openAudition(ent, singerData.name);
-  }, [getCurrentMatchPair, audio, singerData.name]);
+  const handlePreview = useCallback(
+    (slot) => {
+      const pair = getCurrentMatchPair();
+      const ent = slot === 0 ? pair[0] : pair[1];
+      if (ent) audio.openAudition(ent, baseSingerData.name);
+    },
+    [getCurrentMatchPair, audio, baseSingerData],
+  );
 
   // ---------- 开始 / 继续 / 重置 ----------
   const handleStart = useCallback(() => {
@@ -139,8 +175,11 @@ function App() {
     if (isBusy) return false;
     if (selectedMode === 'wc') {
       if (!wcState.wc) return false;
-      const overlayShown = wcState.showTransition || !!wcState.currentGroupResult ||
-        wcState.wc.phase === 'draw' || wcState.wc.phase === 'wildcard';
+      const overlayShown =
+        wcState.showTransition ||
+        !!wcState.currentGroupResult ||
+        wcState.wc.phase === 'draw' ||
+        wcState.wc.phase === 'wildcard';
       if (overlayShown) return false;
       return wcState.wc.history.length > 0;
     }
@@ -149,28 +188,42 @@ function App() {
   })();
 
   // ---------- 歌手 / 模式切换 ----------
-  const handleSelectSinger = useCallback((id) => {
-    if (id === currentSinger) return;
-    setCurrentSinger(id);
-    setSelectedSize(null);
-    setGameStarted(false);
-  }, [currentSinger]);
+  const handleSelectSinger = useCallback(
+    (id) => {
+      if (id === currentSinger) return;
+      setCurrentSinger(id);
+      setSelectedSize(null);
+      setGameStarted(false);
+      setCustomSelectedIds(new Set());
+    },
+    [currentSinger],
+  );
 
-  const handleSelectMode = useCallback((mode) => {
-    setSelectedMode(mode);
-  }, []);
+  const handleSelectMode = useCallback(
+    (mode) => {
+      if (mode === selectedMode) return;
+      setSelectedMode(mode);
+      // 切换模式时重置规模和游戏状态
+      setSelectedSize(null);
+      setGameStarted(false);
+    },
+    [selectedMode],
+  );
 
   const handleSelectSize = useCallback((size) => {
     setSelectedSize(size);
   }, []);
 
   // ---------- 进度条 seek ----------
-  const seekHandler = useCallback((e) => {
-    const bar = e.currentTarget;
-    const rect = bar.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    audio.seek(pct);
-  }, [audio]);
+  const seekHandler = useCallback(
+    (e) => {
+      const bar = e.currentTarget;
+      const rect = bar.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      audio.seek(pct);
+    },
+    [audio],
+  );
 
   // ---------- 键盘 ----------
   useEffect(() => {
@@ -185,26 +238,45 @@ function App() {
       // Enter 处理各类浮层
       if (e.key === 'Enter') {
         if (selectedMode === 'wc') {
-          if (wcState.currentGroupResult) { wcState.proceedFromGroupResult(); return; }
-          if (wcState.wc?.phase === 'draw') { wcState.proceedFromDraw(); return; }
-          if (wcState.wc?.phase === 'wildcard') { wcState.proceedFromWildcard(); return; }
+          if (wcState.currentGroupResult) {
+            wcState.proceedFromGroupResult();
+            return;
+          }
+          if (wcState.wc?.phase === 'draw') {
+            wcState.proceedFromDraw();
+            return;
+          }
+          if (wcState.wc?.phase === 'wildcard') {
+            wcState.proceedFromWildcard();
+            return;
+          }
         }
-        if (gameState.showTransition) { gameState.dismissTransition(); return; }
-        if (wcState.showTransition) { wcState.dismissTransition(); return; }
+        if (gameState.showTransition) {
+          gameState.dismissTransition();
+          return;
+        }
+        if (wcState.showTransition) {
+          wcState.dismissTransition();
+          return;
+        }
       }
 
       // 判断是否可操作
       const isBusy = selectedMode === 'wc' ? wcState.busy : gameState.busy;
-      const overlayShown = selectedMode === 'wc'
-        ? wcState.showTransition || !!wcState.currentGroupResult ||
-          wcState.wc?.phase === 'draw' || wcState.wc?.phase === 'wildcard'
-        : gameState.showTransition;
+      const overlayShown =
+        selectedMode === 'wc'
+          ? wcState.showTransition ||
+            !!wcState.currentGroupResult ||
+            wcState.wc?.phase === 'draw' ||
+            wcState.wc?.phase === 'wildcard'
+          : gameState.showTransition;
       if (isBusy || overlayShown || isChampion || !gameStarted) return;
 
       // 判断是否在可选择的阶段
-      const canPick = selectedMode === 'wc'
-        ? wcState.phase === 'group' || wcState.phase === 'knockout'
-        : true;
+      const canPick =
+        selectedMode === 'wc'
+          ? wcState.phase === 'group' || wcState.phase === 'knockout'
+          : true;
       if (!canPick) return;
 
       if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
@@ -314,15 +386,18 @@ function App() {
   })();
 
   // ---------- 是否显示比赛舞台 ----------
-  const showStage = gameStarted && !isChampion &&
+  const showStage =
+    gameStarted &&
+    !isChampion &&
     (selectedMode === 'wc'
       ? wcState.phase === 'group' || wcState.phase === 'knockout'
       : true);
 
   // ---------- chorusPct ----------
-  const chorusPct = audio.duration > 0 && audio.chorusTime != null
-    ? (audio.chorusTime / audio.duration) * 100
-    : 0;
+  const chorusPct =
+    audio.duration > 0 && audio.chorusTime != null
+      ? (audio.chorusTime / audio.duration) * 100
+      : 0;
 
   // ==================== 渲染 ====================
   return (
@@ -331,7 +406,9 @@ function App() {
       <div className="topbar">
         <div className="brand">
           <span className="cup">🏆</span>
-          <span>{singerData.name}歌曲世界杯<small>&nbsp;{singerData.nameEn}&nbsp;CUP</small></span>
+          <span>
+            {singerData.name}歌曲世界杯<small>&nbsp;{singerData.nameEn}&nbsp;CUP</small>
+          </span>
         </div>
         <div className="spacer" />
         {gameStarted && !isChampion && (
@@ -354,8 +431,12 @@ function App() {
           singers={SINGERS}
           currentSinger={currentSinger}
           onSelectSinger={handleSelectSinger}
-          selectedSize={classicSize}
+          selectedSize={selectedSize}
           onSelectSize={handleSelectSize}
+          customSelectedIds={customSelectedIds}
+          onCustomSelectedChange={setCustomSelectedIds}
+          customEntrants={baseSingerData?.entrants}
+          classicMaxSize={maxBracket}
         />
       )}
 
@@ -398,23 +479,24 @@ function App() {
             leftState={getCardState(0)}
             rightState={getCardState(1)}
             showSideTag={selectedMode !== 'wc'}
+            showPreview={true}
             onPick={handlePick}
             onPreview={handlePreview}
           >
             {/* WC 小组积分榜 */}
-            {selectedMode === 'wc' && wcState.wc?.phase === 'group' &&
+            {selectedMode === 'wc' &&
+              wcState.wc?.phase === 'group' &&
               wcState.wc.groups[wcState.wc.curGroup] && (
-              <GroupStandings
-                group={wcState.wc.groups[wcState.wc.curGroup]}
-                entrants={singerData.entrants}
-                seedRank={singerData.seedRank}
-              />
-            )}
+                <GroupStandings
+                  group={wcState.wc.groups[wcState.wc.curGroup]}
+                  entrants={singerData.entrants}
+                  seedRank={singerData.seedRank}
+                />
+              )}
             {/* WC 淘汰赛对阵总览 */}
-            {selectedMode === 'wc' && wcState.wc?.phase === 'knockout' &&
-              wcState.wc.ko?.rounds?.length > 0 && (
-              <KOBracket ko={wcState.wc.ko} />
-            )}
+            {selectedMode === 'wc' &&
+              wcState.wc?.phase === 'knockout' &&
+              wcState.wc.ko?.rounds?.length > 0 && <KOBracket ko={wcState.wc.ko} />}
           </MatchStage>
         </section>
       )}
@@ -425,31 +507,41 @@ function App() {
           <ChampionScreen
             champion={selectedMode === 'wc' ? wcState.champion : gameState.champion}
             singerName={singerData.name}
-            history={selectedMode === 'wc'
-              ? (wcState.wc?.history || []).map(h => ({
-                  roundName: h.phase === 'group' ? `${h.group}组` : KO_ROUND_NAMES[h.round] || '',
-                  winner: h.winner, loser: h.loser,
-                }))
-              : gameState.history}
+            history={
+              selectedMode === 'wc'
+                ? (wcState.wc?.history || []).map((h) => ({
+                    roundName:
+                      h.phase === 'group'
+                        ? `${h.group}组`
+                        : KO_ROUND_NAMES[h.round] || '',
+                    winner: h.winner,
+                    loser: h.loser,
+                  }))
+                : gameState.history
+            }
             onAgain={handleAgain}
             confettiRef={confettiRef}
           />
           {/* 冠军晋级之路分享图 */}
           <ChampionShare
             champion={selectedMode === 'wc' ? wcState.champion : gameState.champion}
-            history={selectedMode === 'wc'
-              ? (wcState.wc?.history || []).map(h => ({
-                  roundName: h.phase === 'group' ? `${h.group}组` : KO_ROUND_NAMES[h.round] || '',
-                  winner: h.winner, loser: h.loser,
-                }))
-              : gameState.history}
-            rounds={selectedMode === 'wc'
-              ? (wcState.wc?.ko?.rounds || [])
-              : gameState.rounds}
+            history={
+              selectedMode === 'wc'
+                ? (wcState.wc?.history || []).map((h) => ({
+                    roundName:
+                      h.phase === 'group'
+                        ? `${h.group}组`
+                        : KO_ROUND_NAMES[h.round] || '',
+                    winner: h.winner,
+                    loser: h.loser,
+                  }))
+                : gameState.history
+            }
+            rounds={
+              selectedMode === 'wc' ? wcState.wc?.ko?.rounds || [] : gameState.rounds
+            }
             singerName={singerData.name}
-            bracketSize={selectedMode === 'wc'
-              ? WC_KO_TEAMS
-              : classicSize}
+            bracketSize={selectedMode === 'wc' ? WC_KO_TEAMS : gameState.bracketSize}
           />
         </>
       )}
@@ -492,7 +584,11 @@ function App() {
           icon={transitionData.icon}
           title={transitionData.title}
           sub={transitionData.sub}
-          onContinue={selectedMode === 'wc' ? wcState.dismissTransition : gameState.dismissTransition}
+          onContinue={
+            selectedMode === 'wc'
+              ? wcState.dismissTransition
+              : gameState.dismissTransition
+          }
         />
       )}
 

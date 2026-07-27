@@ -24,9 +24,24 @@ export default function TrophySvg({ size = 104 }) {
           <stop offset="1" stopColor="#d98e16" />
         </linearGradient>
       </defs>
-      <path d="M14 13 C5 13 5 31 16 33" fill="none" stroke={`url(#${gradId})`} strokeWidth="3.6" strokeLinecap="round" />
-      <path d="M50 13 C59 13 59 31 48 33" fill="none" stroke={`url(#${gradId})`} strokeWidth="3.6" strokeLinecap="round" />
-      <path d="M16 7 H48 V21 C48 34 40 42 32 42 C24 42 16 34 16 21 Z" fill={`url(#${gradId})`} />
+      <path
+        d="M14 13 C5 13 5 31 16 33"
+        fill="none"
+        stroke={`url(#${gradId})`}
+        strokeWidth="3.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M50 13 C59 13 59 31 48 33"
+        fill="none"
+        stroke={`url(#${gradId})`}
+        strokeWidth="3.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16 7 H48 V21 C48 34 40 42 32 42 C24 42 16 34 16 21 Z"
+        fill={`url(#${gradId})`}
+      />
       <path d="M22 11 H29 V23 C25 23 22 19 22 14 Z" fill="#ffffff" opacity=".28" />
       <rect x="29" y="42" width="6" height="8" fill={`url(#${gradId})`} />
       <rect x="19" y="50" width="26" height="5" rx="2.2" fill={`url(#${gradId})`} />

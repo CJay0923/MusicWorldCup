@@ -14,6 +14,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BYFUNS_API, METING_API } from '../data/singers.js';
+import { findITunesPreview } from '../utils/itunes.js';
 
 const QQ_SEARCH = 'https://y.qq.com/n/ryqq/search?w=';
 
@@ -33,6 +34,8 @@ export function useAudioPlayer() {
   const currentSongRef = useRef(null);
   const nidRef = useRef(null);
   const triedMetingRef = useRef(false);
+  const triedITunesRef = useRef(false);
+  const artistRef = useRef('');
 
   // 绑定 audio 事件监听（仅一次）
   useEffect(() => {
@@ -67,8 +70,8 @@ export function useAudioPlayer() {
     const onPause = () => setIsPlaying(false);
     const onEnded = () => setIsPlaying(false);
     const onError = () => {
-      // byfuns URL 加载失败 -> 切换到 METING_API 直链重试一次
       const nid = nidRef.current;
+      // byfuns URL 加载失败 -> 切换到 METING_API 直链重试一次
       if (nid && !triedMetingRef.current) {
         triedMetingRef.current = true;
         setIsLoading(true);
@@ -77,6 +80,36 @@ export function useAudioPlayer() {
           audio.load();
         } catch (e) {
           /* ignore */
+        }
+      } else if (!triedITunesRef.current) {
+        // 网易云两条路都走不通 -> 尝试 iTunes 预览兜底
+        triedITunesRef.current = true;
+        setIsLoading(true);
+        const song = currentSongRef.current;
+        const artist = artistRef.current;
+        if (song && song.name) {
+          findITunesPreview(artist, song.name).then(result => {
+            if (result && result.preview && audio) {
+              // iTunes 预览只有30秒，chorus 可能不在片段内，
+              // 但仍然播放——有声音比没声音好
+              try {
+                audio.src = result.preview;
+                audio.load();
+              } catch (e) {
+                /* ignore */
+              }
+            } else {
+              // iTunes 也找不到，停止 loading
+              setIsLoading(false);
+              setIsPlaying(false);
+            }
+          }).catch(() => {
+            setIsLoading(false);
+            setIsPlaying(false);
+          });
+        } else {
+          setIsLoading(false);
+          setIsPlaying(false);
         }
       } else {
         setIsLoading(false);
@@ -109,20 +142,11 @@ export function useAudioPlayer() {
   const openAudition = useCallback(async (ent, artistName) => {
     if (!ent) return;
 
-    // 无 nid -> 打开 QQ 音乐搜索
-    if (!ent.nid) {
-      const q = encodeURIComponent((ent.name || '') + ' ' + (artistName || ''));
-      try {
-        window.open(QQ_SEARCH + q, '_blank');
-      } catch (e) {
-        /* ignore popup block */
-      }
-      return;
-    }
-
     // 重置每首歌的标记
     nidRef.current = ent.nid;
     triedMetingRef.current = false;
+    triedITunesRef.current = false;
+    artistRef.current = artistName || '';
     currentSongRef.current = ent;
 
     setCurrentSong(ent);
@@ -136,7 +160,33 @@ export function useAudioPlayer() {
 
     const audio = audioRef.current;
 
-    // 先尝试 BYFUNS_API 获取完整 URL
+    // 无 nid -> 直接尝试 iTunes 预览（不再只跳转 QQ 搜索）
+    if (!ent.nid) {
+      try {
+        const itunesResult = await findITunesPreview(artistName, ent.name);
+        if (itunesResult && itunesResult.preview && audio) {
+          // iTunes 预览只有30秒，不 seek chorus
+          triedITunesRef.current = true;
+          audio.src = itunesResult.preview;
+          audio.load();
+          return;
+        }
+      } catch (e) {
+        /* iTunes 也搜不到，回退到 QQ 搜索页 */
+      }
+      // iTunes 也没有 -> 打开 QQ 音乐搜索
+      const q = encodeURIComponent((ent.name || '') + ' ' + (artistName || ''));
+      try {
+        window.open(QQ_SEARCH + q, '_blank');
+      } catch (e) {
+        /* ignore popup block */
+      }
+      setVisible(false);
+      setIsLoading(false);
+      return;
+    }
+
+    // 有 nid -> 先尝试 BYFUNS_API 获取完整 URL
     let url = null;
     try {
       const res = await fetch(BYFUNS_API + ent.nid);
@@ -200,6 +250,8 @@ export function useAudioPlayer() {
     currentSongRef.current = null;
     nidRef.current = null;
     triedMetingRef.current = false;
+    triedITunesRef.current = false;
+    artistRef.current = '';
   }, []);
 
   // ---------- 播放/暂停 ----------

@@ -119,6 +119,28 @@ function App() {
     else gameState.resetState();
   }, [selectedMode, wcState, gameState]);
 
+  // ---------- 回退上一场 ----------
+  const handleUndo = useCallback(() => {
+    if (selectedMode === 'wc') wcState.undoWC();
+    else gameState.undo();
+  }, [selectedMode, wcState, gameState]);
+
+  // ---------- 是否可以回退 ----------
+  const canUndo = (() => {
+    if (!gameStarted || isChampion) return false;
+    const isBusy = selectedMode === 'wc' ? wcState.busy : gameState.busy;
+    if (isBusy) return false;
+    if (selectedMode === 'wc') {
+      if (!wcState.wc) return false;
+      const overlayShown = wcState.showTransition || !!wcState.currentGroupResult ||
+        wcState.wc.phase === 'draw' || wcState.wc.phase === 'wildcard';
+      if (overlayShown) return false;
+      return wcState.wc.history.length > 0;
+    }
+    if (gameState.showTransition) return false;
+    return gameState.history.length > 0;
+  })();
+
   // ---------- 歌手 / 模式切换 ----------
   const handleSelectSinger = useCallback((id) => {
     if (id === currentSinger) return;
@@ -349,6 +371,13 @@ function App() {
       {/* 比赛舞台 */}
       {showStage && (
         <section className="stage active">
+          {canUndo && (
+            <div className="undo-bar">
+              <button className="btn undo-btn" onClick={handleUndo} type="button">
+                ↶ 回退上一场
+              </button>
+            </div>
+          )}
           <MatchStage
             leftEntrant={leftE}
             rightEntrant={rightE}

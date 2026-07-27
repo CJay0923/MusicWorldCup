@@ -94,6 +94,12 @@ body::after{
 .start-cta{font-size:17px;padding:14px 38px}
 .hero .hint{color:var(--muted);font-size:12px;margin-top:14px}
 
+.undo-bar{display:flex;justify-content:center;margin-bottom:10px}
+.undo-btn{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);
+  color:var(--muted);padding:7px 18px;font-size:13px;
+}
+.undo-btn:hover{background:rgba(255,92,138,.15);border-color:rgba(255,92,138,.4);color:#ff8aaa}
 .match{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;margin-top:6px}
 .card{
   position:relative;border-radius:var(--radius);padding:30px 22px;cursor:pointer;

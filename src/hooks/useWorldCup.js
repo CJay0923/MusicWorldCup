@@ -441,6 +441,7 @@ export function useWorldCup(singerId, singerData) {
       history: wc.history.concat({
         phase: ko.phase,
         round: ko.curRound,
+        match: ko.curMatch,
         winner,
         loser,
       }),
@@ -497,6 +498,88 @@ export function useWorldCup(singerId, singerData) {
     setBusy(false);
   }, []);
 
+  /**
+   * 回退上一场对决（撤销最后一次 wcPick / koPick）
+   */
+  const undoWC = useCallback(() => {
+    if (busy) return;
+    if (!wc || wc.history.length === 0) return;
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    const lastEntry = wc.history[wc.history.length - 1];
+    const newHistory = wc.history.slice(0, -1);
+
+    let newWc = { ...wc, history: newHistory };
+
+    if (KO_PHASES.includes(lastEntry.phase)) {
+      // ---- 回退淘汰赛 ----
+      const ko = wc.ko;
+      const newRounds = ko.rounds.map((r) => r.slice());
+      const roundIdx = lastEntry.round;
+      const matchIdx = lastEntry.match ?? 0;
+
+      if (newRounds[roundIdx + 1]) {
+        newRounds[roundIdx + 1][matchIdx] = null;
+      }
+
+      newWc = {
+        ...newWc,
+        phase: 'knockout',
+        champion: null,
+        ko: {
+          ...ko,
+          rounds: newRounds,
+          curRound: roundIdx,
+          curMatch: matchIdx,
+          phase: KO_PHASES[roundIdx],
+        },
+      };
+    } else if (lastEntry.phase === 'group') {
+      // ---- 回退小组赛 ----
+      const groupName = lastEntry.group;
+      const groupIdx = wc.groups.findIndex((g) => g.name === groupName);
+      if (groupIdx < 0) return;
+
+      const g = wc.groups[groupIdx];
+      const newGroups = wc.groups.slice();
+      const lastResultIdx = g.results.length - 1;
+      const winnerIdx = g.results[lastResultIdx];
+      const newWins = g.wins.slice();
+      newWins[winnerIdx]--;
+      const newResults = g.results.slice(0, -1);
+
+      newGroups[groupIdx] = {
+        ...g,
+        wins: newWins,
+        results: newResults,
+        curMatch: g.curMatch - 1,
+        winner: null,
+        runnerUp: null,
+        thirdPlace: null,
+        fourthPlace: null,
+        done: false,
+      };
+
+      newWc = {
+        ...newWc,
+        phase: 'group',
+        curGroup: groupIdx,
+        groups: newGroups,
+      };
+    }
+
+    setWc(newWc);
+    setBusy(false);
+    setShowTransition(false);
+    setCurrentGroupResult(null);
+    setLastPick(null);
+    saveWC(newWc);
+  }, [busy, wc, saveWC]);
+
   const phase = wc?.phase || null;
   const champion = wc?.champion || null;
 
@@ -509,6 +592,7 @@ export function useWorldCup(singerId, singerData) {
     startWorldCup,
     wcPick,
     koPick,
+    undoWC,
     proceedFromDraw,
     proceedFromGroupResult,
     proceedFromWildcard,

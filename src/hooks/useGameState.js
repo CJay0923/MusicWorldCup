@@ -184,6 +184,7 @@ export function useGameState(singerId, singerData) {
 
     const newHistory = history.concat({
       round: curRound,
+      match: curMatch,
       roundName: roundNames[curRound],
       winner,
       loser,
@@ -238,6 +239,39 @@ export function useGameState(singerId, singerData) {
     setBusy(false);
   }, []);
 
+  /**
+   * 回退上一场对决（撤销最后一次 pick）
+   */
+  const undo = useCallback(() => {
+    if (busy) return;
+    if (history.length === 0) return;
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    const lastEntry = history[history.length - 1];
+    const newHistory = history.slice(0, -1);
+    const newRounds = rounds.map((r) => r.slice());
+
+    // 撤销晋级：清除下一轮中写入的 winner
+    const matchIdx = lastEntry.match ?? 0;
+    if (newRounds[lastEntry.round + 1]) {
+      newRounds[lastEntry.round + 1][matchIdx] = null;
+    }
+
+    setRounds(newRounds);
+    setHistory(newHistory);
+    setCurRound(lastEntry.round);
+    setCurMatch(matchIdx);
+    setChampion(null);
+    setBusy(false);
+    setShowTransition(false);
+    setLastPick(null);
+    saveState(newRounds, lastEntry.round, matchIdx, newHistory, false);
+  }, [busy, history, rounds, saveState]);
+
   // 当前对局的两位选手
   const currentMatchPair = (() => {
     if (curRound >= NUM_ROUNDS || !rounds[curRound]) return [null, null];
@@ -261,6 +295,7 @@ export function useGameState(singerId, singerData) {
     lastPick,
     startGame,
     pick,
+    undo,
     resetState,
     hasSaved,
     showTransition,

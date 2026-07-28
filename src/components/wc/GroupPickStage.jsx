@@ -1,6 +1,5 @@
 // 四选二小组赛舞台：4 张卡片网格，用户点选 2 首直接晋级
 import { clsx } from 'clsx';
-import MiniPlayer from '../MiniPlayer.jsx';
 
 /**
  * @param {object} group - 当前小组 { name, members[4], picks[], done }
@@ -8,9 +7,6 @@ import MiniPlayer from '../MiniPlayer.jsx';
  * @param {(memberIdx: number) => void} onToggle - 切换某首歌的选中状态
  * @param {() => void} onConfirm - 确认晋级（已选满 2 首时可用）
  * @param {(entrant: object) => void} onPreview - 试听某首歌
- * @param {object} audio - 音频状态对象
- * @param {(arg?) => void} onTogglePlay - 切换播放/暂停
- * @param {(e) => void} onSeek - 进度条 seek
  */
 export default function GroupPickStage({
   group,
@@ -18,9 +14,6 @@ export default function GroupPickStage({
   onToggle,
   onConfirm,
   onPreview,
-  audio,
-  onTogglePlay,
-  onSeek,
 }) {
   if (!group) return null;
 
@@ -42,15 +35,13 @@ export default function GroupPickStage({
           if (!e) return null;
           const selected = group.picks.includes(mi);
           const order = selected ? group.picks.indexOf(mi) + 1 : 0;
-          const active = audio?.playingId === e.id;
-          const isActive = active && (audio.isPlaying || audio.isLoading);
+
           return (
             <div
               key={mi}
               className={clsx('gp-card', {
                 selected,
                 disabled: !selected && pickedCount >= 2,
-                playing: isActive,
               })}
               onClick={() => onToggle(mi)}
             >
@@ -64,37 +55,18 @@ export default function GroupPickStage({
               <div className="gp-pick-label">
                 {selected ? `✓ 第 ${order} 个晋级` : '点击选择'}
               </div>
-              {!isActive && (
+              {onPreview && (
                 <button
-                  className="gp-preview"
+                  className="card-preview-btn"
                   type="button"
                   aria-label="试听"
                   onClick={(ev) => {
                     ev.stopPropagation();
-                    onPreview?.(e);
+                    onPreview(e);
                   }}
                 >
-                  <span className="ico">♪</span>
-                  <span className="txt">试听</span>
+                  ▶ 试听
                 </button>
-              )}
-              {isActive && (
-                <MiniPlayer
-                  isLoading={audio.isLoading}
-                  isPlaying={audio.isPlaying}
-                  onTogglePlay={(arg) =>
-                    arg && arg.stop
-                      ? onTogglePlay?.({ stop: true })
-                      : onTogglePlay?.()
-                  }
-                  progress={audio.progress}
-                  currentTime={audio.currentTime}
-                  duration={audio.duration}
-                  chorusTime={audio.chorusTime}
-                  chorusPct={audio.chorusPct}
-                  onSeek={onSeek}
-                  variant="gp"
-                />
               )}
               <div className="gp-check" style={{ opacity: selected ? 1 : 0 }}>
                 ✓

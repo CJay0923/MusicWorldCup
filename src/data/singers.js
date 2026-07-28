@@ -1389,233 +1389,43 @@ const JJ_ENTRANTS = JJ_LEFT.concat(JJ_RIGHT).map((name, i) => {
   };
 });
 
-// 陶喆 (36 songs)
-const DAVID_LEFT = [
-  '就是爱你',
-  '爱很简单',
-  '普通朋友',
-  '寂寞的季节',
-  '天天',
-  '飞机场的10:30',
-  '黑色柳丁',
-  '小镇姑娘',
-  'Susan说',
-  '爱·我还是他',
-  '今天你要嫁给我',
-  '月亮代表谁的心',
-  '找自己',
-  '宫保鸡丁',
-  '二十二',
-  '雪落下的声音 (陶喆版)',
-  '似曾相识',
-  'Catherin',
-];
-const DAVID_RIGHT = [
-  '望春风',
-  '王八蛋',
-  '鬼',
-  '蝴蝶',
-  '孙子兵法',
-  '忘不了',
-  '关于陶喆',
-  '一念之间',
-  '圣诞之吻',
-  '我喜欢',
-  '说走就走',
-  '拥抱的快乐',
-  '太美丽',
-  'Angeline',
-  '祷告',
-  '长安夜市',
-  '蜘蛛',
-  '你的歌',
-];
-const DAVID_NIDS = [
-  null, null, null, null, null, null, null, null, null, null,
-  null, null, null, null, null, null, null, null, null, null,
-  null, null, null, null, null, null, null, null, null, null,
-  null, null, null, null, null, null,
-];
-const DAVID_PICS = [
-  '', '', '', '', '', '', '', '', '', '',
-  '', '', '', '', '', '', '', '', '', '',
-  '', '', '', '', '', '', '', '', '', '',
-  '', '', '', '', '', '',
-];
-const DAVID_CHORUS = {
-  0: 38.5,
-  1: 28.2,
-  2: 42.0,
-  10: 35.5,
-};
-
-const DAVID_ENTRANTS = DAVID_LEFT.concat(DAVID_RIGHT).map((name, i) => {
-  const nid = DAVID_NIDS[i];
-  const sr = i + 1;
-  return {
-    name,
-    id: i,
-    side: i < DAVID_LEFT.length ? 'L' : 'R',
-    seed: i + 1,
-    nid: nid || null,
-    pic: DAVID_PICS[i] || '',
-    chorus: DAVID_CHORUS[i] || null,
-    seedRank: sr,
-    isSeed: sr <= 32,
-  };
-});
-
-// 周杰伦 (36 songs)
-const JAY_LEFT = [
-  '晴天',
-  '七里香',
-  '简单爱',
-  '夜曲',
-  '稻香',
-  '青花瓷',
-  '一路向北',
-  '蒲公英的约定',
-  '听妈妈的话',
-  '告白气球',
-  '不能说的秘密',
-  '搁浅',
-  '蜗牛',
-  '安静',
-  '轨迹',
-  '发如雪',
-  '黑色毛衣',
-  '龙卷风',
-];
-const JAY_RIGHT = [
-  '借口',
-  '开不了口',
-  '退后',
-  '回到过去',
-  '最后的战役',
-  '爱在西元前',
-  '屋顶',
-  '半岛铁盒',
-  '东风破',
-  '枫',
-  '暗号',
-  '你听得到',
-  '珊瑚海',
-  '心雨',
-  '菊花台',
-  '千里之外',
-  '霍元甲',
-  '等你下课',
-];
-const JAY_NIDS = [
-  null, null, null, null, null, null, null, null, null, null,
-  null, null, null, null, null, null, null, null, null, null,
-  null, null, null, null, null, null, null, null, null, null,
-  null, null, null, null, null, null,
-];
-const JAY_PICS = [
-  '', '', '', '', '', '', '', '', '', '',
-  '', '', '', '', '', '', '', '', '', '',
-  '', '', '', '', '', '', '', '', '', '',
-  '', '', '', '', '', '',
-];
-const JAY_CHORUS = {
-  0: 32.0,
-  1: 28.5,
-  2: 35.0,
-  3: 26.5,
-  9: 30.0,
-};
+// 周杰伦 (120 songs from NetEase Cloud Music)
+const JAY_LEFT = ["屋顶", "布拉格广场", "刀马旦", "骑士精神", "海盗", "Try (Kung Fu Panda 3 Official Theme Song)", "黄浦江深", "红尘客栈", "海边的日落", "你用爱我的方式去爱她", "周杰伦", "该怎么停在你心中", "无人问我粥可温，无人与我立黄昏", "学狗叫", "把坏天气当风景", "可惜故事太长，只有风听我讲", "只记得你的爱，却忘了你也会变", "想你一次落一粒沙小沈阳（原版）", "麦芽糖", "告白气球", "青花瓷", "晴天", "花海", "七里香", "本草纲目", "兰亭序", "明明就", "反方向的钟", "说好的幸福呢", "搁浅", "一路向北", "发如雪", "蒲公英的约定", "回到过去", "即兴曲", "可爱女人", "不该", "以父之名", "稻香", "爱在西元前", "威廉古堡", "爱情悬崖", "烟花易冷", "床边故事", "黑色幽默", "借口", "不能说的秘密", "爱情废柴", "大笨钟", "迷迭香", "美人鱼", "土耳其冰淇淋", "白色风车", "说了再见", "星晴", "手写的从前", "超人不会飞", "轨迹", "浪漫手机", "我不配"];
+const JAY_RIGHT = ["阳光宅男", "心雨", "最长的电影", "时光机", "彩虹", "开不了口", "公主病", "甜甜的", "半兽人", "霍元甲", "雨下一整晚", "黑色毛衣", "我落泪情绪零碎", "算什么男人", "龙卷风", "爸，我回来了", "前世情人", "夜的第七章", "珊瑚海", "退后", "安静", "你好吗", "止战之殇", "一点点", "断了的弦", "等你下课 (with 杨瑞代)", "龙拳", "给我一首歌的时间", "说走就走", "爱的飞行日记", "园游会", "听见下雨的声音", "枫", "分裂", "爱你没差", "暗号", "夜曲", "上海一九四三", "你听得到", "她的睫毛", "东风破", "爷爷泡的茶", "半岛铁盒", "千里之外", "菊花台", "怎么了", "听妈妈的话", "哪里都是你", "牛仔很忙", "简单爱", "Now You See Me", "外婆", "不爱我就拉倒", "还在流浪", "无双", "圣诞星 (feat. 杨瑞代)", "龙战骑士", "红颜如霜", "大头贴", "倒影"];
+const JAY_NIDS = [5257138, 210049, 255020, 210062, 209917, 400876427, 518076026, 3344477349, 2683488320, 3375498863, 3404780436, 1910954593, 2739429743, 3375500370, 3343004015, 2739428261, 3375499263, 2740523719, 185918, 418603077, 185811, 186016, 185697, 186001, 185882, 185701, 25641369, 186093, 185699, 186005, 185924, 185906, 185815, 186055, 2712553851, 186145, 417250561, 186014, 185709, 5234472, 186134, 186022, 185668, 415792916, 186154, 186002, 185868, 418602087, 25641372, 185892, 29822012, 418602086, 185890, 185667, 186149, 29822018, 185686, 186010, 185914, 185818, 185813, 185888, 185821, 185705, 185809, 186125, 185616, 185820, 186045, 185899, 185672, 185908, 185676, 29818120, 186160, 186116, 415792918, 185878, 185920, 5247170, 186139, 185617, 186009, 418603076, 186011, 531051217, 186048, 185694, 418602084, 185678, 186008, 29822014, 185912, 186051, 25653004, 186047, 185904, 186128, 186019, 186021, 186018, 186053, 186046, 185880, 185894, 29822033, 185879, 25641374, 185807, 186119, 417247652, 2163951387, 2164441000, 2140322727, 2162457601, 2137781007, 2160735202, 2140312891, 2159176771, 2147202623];
+const JAY_PICS = ["https://p2.music.126.net/81BsxxhomJ4aJZYvEbyPkw==/109951165671182684.jpg", "https://p2.music.126.net/8D2Pd7EuvGboMyE2xWc47A==/109951172453712025.jpg", "https://p2.music.126.net/dDgHDWlJAFwkMNrjbQExIA==/109951165959446596.jpg", "https://p2.music.126.net/8D2Pd7EuvGboMyE2xWc47A==/109951172453712025.jpg", "https://p2.music.126.net/lKIkniPBdOWqZzl1yvgz9g==/109951170708258712.jpg", "https://p2.music.126.net/H6kETGEXS0zdUvTkP8sh0Q==/109951166326634933.jpg", "https://p2.music.126.net/Bh066t-BnYXHIBLf5cASKg==/109951163062543313.jpg", "https://p2.music.126.net/8AeJLjbGKnp1gxwMycnDsQ==/109951172661339989.jpg", "https://p2.music.126.net/Q17VbSiOgjNyOph23pnuig==/109951170602229077.jpg", "https://p2.music.126.net/OUyVeda03LTYMgcmsEKKLg==/109951172952451158.jpg", "https://p2.music.126.net/xNUsj9e3uNLUkNDRYVo32Q==/109951171901945906.jpg", "https://p2.music.126.net/u036blsm32JipPYebcsYEQ==/109951171922621683.jpg", "https://p2.music.126.net/u036blsm32JipPYebcsYEQ==/109951171922621683.jpg", "https://p2.music.126.net/qm_kO2c5MMwyXVTbekpZ1Q==/109951172952449753.jpg", "https://p2.music.126.net/FqBZAoi9gpbPKTWKZ8Nyyg==/109951172444093838.jpg", "https://p2.music.126.net/u036blsm32JipPYebcsYEQ==/109951171922621683.jpg", "https://p2.music.126.net/XGmlqMYEE1WsYGEOCs4YfQ==/109951172952441941.jpg", "https://p2.music.126.net/rSsezu2-LBfIL8mtNts4Kw==/109951171937989570.jpg", "https://p2.music.126.net/c6UWJU9iGaHGits7IqecRQ==/109951167749320136.jpg", "https://p2.music.126.net/cUTk0ewrQtYGP2YpPZoUng==/3265549553028224.jpg", "https://p2.music.126.net/STWQpRLgUBOcXQIDPoEL_A==/109951163533011733.jpg", "https://p2.music.126.net/ZGffiDQZrGj5s_hnR1CNbg==/109951165566379710.jpg", "https://p2.music.126.net/HBanuZpt8SD2kf15AFa6Og==/109951163200234839.jpg", "https://p2.music.126.net/P1goeQ7SoxEkFsb4ZDijMw==/7746059418324672.jpg", "https://p2.music.126.net/06Yhj36Qu3ZCQJklc9MNKg==/7980255395852522.jpg", "https://p2.music.126.net/HBanuZpt8SD2kf15AFa6Og==/109951163200234839.jpg", "https://p2.music.126.net/oL_TYdmT9mm_erNZb187_g==/109951163533013578.jpg", "https://p2.music.126.net/fRplesEuiaRKFFcwU7q45w==/109951171358444757.jpg", "https://p2.music.126.net/HBanuZpt8SD2kf15AFa6Og==/109951163200234839.jpg", "https://p2.music.126.net/P1goeQ7SoxEkFsb4ZDijMw==/7746059418324672.jpg", "https://p2.music.126.net/c6UWJU9iGaHGits7IqecRQ==/109951167749320136.jpg", "https://p2.music.126.net/c6UWJU9iGaHGits7IqecRQ==/109951167749320136.jpg", "https://p2.music.126.net/STWQpRLgUBOcXQIDPoEL_A==/109951163533011733.jpg", "https://p2.music.126.net/eDfuSni9ZWToHdqilVRI_w==/109951166698447900.jpg", "https://p2.music.126.net/O3jMNNilsLAdv1L85QlRZg==/109951171855827699.jpg", "https://p2.music.126.net/Gd-HAk9hKC85L0wNtfRs1g==/7946170535396804.jpg", "https://p2.music.126.net/cUTk0ewrQtYGP2YpPZoUng==/3265549553028224.jpg", "https://p2.music.126.net/ZGffiDQZrGj5s_hnR1CNbg==/109951165566379710.jpg", "https://p2.music.126.net/HBanuZpt8SD2kf15AFa6Og==/109951163200234839.jpg", "https://p2.music.126.net/rcGG58RFPous1aKTeu5BgQ==/605830906916387.jpg", "https://p2.music.126.net/7R4UhE4MBErGHvI-dB3Rzg==/109951165606034156.jpg", "https://p2.music.126.net/ZGffiDQZrGj5s_hnR1CNbg==/109951165566379710.jpg", "https://p2.music.126.net/4E5b_0eDTiMCzYKiVSAerw==/19165587184063665.jpg", "https://p2.music.126.net/cUTk0ewrQtYGP2YpPZoUng==/3265549553028224.jpg", "https://p2.music.126.net/Gd-HAk9hKC85L0wNtfRs1g==/7946170535396804.jpg", "https://p2.music.126.net/P1goeQ7SoxEkFsb4ZDijMw==/7746059418324672.jpg", "https://p2.music.126.net/i9iGIx3y8FlghFJqn5pAqQ==/109951171867698249.jpg", "https://p2.music.126.net/cUTk0ewrQtYGP2YpPZoUng==/3265549553028224.jpg", "https://p2.music.126.net/oL_TYdmT9mm_erNZb187_g==/109951163533013578.jpg", "https://p2.music.126.net/06Yhj36Qu3ZCQJklc9MNKg==/7980255395852522.jpg", "https://p2.music.126.net/8qQyR1IArFfftFttSyqEGQ==/109951171855839606.jpg", "https://p2.music.126.net/cUTk0ewrQtYGP2YpPZoUng==/3265549553028224.jpg", "https://p2.music.126.net/06Yhj36Qu3ZCQJklc9MNKg==/7980255395852522.jpg", "https://p2.music.126.net/4E5b_0eDTiMCzYKiVSAerw==/19165587184063665.jpg", "https://p2.music.126.net/Gd-HAk9hKC85L0wNtfRs1g==/7946170535396804.jpg", "https://p2.music.126.net/8qQyR1IArFfftFttSyqEGQ==/109951171855839606.jpg", "https://p2.music.126.net/4E5b_0eDTiMCzYKiVSAerw==/19165587184063665.jpg", "https://p2.music.126.net/wAH0XjlMOPIewdZsowbYAw==/109951165564941972.jpg", "https://p2.music.126.net/c6UWJU9iGaHGits7IqecRQ==/109951167749320136.jpg", "https://p2.music.126.net/STWQpRLgUBOcXQIDPoEL_A==/109951163533011733.jpg", "https://p2.music.126.net/STWQpRLgUBOcXQIDPoEL_A==/109951163533011733.jpg", "https://p2.music.126.net/06Yhj36Qu3ZCQJklc9MNKg==/7980255395852522.jpg", "https://p2.music.126.net/STWQpRLgUBOcXQIDPoEL_A==/109951163533011733.jpg", "https://p2.music.126.net/HBanuZpt8SD2kf15AFa6Og==/109951163200234839.jpg", "https://p2.music.126.net/STWQpRLgUBOcXQIDPoEL_A==/109951163533011733.jpg", "https://p2.music.126.net/7R4UhE4MBErGHvI-dB3Rzg==/109951165606034156.jpg", "https://p2.music.126.net/aRmkU-iV0yt0F6UTdEAN3A==/19123805742099070.jpg", "https://p2.music.126.net/STWQpRLgUBOcXQIDPoEL_A==/109951163533011733.jpg", "https://p2.music.126.net/eDfuSni9ZWToHdqilVRI_w==/109951166698447900.jpg", "https://p2.music.126.net/IRAFO-WfK-J__UOdC9-_dA==/109951163533060912.jpg", "https://p2.music.126.net/4E5b_0eDTiMCzYKiVSAerw==/19165587184063665.jpg", "https://p2.music.126.net/c6UWJU9iGaHGits7IqecRQ==/109951167749320136.jpg", "https://p2.music.126.net/4E5b_0eDTiMCzYKiVSAerw==/19165587184063665.jpg", "https://p2.music.126.net/8qQyR1IArFfftFttSyqEGQ==/109951171855839606.jpg", "https://p2.music.126.net/Gd-HAk9hKC85L0wNtfRs1g==/7946170535396804.jpg", "https://p2.music.126.net/7R4UhE4MBErGHvI-dB3Rzg==/109951165606034156.jpg", "https://p2.music.126.net/cUTk0ewrQtYGP2YpPZoUng==/3265549553028224.jpg", "https://p2.music.126.net/06Yhj36Qu3ZCQJklc9MNKg==/7980255395852522.jpg", "https://p2.music.126.net/c6UWJU9iGaHGits7IqecRQ==/109951167749320136.jpg", "https://p2.music.126.net/mKIWKulKxMIIjZED9kQRWQ==/109951165641816216.jpg", "https://p2.music.126.net/7R4UhE4MBErGHvI-dB3Rzg==/109951165606034156.jpg", "https://p2.music.126.net/aRmkU-iV0yt0F6UTdEAN3A==/19123805742099070.jpg", "https://p2.music.126.net/P1goeQ7SoxEkFsb4ZDijMw==/7746059418324672.jpg", "https://p2.music.126.net/cUTk0ewrQtYGP2YpPZoUng==/3265549553028224.jpg", "https://p2.music.126.net/wAH0XjlMOPIewdZsowbYAw==/109951165564941972.jpg", "https://p2.music.126.net/A8qicH14toObbLpPMiKmBw==/109951163110962030.jpg", "https://p2.music.126.net/eDfuSni9ZWToHdqilVRI_w==/109951166698447900.jpg", "https://p2.music.126.net/HBanuZpt8SD2kf15AFa6Og==/109951163200234839.jpg", "https://p2.music.126.net/cUTk0ewrQtYGP2YpPZoUng==/3265549553028224.jpg", "https://p2.music.126.net/4E5b_0eDTiMCzYKiVSAerw==/19165587184063665.jpg", "https://p2.music.126.net/P1goeQ7SoxEkFsb4ZDijMw==/7746059418324672.jpg", "https://p2.music.126.net/8qQyR1IArFfftFttSyqEGQ==/109951171855839606.jpg", "https://p2.music.126.net/c6UWJU9iGaHGits7IqecRQ==/109951167749320136.jpg", "https://p2.music.126.net/eDfuSni9ZWToHdqilVRI_w==/109951166698447900.jpg", "https://p2.music.126.net/oL_TYdmT9mm_erNZb187_g==/109951163533013578.jpg", "https://p2.music.126.net/eDfuSni9ZWToHdqilVRI_w==/109951166698447900.jpg", "https://p2.music.126.net/c6UWJU9iGaHGits7IqecRQ==/109951167749320136.jpg", "https://p2.music.126.net/7R4UhE4MBErGHvI-dB3Rzg==/109951165606034156.jpg", "https://p2.music.126.net/ZGffiDQZrGj5s_hnR1CNbg==/109951165566379710.jpg", "https://p2.music.126.net/ZGffiDQZrGj5s_hnR1CNbg==/109951165566379710.jpg", "https://p1.music.126.net/ZGffiDQZrGj5s_hnR1CNbg==/109951165566379710.jpg", "https://p1.music.126.net/eDfuSni9ZWToHdqilVRI_w==/109951166698447900.jpg", "https://p1.music.126.net/eDfuSni9ZWToHdqilVRI_w==/109951166698447900.jpg", "https://p1.music.126.net/06Yhj36Qu3ZCQJklc9MNKg==/7980255395852522.jpg", "https://p1.music.126.net/06Yhj36Qu3ZCQJklc9MNKg==/7980255395852522.jpg", "https://p1.music.126.net/8qQyR1IArFfftFttSyqEGQ==/109951171855839606.jpg", "https://p1.music.126.net/06Yhj36Qu3ZCQJklc9MNKg==/7980255395852522.jpg", "https://p1.music.126.net/oL_TYdmT9mm_erNZb187_g==/109951163533013578.jpg", "https://p1.music.126.net/STWQpRLgUBOcXQIDPoEL_A==/109951163533011733.jpg", "https://p1.music.126.net/7R4UhE4MBErGHvI-dB3Rzg==/109951165606034156.jpg", "https://p1.music.126.net/cUTk0ewrQtYGP2YpPZoUng==/3265549553028224.jpg", "https://p1.music.126.net/ox01MUU9DjOV4IcRae6-5A==/109951169660795220.jpg", "https://p1.music.126.net/PD2ACsrKfduYi1UQK0GQqw==/109951169666010665.jpg", "https://p1.music.126.net/0ju8ET1ApZSXfWacc4w49w==/109951169484091680.jpg", "https://p1.music.126.net/68GNoYdKepGIiC3HumO-6w==/109951169647192365.jpg", "https://p1.music.126.net/0ju8ET1ApZSXfWacc4w49w==/109951169484091680.jpg", "https://p1.music.126.net/0ju8ET1ApZSXfWacc4w49w==/109951169484091680.jpg", "https://p1.music.126.net/0ju8ET1ApZSXfWacc4w49w==/109951169484091680.jpg", "https://p1.music.126.net/0ju8ET1ApZSXfWacc4w49w==/109951169484091680.jpg", "https://p1.music.126.net/0ju8ET1ApZSXfWacc4w49w==/109951169484091680.jpg"];
+const JAY_CHORUS = {};
 
 const JAY_ENTRANTS = JAY_LEFT.concat(JAY_RIGHT).map((name, i) => {
   const nid = JAY_NIDS[i];
   const sr = i + 1;
-  return {
-    name,
-    id: i,
-    side: i < JAY_LEFT.length ? 'L' : 'R',
-    seed: i + 1,
-    nid: nid || null,
-    pic: JAY_PICS[i] || '',
-    chorus: JAY_CHORUS[i] || null,
-    seedRank: sr,
-    isSeed: sr <= 32,
-  };
+  return { name, id: i, side: i < JAY_LEFT.length ? 'L' : 'R', seed: i + 1, nid: nid || null, pic: JAY_PICS[i] || '', chorus: JAY_CHORUS[i] || null, seedRank: sr, isSeed: sr <= 32 };
 });
 
-// 蔡依林 (36 songs)
-const JOLIN_LEFT = [
-  '日不落',
-  '说爱你',
-  '倒带',
-  '舞娘',
-  '看我72变',
-  '爱情36计',
-  '妥协',
-  '假装',
-  '心形的地图',
-  '就是爱',
-  '柠檬草的味道',
-  '天空',
-  '布拉格广场',
-  '独占神话',
-  '我知道你很难过',
-  '怪美的',
-  '你也很爱他',
-  '诗人漫步',
-];
-const JOLIN_RIGHT = [
-  '特务J',
-  '花蝴蝶',
-  '大艺术家',
-  'Play我呸',
-  '美人计',
-  '第三人称',
-  '我和我',
-  '玫瑰少年',
-  '脑袋空空',
-  '我愿为你',
-  '依赖',
-  '想要',
-  '我是个孩子',
-  '浪漫',
-  '独占',
-  '你住在我心上',
-  '我曾爱过的男孩',
-  '全新的一天',
-];
-const JOLIN_NIDS = [
-  null, null, null, null, null, null, null, null, null, null,
-  null, null, null, null, null, null, null, null, null, null,
-  null, null, null, null, null, null, null, null, null, null,
-  null, null, null, null, null, null,
-];
-const JOLIN_PICS = [
-  '', '', '', '', '', '', '', '', '', '',
-  '', '', '', '', '', '', '', '', '', '',
-  '', '', '', '', '', '', '', '', '', '',
-  '', '', '', '', '', '',
-];
-const JOLIN_CHORUS = {
-  0: 30.5,
-  1: 28.0,
-  2: 35.5,
-  3: 40.0,
-};
+// 蔡依林 (81 songs from NetEase Cloud Music)
+const JOLIN_LEFT = ["倒带", "日不落", "说爱你", "特务J", "舞娘", "Stars Align", "大艺术家", "第三人称", "戀我癖 Feat. Jolin Tsai 蔡依林", "离人节", "柠檬草的味道", "Dr. Jolin", "一个人", "听说爱情回来过", "马德里不思议", "看我72变", "Mr. Q", "唯舞独尊", "就是爱", "桃花源", "骑士精神", "爱情36计", "Mr.Q", "Love Love Love", "我怀念的", "玩美", "爱无赦", "心型圈", "布拉格广场", "我知道你很难过", "Physical", "黑发尤物", "乖乖牌", "招牌动作", "假装", "美人计", "天空", "非卖品", "开场白", "我"];
+const JOLIN_RIGHT = ["怀念", "今天你要嫁给我", "唇唇欲动(Hit Hot Vibration Mix)", "亲爱的对象", "普通朋友", "你怎么连话都说不清楚", "最终话", "耍大牌", "惯性背叛", "野蛮游戏", "冷 暴力", "墓仔埔也敢去", "马赛克", "小伤口", "冷暴力", "我是谁", "When U say nothing at all", "Let's Move It", "节拍器", "Angel", "旅程", "海盗", "独占神话", "情逢敌手", "金三角", "Fight as ONE", "怕什么", "Get this party started", "Lady marmalade", "冷.暴力", "Thank U", "无神论", "Kiss me", "Lovefool", "Ending", "The blower's daughter", "I Won't Last A Day Without You", "Intro", "让让", "Shake Your Body", "爱的天使"];
+const JOLIN_NIDS = [4876202, 209643, 210042, 1808084701, 209596, 1833653230, 209539, 29722126, 452814736, 209723, 209914, 25639145, 209635, 209707, 209719, 210045, 209599, 209704, 209733, 209637, 210062, 400161745, 209724, 209923, 1808084702, 209717, 209634, 209722, 210049, 400161922, 209629, 25641767, 209725, 209648, 209720, 25641751, 209804, 209640, 209621, 25639163, 209622, 150422, 209714, 2008202895, 1808085682, 400161917, 209726, 209593, 209608, 209801, 209639, 209709, 25639160, 25641782, 1808085681, 1496855338, 209630, 209644, 209641, 209632, 27713716, 209917, 209812, 209705, 209642, 1437165631, 209636, 209623, 209628, 209613, 209631, 1808085683, 209625, 209624, 1808085685, 209626, 209627, 1808084700, 209594, 28661079, 209700];
+const JOLIN_PICS = ["https://p1.music.126.net/DeKGN_wQwihLZRBcHSQ-EA==/109951171315893199.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/8D2Pd7EuvGboMyE2xWc47A==/109951172453712025.jpg", "https://p1.music.126.net/PgmubWeQkFS0dS6vELWtTg==/109951165589727449.jpg", "https://p1.music.126.net/eWEUNXodz-PChcITtblXZQ==/18675205000257798.jpg", "https://p1.music.126.net/jR2sAa0lu3MRwZ8w4xb_xw==/109951173628305733.jpg", "https://p1.music.126.net/8TVSY8S37SGWU8IPit0qQA==/109951168195203598.jpg", "https://p1.music.126.net/gHSIDAR8_3_QBPpGX4scNg==/6657542907310638.jpg", "https://p1.music.126.net/qXzyI00_XwByKbpHzB7rKg==/109951163378954345.jpg", "https://p1.music.126.net/owr7Ak1Dk6AAn96hirnUDg==/109951163251449978.jpg", "https://p1.music.126.net/lKIkniPBdOWqZzl1yvgz9g==/109951170708258712.jpg", "https://p1.music.126.net/TdDA7cxRRrVgnGw77Wakrg==/109951168195234603.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/xyj6878y8_Y0Xnvu7YdI0Q==/18909400974624226.jpg", "https://p1.music.126.net/owr7Ak1Dk6AAn96hirnUDg==/109951163251449978.jpg", "https://p1.music.126.net/8D2Pd7EuvGboMyE2xWc47A==/109951172453712025.jpg", "https://p1.music.126.net/eWEUNXodz-PChcITtblXZQ==/18675205000257798.jpg", "https://p1.music.126.net/xyj6878y8_Y0Xnvu7YdI0Q==/18909400974624226.jpg", "https://p1.music.126.net/DqmJQQdpW0jct7v-C1kQrw==/109951165705498890.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/8D2Pd7EuvGboMyE2xWc47A==/109951172453712025.jpg", "https://p1.music.126.net/6hiV-3m-hdTNOh8pclZIEg==/109951165986730839.jpg", "https://p1.music.126.net/owr7Ak1Dk6AAn96hirnUDg==/109951163251449978.jpg", "https://p1.music.126.net/lKIkniPBdOWqZzl1yvgz9g==/109951170708258712.jpg", "https://p1.music.126.net/PgmubWeQkFS0dS6vELWtTg==/109951165589727449.jpg", "https://p1.music.126.net/owr7Ak1Dk6AAn96hirnUDg==/109951163251449978.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/owr7Ak1Dk6AAn96hirnUDg==/109951163251449978.jpg", "https://p1.music.126.net/8D2Pd7EuvGboMyE2xWc47A==/109951172453712025.jpg", "https://p1.music.126.net/sP2dnyP_zds2hlzClLoLpA==/109951165958812099.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/e8hOkEf5UOirlNEJnDKB1Q==/748767418557549.jpg", "https://p1.music.126.net/owr7Ak1Dk6AAn96hirnUDg==/109951163251449978.jpg", "https://p1.music.126.net/84IexihW0KPrRe0DdOEyHg==/109951165958730017.jpg", "https://p1.music.126.net/owr7Ak1Dk6AAn96hirnUDg==/109951163251449978.jpg", "https://p1.music.126.net/e8hOkEf5UOirlNEJnDKB1Q==/748767418557549.jpg", "https://p1.music.126.net/FSVMl16WNRjTp-H241VMsA==/109951165970188334.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/eWEUNXodz-PChcITtblXZQ==/18675205000257798.jpg", "https://p1.music.126.net/TdDA7cxRRrVgnGw77Wakrg==/109951168195234603.jpg", "https://p1.music.126.net/eWEUNXodz-PChcITtblXZQ==/18675205000257798.jpg", "https://p1.music.126.net/Fq9QNt2SYKvPEL3ipfVc9g==/109951166916020363.jpg", "https://p1.music.126.net/xyj6878y8_Y0Xnvu7YdI0Q==/18909400974624226.jpg", "https://p1.music.126.net/-VsmbstEFNy9RgxnNHVvEw==/109951168162290033.jpg", "https://p1.music.126.net/PgmubWeQkFS0dS6vELWtTg==/109951165589727449.jpg", "https://p1.music.126.net/sP2dnyP_zds2hlzClLoLpA==/109951165958812099.jpg", "https://p1.music.126.net/owr7Ak1Dk6AAn96hirnUDg==/109951163251449978.jpg", "https://p1.music.126.net/eWEUNXodz-PChcITtblXZQ==/18675205000257798.jpg", "https://p1.music.126.net/eWEUNXodz-PChcITtblXZQ==/18675205000257798.jpg", "https://p1.music.126.net/FSVMl16WNRjTp-H241VMsA==/109951165970188334.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/xyj6878y8_Y0Xnvu7YdI0Q==/18909400974624226.jpg", "https://p1.music.126.net/TdDA7cxRRrVgnGw77Wakrg==/109951168195234603.jpg", "https://p1.music.126.net/e8hOkEf5UOirlNEJnDKB1Q==/748767418557549.jpg", "https://p1.music.126.net/PgmubWeQkFS0dS6vELWtTg==/109951165589727449.jpg", "https://p1.music.126.net/LOekHheOMDpdjuXrXWjfJg==/109951165483194861.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/O2Ty_diF0X8TJBl6IPaErQ==/109951170702636189.jpg", "https://p1.music.126.net/lKIkniPBdOWqZzl1yvgz9g==/109951170708258712.jpg", "https://p1.music.126.net/FSVMl16WNRjTp-H241VMsA==/109951165970188334.jpg", "https://p1.music.126.net/xyj6878y8_Y0Xnvu7YdI0Q==/18909400974624226.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/DmrUUFqk5gcBLSU4bQIaXQ==/109951164866101330.jpg", "https://p1.music.126.net/Yu--DIhsQSoei6XQTrSUNA==/109951163200168756.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/eWEUNXodz-PChcITtblXZQ==/18675205000257798.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/PgmubWeQkFS0dS6vELWtTg==/109951165589727449.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/PgmubWeQkFS0dS6vELWtTg==/109951165589727449.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/V4hvRKwP6vZiyv_Ab5CpEw==/19232657393191893.jpg", "https://p1.music.126.net/PgmubWeQkFS0dS6vELWtTg==/109951165589727449.jpg", "https://p1.music.126.net/eWEUNXodz-PChcITtblXZQ==/18675205000257798.jpg", "https://p2.music.126.net/SD19kLU1oHNqL7Gt7tTPjw==/5994537394955153.jpg", "https://p2.music.126.net/5iLDYaF3oi6tNk9hL2gp7g==/109951165958691340.jpg"];
+const JOLIN_CHORUS = {};
 
 const JOLIN_ENTRANTS = JOLIN_LEFT.concat(JOLIN_RIGHT).map((name, i) => {
   const nid = JOLIN_NIDS[i];
   const sr = i + 1;
-  return {
-    name,
-    id: i,
-    side: i < JOLIN_LEFT.length ? 'L' : 'R',
-    seed: i + 1,
-    nid: nid || null,
-    pic: JOLIN_PICS[i] || '',
-    chorus: JOLIN_CHORUS[i] || null,
-    seedRank: sr,
-    isSeed: sr <= 32,
-  };
+  return { name, id: i, side: i < JOLIN_LEFT.length ? 'L' : 'R', seed: i + 1, nid: nid || null, pic: JOLIN_PICS[i] || '', chorus: JOLIN_CHORUS[i] || null, seedRank: sr, isSeed: sr <= 32 };
+});
+
+// 陶喆 (70 songs from NetEase Cloud Music)
+const DAVID_LEFT = ["普通朋友", "爱我还是他", "天天", "蝴蝶", "讨厌红楼梦", "今天你要嫁给我", "爱，很简单", "小镇姑娘", "Angel", "Melody", "我们的故事", "就是爱你", "Susan 说", "飞机场的10:30", "找自己", "二十二", "流沙", "心乱飞", "望春风", "Dear God", "寂寞的季节", "沙滩", "月亮代表谁的心", "Runaway", "似曾相识", "那个女孩", "好好说再见", "是是非非", "今天没回家", "黑色柳丁", "Moonchild", "暗恋", "宫保鸡丁", "一念之间", "Free (Bonus Track)"];
+const DAVID_RIGHT = ["不爱", "无缘", "千言万语", "Katrina", "荷塘月色", "再见以前先说再见", "半晴天", "太美丽", "Catherine", "十七岁", "王八蛋", "说走就走", "爱是个什么东西", "Angeline", "Olia", "I'm OK", "勿忘我", "我太傻", "鬼", "追", "陪你", "Sula 与 Lampa 的寓言", "My Anata", "雪豹", "她的歌", "马戏团", "我喜欢(Ballad Version)", "孙子兵法", "微尘", "2Night藏爱", "夜来香", "Walk On", "每一面都美", "摇篮曲", "I Believe"];
+const DAVID_NIDS = [150623, 150432, 150633, 150561, 150560, 209615, 150654, 150619, 150558, 150520, 28613455, 150430, 150433, 150651, 150617, 150565, 150667, 150671, 150660, 150556, 150524, 150656, 150564, 150530, 150421, 26425119, 26425118, 150665, 150502, 150552, 2690548915, 150389, 150562, 26145664, 150412, 150424, 150434, 2690549685, 150570, 3335851919, 150674, 2690549667, 150415, 150429, 150658, 1859065057, 150627, 150438, 150635, 150425, 150625, 26210113, 150394, 150428, 150416, 2690549700, 150435, 150566, 150392, 150437, 150631, 150540, 150431, 2690549679, 150436, 150621, 150418, 150423, 150568, 150576];
+const DAVID_PICS = ["", "", "https://p1.music.126.net/tMQXBMTy8pGjGggX1j0YNQ==/109951169389595068.jpg", "https://p2.music.126.net/FLIHPqpkfUBimQZB370agQ==/109951169237251638.jpg", "https://p2.music.126.net/FLIHPqpkfUBimQZB370agQ==/109951169237251638.jpg", "https://p2.music.126.net/eWEUNXodz-PChcITtblXZQ==/18675205000257798.jpg", "https://p1.music.126.net/vcyUJw7mfEzzMCgbJry31w==/109951169507121139.jpg", "https://p1.music.126.net/tMQXBMTy8pGjGggX1j0YNQ==/109951169389595068.jpg", "", "https://p1.music.126.net/4uHOznBK63ZOa9vft8qjxQ==/109951164124485287.jpg", "", "https://p2.music.126.net/ZR6QuByWgej9-aRhZjLqHw==/109951163803188844.jpg", "https://p2.music.126.net/ZR6QuByWgej9-aRhZjLqHw==/109951163803188844.jpg", "", "https://p1.music.126.net/tMQXBMTy8pGjGggX1j0YNQ==/109951169389595068.jpg", "https://p2.music.126.net/FLIHPqpkfUBimQZB370agQ==/109951169237251638.jpg", "https://p1.music.126.net/vcyUJw7mfEzzMCgbJry31w==/109951169507121139.jpg", "https://p2.music.126.net/vcyUJw7mfEzzMCgbJry31w==/109951169507121139.jpg", "https://p1.music.126.net/vcyUJw7mfEzzMCgbJry31w==/109951169507121139.jpg", "https://p1.music.126.net/FLIHPqpkfUBimQZB370agQ==/109951169237251638.jpg", "", "https://p1.music.126.net/vcyUJw7mfEzzMCgbJry31w==/109951169507121139.jpg", "", "https://p1.music.126.net/4uHOznBK63ZOa9vft8qjxQ==/109951164124485287.jpg", "", "", "https://p2.music.126.net/l-rHTU3Zv6g7yjN9PH3GQw==/109951168271401133.jpg", "https://p1.music.126.net/vcyUJw7mfEzzMCgbJry31w==/109951169507121139.jpg", "", "", "https://p1.music.126.net/9r50-BhduCERNbyOxx_raw==/109951170722562446.jpg", "https://p2.music.126.net/X5k0ldV70RTbKOhhZ10yng==/109951166916017949.jpg", "https://p1.music.126.net/FLIHPqpkfUBimQZB370agQ==/109951169237251638.jpg", "https://p1.music.126.net/l-rHTU3Zv6g7yjN9PH3GQw==/109951168271401133.jpg", "https://p1.music.126.net/K05FL1BmwrJXeoxctQILjA==/109951171530792491.jpg", "https://p1.music.126.net/Fq9QNt2SYKvPEL3ipfVc9g==/109951166916020363.jpg", "", "https://p2.music.126.net/9r50-BhduCERNbyOxx_raw==/109951170722562446.jpg", "https://p2.music.126.net/FLIHPqpkfUBimQZB370agQ==/109951169237251638.jpg", "https://p2.music.126.net/oI8Pk1o7PH9z4xQXaieO8Q==/109951172541500245.jpg", "", "", "https://p2.music.126.net/Fq9QNt2SYKvPEL3ipfVc9g==/109951166916020363.jpg", "https://p2.music.126.net/ZR6QuByWgej9-aRhZjLqHw==/109951163803188844.jpg", "https://p2.music.126.net/vcyUJw7mfEzzMCgbJry31w==/109951169507121139.jpg", "https://p2.music.126.net/vcyUJw7mfEzzMCgbJry31w==/109951169507121139.jpg", "https://p1.music.126.net/tMQXBMTy8pGjGggX1j0YNQ==/109951169389595068.jpg", "", "https://p2.music.126.net/tMQXBMTy8pGjGggX1j0YNQ==/109951169389595068.jpg", "https://p1.music.126.net/Fq9QNt2SYKvPEL3ipfVc9g==/109951166916020363.jpg", "https://p2.music.126.net/tMQXBMTy8pGjGggX1j0YNQ==/109951169389595068.jpg", "https://p2.music.126.net/l-rHTU3Zv6g7yjN9PH3GQw==/109951168271401133.jpg", "https://p2.music.126.net/X5k0ldV70RTbKOhhZ10yng==/109951166916017949.jpg", "https://p2.music.126.net/ZR6QuByWgej9-aRhZjLqHw==/109951163803188844.jpg", "https://p2.music.126.net/Fq9QNt2SYKvPEL3ipfVc9g==/109951166916020363.jpg", "https://p2.music.126.net/9r50-BhduCERNbyOxx_raw==/109951170722562446.jpg", "https://p2.music.126.net/ZR6QuByWgej9-aRhZjLqHw==/109951163803188844.jpg", "https://p2.music.126.net/FLIHPqpkfUBimQZB370agQ==/109951169237251638.jpg", "https://p2.music.126.net/X5k0ldV70RTbKOhhZ10yng==/109951166916017949.jpg", "https://p2.music.126.net/ZR6QuByWgej9-aRhZjLqHw==/109951163803188844.jpg", "https://p2.music.126.net/tMQXBMTy8pGjGggX1j0YNQ==/109951169389595068.jpg", "https://p2.music.126.net/4uHOznBK63ZOa9vft8qjxQ==/109951164124485287.jpg", "https://p2.music.126.net/ZR6QuByWgej9-aRhZjLqHw==/109951163803188844.jpg", "https://p2.music.126.net/9r50-BhduCERNbyOxx_raw==/109951170722562446.jpg", "https://p2.music.126.net/ZR6QuByWgej9-aRhZjLqHw==/109951163803188844.jpg", "https://p2.music.126.net/tMQXBMTy8pGjGggX1j0YNQ==/109951169389595068.jpg", "https://p2.music.126.net/Fq9QNt2SYKvPEL3ipfVc9g==/109951166916020363.jpg", "https://p2.music.126.net/Fq9QNt2SYKvPEL3ipfVc9g==/109951166916020363.jpg", "https://p2.music.126.net/FLIHPqpkfUBimQZB370agQ==/109951169237251638.jpg", "https://p2.music.126.net/k9saBYQzS_jFNe97wdVcWg==/48378511639146.jpg"];
+const DAVID_CHORUS = {};
+
+const DAVID_ENTRANTS = DAVID_LEFT.concat(DAVID_RIGHT).map((name, i) => {
+  const nid = DAVID_NIDS[i];
+  const sr = i + 1;
+  return { name, id: i, side: i < DAVID_LEFT.length ? 'L' : 'R', seed: i + 1, nid: nid || null, pic: DAVID_PICS[i] || '', chorus: DAVID_CHORUS[i] || null, seedRank: sr, isSeed: sr <= 32 };
 });
 
 export const SINGERS = {
@@ -1635,18 +1445,10 @@ export const SINGERS = {
     seeds: JJ_ENTRANTS.map((_, i) => i),
     seedRank: Object.fromEntries(JJ_ENTRANTS.map((e, i) => [i, i + 1])),
   },
-  david: {
-    name: '陶喆',
-    nameEn: 'DAVID',
-    bracketSize: 32,
-    entrants: DAVID_ENTRANTS,
-    seeds: DAVID_ENTRANTS.map((_, i) => i),
-    seedRank: Object.fromEntries(DAVID_ENTRANTS.map((e, i) => [i, i + 1])),
-  },
   jay: {
     name: '周杰伦',
     nameEn: 'JAY',
-    bracketSize: 32,
+    bracketSize: 64,
     entrants: JAY_ENTRANTS,
     seeds: JAY_ENTRANTS.map((_, i) => i),
     seedRank: Object.fromEntries(JAY_ENTRANTS.map((e, i) => [i, i + 1])),
@@ -1654,14 +1456,24 @@ export const SINGERS = {
   jolin: {
     name: '蔡依林',
     nameEn: 'JOLIN',
-    bracketSize: 32,
+    bracketSize: 64,
     entrants: JOLIN_ENTRANTS,
     seeds: JOLIN_ENTRANTS.map((_, i) => i),
     seedRank: Object.fromEntries(JOLIN_ENTRANTS.map((e, i) => [i, i + 1])),
   },
+  david: {
+    name: '陶喆',
+    nameEn: 'DAVID',
+    bracketSize: 64,
+    entrants: DAVID_ENTRANTS,
+    seeds: DAVID_ENTRANTS.map((_, i) => i),
+    seedRank: Object.fromEntries(DAVID_ENTRANTS.map((e, i) => [i, i + 1])),
+  },
 };
 
-export const SINGER_ICONS = { stefanie: '🎵', jj: '🎶', david: '🎸', jay: '🎹', jolin: '💃' };
+export const STATIC_SINGERS = SINGERS;
+
+export const SINGER_ICONS = {stefanie: '🎵', jj: '🎶', jay: '🎹', jolin: '💃', david: '🎸'};
 
 // World Cup constants
 export const WC_GROUPS = 12;
@@ -1756,30 +1568,60 @@ export function buildCustomSingerData(selected, bracketSize, singerName) {
 }
 
 /**
- * 将 entrant 列表按专辑封面 URL 分组，并附带专辑名称和简介
+ * 将 entrant 列表按专辑分组，并附带专辑名称和简介
+ * 优先按专辑名称合并（同一专辑的不同封面 URL 会合并为一组），
+ * 无专辑名称信息时按封面 URL 分组。
  * @param {object[]} entrants - entrant 对象数组
  * @returns {{pic:string, name:string, desc:string, date:string, songs:object[]}[]} 按专辑分组的歌曲列表
  */
 export function getAlbumGroups(entrants) {
-  const map = new Map();
+  // 只保留个人专辑类型（录音室专辑、EP、单曲），排除现场/精选/合辑等
+  const ALLOWED_ALBUM_TYPES = ['录音室专辑', 'EP', 'Single', '单曲'];
+  // albumType 为空时，用专辑名关键词兜底过滤
+  const EXCLUDE_NAME_PATTERNS = /精选|合辑|现场|演唱会|Live|LIVE|live|致敬|Tribute|翻唱|Cover|Remix|混音/i;
+
+  // 优先使用 entrant 自带的专辑信息（本地预取数据），其次按 pic URL 分组
+  const nameMap = new Map();
+
   for (const e of entrants) {
-    const key = e.pic || '__no_cover__';
-    if (!map.has(key)) map.set(key, []);
-    map.get(key).push(e);
-  }
-  // 转为数组，按专辑发行日期升序排列（从早到新）
-  return Array.from(map.entries())
-    .map(([pic, songs]) => {
-      const info = pic ? ALBUM_INFO[pic] || {} : {};
-      return {
+    const albumName = e.albumName || '';
+    const albumMid = e.albumMid || '';
+    const albumDate = e.albumDate || '';
+    const albumType = e.albumType || '';
+    const pic = e.pic || '';
+
+    // 过滤非个人专辑
+    if (albumType && !ALLOWED_ALBUM_TYPES.includes(albumType)) continue;
+    if (!albumType && EXCLUDE_NAME_PATTERNS.test(albumName)) continue;
+
+    // 分组合键：有 albumMid 用 albumMid，否则用 albumName，再否则用 pic
+    const mergeKey = albumMid || albumName || pic || '__no_cover__';
+
+    // 静态数据补充 desc/company
+    const staticInfo = pic && pic !== '__no_cover__' ? ALBUM_INFO[pic] || {} : {};
+
+    if (!nameMap.has(mergeKey)) {
+      nameMap.set(mergeKey, {
         pic: pic === '__no_cover__' ? '' : pic,
-        name: info.name || '',
-        desc: info.desc || '',
-        date: info.date || '',
-        company: info.company || '',
-        songs,
-      };
-    })
+        name: albumName || staticInfo.name || '',
+        desc: staticInfo.desc || '',
+        date: albumDate || staticInfo.date || '',
+        company: staticInfo.company || '',
+        songs: [],
+      });
+    }
+
+    const group = nameMap.get(mergeKey);
+    group.songs.push(e);
+    // 合并时取最早的发行日期（优先用预取的 albumDate，其次用静态 date）
+    const candidateDate = albumDate || staticInfo.date || '';
+    if (candidateDate && (!group.date || candidateDate < group.date)) {
+      group.date = candidateDate;
+    }
+  }
+
+  // 转为数组，按专辑发行日期升序排列（从早到新）
+  return Array.from(nameMap.values())
     .sort((a, b) => {
       // 有日期的按日期升序，无日期的排到最后
       if (a.date && b.date) return a.date.localeCompare(b.date);

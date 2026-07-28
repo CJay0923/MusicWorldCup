@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { clsx } from 'clsx';
 import TrophySvg from './TrophySvg.jsx';
-import Confetti from './Confetti.jsx';
 
 /**
  * Champion display screen.
@@ -9,14 +8,12 @@ import Confetti from './Confetti.jsx';
  * @param {string} singerName - singer name for the winner-side text
  * @param {Array} history - array of {roundName, winner, loser}
  * @param {() => void} onAgain - called when the "再战一届" button is clicked
- * @param {React.RefObject<HTMLCanvasElement>} confettiRef - ref for the confetti canvas
  */
 export default function ChampionScreen({
   champion,
   singerName,
   history,
   onAgain,
-  confettiRef,
 }) {
   // 默认展开夺冠之路
   const [showRecap, setShowRecap] = useState(true);
@@ -46,8 +43,6 @@ export default function ChampionScreen({
 
   return (
     <section className="champion active">
-      <Confetti active canvasRef={confettiRef} />
-
       <TrophySvg size={128} />
 
       <div className={clsx('champ-cover-wrap', { empty: !champion?.pic })}>

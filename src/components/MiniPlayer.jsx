@@ -1,5 +1,5 @@
 // MiniPlayer.jsx
-// 卡片内嵌的迷你播放条：▶/⏸ + 进度条(含高潮标记) + 时间
+// 卡片内嵌的迷你播放条：▶/⏸ + 进度条(含高潮标记+拖拽手柄) + 时间
 import { clsx } from 'clsx';
 import { fmtTime } from '../utils/format.js';
 
@@ -18,6 +18,7 @@ import { fmtTime } from '../utils/format.js';
 export default function MiniPlayer({
   isLoading,
   isPlaying,
+  isActive,
   onTogglePlay,
   progress,
   currentTime,
@@ -27,10 +28,11 @@ export default function MiniPlayer({
   onSeek,
   variant = 'card',
 }) {
+  const active = isActive ?? (isPlaying || isLoading);
   return (
-    <div className={clsx('mini-player', variant)}>
+    <div className={clsx('mini-player', variant, { active })}>
       <button
-        className="mp-play"
+        className={clsx('mp-play', { loading: isLoading })}
         type="button"
         aria-label={isPlaying ? '暂停' : '播放'}
         onClick={(e) => {
@@ -40,29 +42,34 @@ export default function MiniPlayer({
       >
         {isLoading ? <span className="spin" /> : isPlaying ? '⏸' : '▶'}
       </button>
-      <div className="mp-body">
-        <div className="mp-bar" onClick={onSeek}>
-          <div className="mp-fill" style={{ width: `${progress}%` }} />
-          {chorusTime != null && chorusPct > 0 && (
-            <div className="mp-chorus" style={{ left: `${chorusPct}%` }} title="高潮片段" />
-          )}
-        </div>
-        <div className="mp-time">
-          <span>{fmtTime(currentTime)}</span>
-          <span>{fmtTime(duration)}</span>
-        </div>
-      </div>
-      <button
-        className="mp-stop"
-        type="button"
-        aria-label="停止试听"
-        onClick={(e) => {
-          e.stopPropagation();
-          onTogglePlay?.({ stop: true });
-        }}
-      >
-        ✕
-      </button>
+      {active && (
+        <>
+          <div className="mp-body">
+            <div className="mp-bar" onClick={onSeek} onTouchMove={onSeek}>
+              <div className="mp-fill" style={{ width: `${progress}%` }} />
+              {chorusTime != null && chorusPct > 0 && (
+                <div className="mp-chorus" style={{ left: `${chorusPct}%` }} title="高潮片段" />
+              )}
+              <div className="mp-thumb" style={{ left: `${progress}%` }} />
+            </div>
+            <div className="mp-time">
+              <span>{fmtTime(currentTime)}</span>
+              <span>{fmtTime(duration)}</span>
+            </div>
+          </div>
+          <button
+            className="mp-stop"
+            type="button"
+            aria-label="停止试听"
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePlay?.({ stop: true });
+            }}
+          >
+            ✕
+          </button>
+        </>
+      )}
     </div>
   );
 }

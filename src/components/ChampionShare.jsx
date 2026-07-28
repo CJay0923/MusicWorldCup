@@ -64,22 +64,115 @@ function fitText(ctx, text, maxWidth) {
   return (lo > 0 ? text.slice(0, lo) : '') + '…';
 }
 
-// 加载单张封面图，crossOrigin 防止画布污染；失败/超时返回 null
+// 多行换行：将文本按 maxWidth 拆分为最多 maxLines 行，最后一行超出则截断
+function wrapText(ctx, text, maxWidth, maxLines = 2) {
+  if (!text) return [];
+  if (ctx.measureText(text).width <= maxWidth) return [text];
+  const lines = [];
+  let current = '';
+  for (const ch of text) {
+    if (ctx.measureText(current + ch).width > maxWidth && current) {
+      lines.push(current);
+      current = ch;
+      if (lines.length >= maxLines - 1) break;
+    } else {
+      current += ch;
+    }
+  }
+  if (current) {
+    // 最后一行若超出宽度则截断
+    if (lines.length >= maxLines - 1 && ctx.measureText(current).width > maxWidth) {
+      current = fitText(ctx, current, maxWidth);
+    }
+    lines.push(current);
+  }
+  return lines.slice(0, maxLines);
+}
+
+// CORS 代理：将 QQ 音乐 CDN 图片或本地封面路径转为可通过 CORS 的 URL
+function corsProxyUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('data:')) return url;
+  // 本地路径转 CDN URL（用于分享链接场景）
+  if (url.startsWith('./covers/album_') || url.startsWith('/covers/album_')) {
+    const m = url.match(/album_([^.]+)/);
+    if (m) {
+      const cdn = `y.gtimg.cn/music/photo_new/T002R300x300M000${m[1]}.jpg`;
+      return `https://images.weserv.nl/?url=${encodeURIComponent(cdn)}`;
+    }
+  }
+  // CDN URL 通过 weserv 代理获取 CORS 头
+  if (url.startsWith('https://y.gtimg.cn/')) {
+    const stripped = url.replace(/^https?:\/\//, '');
+    return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}`;
+  }
+  return url;
+}
+
+// 加载单张封面图：本地图片（同源）直接加载，远程图片通过 CORS 代理
+// 返回 { img, tainted } 或 null
 function loadImage(url, timeout = IMG_TIMEOUT) {
   return new Promise((resolve) => {
     if (!url) return resolve(null);
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    let done = false;
+
+    // 对远程 QQ 音乐 CDN 图片使用 CORS 代理
+    const proxiedUrl = corsProxyUrl(url);
+
+    // 判断是否为本地路径（同源）
+    const isLocal =
+      url.startsWith('/') ||
+      url.startsWith('./') ||
+      url.startsWith(window.location.origin);
+
+    let settled = false;
     const finish = (val) => {
-      if (done) return;
-      done = true;
+      if (settled) return;
+      settled = true;
       resolve(val);
     };
-    img.onload = () => finish(img);
-    img.onerror = () => finish(null);
-    img.src = url;
-    setTimeout(() => finish(null), timeout);
+
+    if (isLocal) {
+      // 本地图片：直接加载，无需 crossOrigin，不会污染 canvas
+      const img = new Image();
+      img.onload = () => finish({ img, tainted: false });
+      img.onerror = () => finish(null);
+      img.src = url;
+      setTimeout(() => {
+        if (!img.complete) finish(null);
+      }, timeout);
+      return;
+    }
+
+    // 远程图片：通过 CORS 代理加载，带 crossOrigin
+    const tryWithCORS = (attempt) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => finish({ img, tainted: false });
+      img.onerror = () => {
+        if (attempt < 1) {
+          setTimeout(() => tryWithCORS(attempt + 1), 500);
+        } else {
+          // 策略2：不带 crossOrigin 加载（会污染 canvas，但至少能显示）
+          tryWithoutCORS();
+        }
+      };
+      img.src = proxiedUrl;
+      setTimeout(() => {
+        if (!img.complete) finish(null);
+      }, timeout);
+    };
+
+    const tryWithoutCORS = () => {
+      const img = new Image();
+      img.onload = () => finish({ img, tainted: true });
+      img.onerror = () => finish(null);
+      img.src = proxiedUrl;
+      setTimeout(() => {
+        if (!img.complete) finish(null);
+      }, timeout);
+    };
+
+    tryWithCORS(0);
   });
 }
 
@@ -153,7 +246,7 @@ function drawCard(ctx, opts) {
       : 'rgba(255,255,255,0.13)';
   ctx.stroke();
 
-  const img = entrant.pic ? imgMap[entrant.pic] : null;
+  const img = entrant.pic ? imgMap[entrant.picLocal || entrant.pic] : null;
 
   if (vertical) {
     // 竖向布局：封面在上、歌名在下（小规模时用，给文字更多宽度）
@@ -172,7 +265,13 @@ function drawCard(ctx, opts) {
     ctx.font = `${isChampPath ? 700 : 600} ${fontSize}px ${FONT}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(fitText(ctx, entrant.name, w - 6), x + w / 2, cy + cs + textAreaH / 2);
+    const nameMaxW = w - 6;
+    const lines = wrapText(ctx, entrant.name, nameMaxW, 2);
+    const lineH = fontSize * 1.2;
+    const startY = cy + cs + textAreaH / 2 - ((lines.length - 1) * lineH) / 2;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, x + w / 2, startY + i * lineH);
+    });
   } else {
     // 横向布局：封面在侧、歌名在另一侧（大规模时用）
     const cs = coverSize;
@@ -180,10 +279,11 @@ function drawCard(ctx, opts) {
     const cx = side === 'L' ? x + 3 : x + w - cs - 3;
     drawCover(ctx, cx, cy, cs, img, isChampPath);
 
-    const pad = 6;
+    const pad = 4;
     const nameX = side === 'L' ? cx + cs + pad : cx - pad;
     const nameMaxW = w - cs - pad * 2 - 2;
-    const fontSize = Math.max(10, Math.min(16, h - 8));
+    // 大规模时用更小字号，确保歌名能显示更多字符
+    const fontSize = Math.max(7, Math.min(11, Math.round(h * 0.26)));
     ctx.fillStyle = isChampPath
       ? '#ffffff'
       : isWinner
@@ -192,7 +292,12 @@ function drawCard(ctx, opts) {
     ctx.font = `${isChampPath ? 700 : 600} ${fontSize}px ${FONT}`;
     ctx.textAlign = side === 'L' ? 'left' : 'right';
     ctx.textBaseline = 'middle';
-    ctx.fillText(fitText(ctx, entrant.name, nameMaxW), nameX, y + h / 2);
+    const lines = wrapText(ctx, entrant.name, nameMaxW, 2);
+    const lineH = fontSize * 1.2;
+    const startY = y + h / 2 - ((lines.length - 1) * lineH) / 2;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, nameX, startY + i * lineH);
+    });
   }
 }
 
@@ -314,7 +419,7 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
       ? Math.min(Math.round(cardW * 0.55), Math.max(20, cardH - 30))
       : Math.min(
           cardH - 4,
-          Math.max(14, Math.round(Math.min(cardH, cardW) * 0.5 + r * 1.5)),
+          Math.max(12, Math.round(Math.min(cardH, cardW) * 0.36 + r * 1.2)),
         );
 
   // 连接线线宽：小规模用更粗的线增强可见性
@@ -324,18 +429,19 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   // ---- 加载封面图 ----
   const imgMap = {};
   const urlSet = new Set();
-  if (champion && champion.pic) urlSet.add(champion.pic);
+  if (champion && champion.pic) urlSet.add(champion.picLocal || champion.pic);
   for (let r = 0; r < rounds.length; r++) {
     for (const e of rounds[r] || []) {
-      if (e && e.pic) urlSet.add(e.pic);
+      if (e && e.pic) urlSet.add(e.picLocal || e.pic);
     }
   }
   const urls = [...urlSet];
   await Promise.race([
     Promise.all(
       urls.map((u) =>
-        loadImage(u).then((img) => {
-          if (img) imgMap[u] = img;
+        loadImage(u).then((result) => {
+          // 只存非 tainted 的 Image 元素，避免 canvas 污染导致导出失败
+          if (result && !result.tainted) imgMap[u] = result.img;
         }),
       ),
     ),
@@ -607,7 +713,7 @@ function drawChampionBlock(
   ctx.fillText('👑', centerX, coverY - crownFont * 0.55);
 
   // 封面
-  const img = champion && champion.pic ? imgMap[champion.pic] : null;
+  const img = champion && champion.pic ? imgMap[champion.picLocal || champion.pic] : null;
   const cornerR = Math.max(8, Math.round(size * 0.1));
   ctx.save();
   roundRect(ctx, centerX - half, coverY, size, size, cornerR);
@@ -632,10 +738,15 @@ function drawChampionBlock(
   ctx.fillStyle = '#ffffff';
   ctx.font = `800 ${nameFont}px ${FONT}`;
   const name = champion ? champion.name : '—';
-  ctx.fillText(fitText(ctx, name, 320), centerX, nameY);
+  const nameLines = wrapText(ctx, name, 320, 2);
+  const nameLineH = nameFont * 1.15;
+  const nameStartY = nameY - ((nameLines.length - 1) * nameLineH) / 2;
+  nameLines.forEach((line, i) => {
+    ctx.fillText(line, centerX, nameStartY + i * nameLineH);
+  });
 
   // "🏆 冠军" 标签药丸
-  const labelY = nameY + labelOffset;
+  const labelY = nameY + nameLineH + labelOffset;
   const label = '🏆 冠军';
   ctx.font = `700 ${labelFont}px ${FONT}`;
   const labelW = ctx.measureText(label).width + 24;

@@ -151,6 +151,8 @@ function serializeWC(wc) {
     })),
     curGroup: wc.curGroup,
     wildcards: wc.wildcards.map(sE),
+    wildcardPool: (wc.wildcardPool || []).map(sE),
+    wildcardPicks: (wc.wildcardPicks || []).map(sE),
     ko: {
       rounds: wc.ko.rounds.map((r) => r.map(sE)),
       curRound: wc.ko.curRound,
@@ -187,6 +189,8 @@ function deserializeWC(d) {
     })),
     curGroup: d.curGroup,
     wildcards: (d.wildcards || []).map(rE),
+    wildcardPool: (d.wildcardPool || []).map(rE),
+    wildcardPicks: (d.wildcardPicks || []).map(rE),
     ko: {
       rounds: (d.ko?.rounds || []).map((r) => r.map(rE)),
       curRound: d.ko?.curRound ?? 0,
@@ -214,7 +218,6 @@ export function useWorldCup(singerId, singerData) {
   const [wc, setWc] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
-  const [currentGroupResult, setCurrentGroupResult] = useState(null);
   // 最近一次选择，供组件播放胜负高亮动画
   const [lastPick, setLastPick] = useState(null);
 
@@ -232,7 +235,6 @@ export function useWorldCup(singerId, singerData) {
     setWc(null);
     setBusy(false);
     setShowTransition(false);
-    setCurrentGroupResult(null);
     setLastPick(null);
   }, [singerId]);
 
@@ -287,7 +289,6 @@ export function useWorldCup(singerId, singerData) {
           setWc(saved);
           setBusy(false);
           setShowTransition(false);
-          setCurrentGroupResult(null);
           setLastPick(null);
           return;
         }
@@ -295,7 +296,6 @@ export function useWorldCup(singerId, singerData) {
       setWc(makeDraw(singerData));
       setBusy(false);
       setShowTransition(false);
-      setCurrentGroupResult(null);
       setLastPick(null);
     },
     [loadSavedWC, singerData],
@@ -314,7 +314,6 @@ export function useWorldCup(singerId, singerData) {
     setWc(makeDraw(singerData));
     setBusy(false);
     setShowTransition(false);
-    setCurrentGroupResult(null);
     setLastPick(null);
   }, [singerId, singerData]);
 
@@ -401,16 +400,25 @@ export function useWorldCup(singerId, singerData) {
     };
     setWc(newWc);
     setBusy(true);
-    setCurrentGroupResult({
-      name: ng.name,
-      winner: ng.winner,
-      runnerUp: ng.runnerUp,
-      thirdPlace: ng.thirdPlace,
-      allDone,
-    });
-    setShowTransition(true);
     saveWC(newWc);
-    // busy 保持为 true，直到 proceedFromGroupResult
+
+    // 自动进入下一组或外卡阶段（不弹窗）
+    timerRef.current = setTimeout(() => {
+      if (allDone) {
+        const thirds = newGroups.map((g) => g.thirdPlace).filter(Boolean);
+        const next = { ...newWc, phase: 'wildcard', wildcards: [], wildcardPool: thirds, wildcardPicks: [] };
+        setWc(next);
+        saveWC(next);
+      } else {
+        let ng2 = newWc.curGroup + 1;
+        while (ng2 < newWc.groups.length && newWc.groups[ng2].done) ng2++;
+        const next = { ...newWc, curGroup: ng2 };
+        setWc(next);
+        saveWC(next);
+      }
+      setBusy(false);
+      setLastPick(null);
+    }, PICK_DELAY);
   }, [busy, wc, saveWC, singerData]);
 
   // 从小组结果继续：进入下一组 或 进入外卡阶段
@@ -419,11 +427,9 @@ export function useWorldCup(singerId, singerData) {
     const allDone = wc.groups.every((x) => x.done);
     let next;
     if (allDone) {
-      // 12 个第三名按 seedRank 排序取前 8 作为外卡
+      // 12 个第三名全部进入外卡阶段，由用户自选 8 个
       const thirds = wc.groups.map((g) => g.thirdPlace).filter(Boolean);
-      thirds.sort((a, b) => (a.seedRank || 999) - (b.seedRank || 999));
-      const wildcards = thirds.slice(0, WC_WILDCARDS);
-      next = { ...wc, phase: 'wildcard', wildcards };
+      next = { ...wc, phase: 'wildcard', wildcards: [], wildcardPool: thirds, wildcardPicks: [] };
     } else {
       let ng = wc.curGroup + 1;
       while (ng < wc.groups.length && wc.groups[ng].done) ng++;
@@ -431,7 +437,6 @@ export function useWorldCup(singerId, singerData) {
     }
     setWc(next);
     setShowTransition(false);
-    setCurrentGroupResult(null);
     setBusy(false);
     setLastPick(null);
     saveWC(next);
@@ -440,7 +445,8 @@ export function useWorldCup(singerId, singerData) {
   // 从外卡阶段进入淘汰赛
   const proceedFromWildcard = useCallback(() => {
     if (!wc || wc.phase !== 'wildcard') return;
-    const ko = buildKnockout(wc);
+    const wildcards = wc.wildcardPicks || [];
+    const ko = buildKnockout({ ...wc, wildcards });
     const next = { ...wc, phase: 'knockout', ko };
     setWc(next);
     setShowTransition(false);
@@ -448,6 +454,31 @@ export function useWorldCup(singerId, singerData) {
     setLastPick(null);
     saveWC(next);
   }, [wc, saveWC]);
+
+  /**
+   * 外卡阶段：切换某首歌的选中状态（最多选 WC_WILDCARDS 首）
+   * @param {string} entrantId - 歌曲ID
+   */
+  const wcToggleWildcard = useCallback(
+    (entrantId) => {
+      if (!wc || wc.phase !== 'wildcard') return;
+      const picks = wc.wildcardPicks || [];
+      const pos = picks.findIndex((e) => e && e.id === entrantId);
+      let newPicks;
+      if (pos >= 0) {
+        newPicks = picks.filter((e) => e && e.id !== entrantId);
+      } else {
+        if (picks.length >= WC_WILDCARDS) return;
+        const entrant = (wc.wildcardPool || []).find((e) => e && e.id === entrantId);
+        if (entrant) newPicks = [...picks, entrant];
+        else return;
+      }
+      const next = { ...wc, wildcardPicks: newPicks };
+      setWc(next);
+      saveWC(next);
+    },
+    [wc, saveWC],
+  );
 
   /**
    * 淘汰赛选择
@@ -613,7 +644,6 @@ export function useWorldCup(singerId, singerData) {
     setWc(newWc);
     setBusy(false);
     setShowTransition(false);
-    setCurrentGroupResult(null);
     setLastPick(null);
     saveWC(newWc);
   }, [busy, wc, saveWC]);
@@ -630,6 +660,7 @@ export function useWorldCup(singerId, singerData) {
     startWorldCup,
     wcTogglePick,
     wcConfirmPicks,
+    wcToggleWildcard,
     koPick,
     undoWC,
     proceedFromDraw,
@@ -639,7 +670,6 @@ export function useWorldCup(singerId, singerData) {
     hasSavedWC,
     showTransition,
     dismissTransition,
-    currentGroupResult,
   };
 }
 

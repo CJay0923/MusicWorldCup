@@ -32,13 +32,26 @@ const NETEASE_HEADERS = {
 };
 
 const SINGERS = {
-  stefanie: { name: '孙燕姿', singermid: '001pWERg3vFgg8' },
-  jj: { name: '林俊杰', singermid: '001BLpXF2DyJe2' },
+  // 男歌手：周王陶林 + 方大同 + 陈奕迅 + 五月天 + 李荣浩
   jay: { name: '周杰伦', singermid: '0025NhlN2yWrP4' },
-  jolin: { name: '蔡依林', singermid: '0027pdHE4STooO' },
+  leehom: { name: '王力宏', singermid: '001JDzPT3JdvqK' },
   david: { name: '陶喆', singermid: '002cK0F12szD9T' },
-  she: { name: 'S.H.E', singermid: '003u5H9x1vACGo' },
+  jj: { name: '林俊杰', singermid: '001BLpXF2DyJe2' },
+  khalil: { name: '方大同', singermid: '003zHcYF44FVEV' },
   eason: { name: '陈奕迅', singermid: '003Nz2So3XXYek' },
+  mayday: { name: '五月天', singermid: '000Sp0Bz4JXH0o' },
+  lironghao: { name: '李荣浩', singermid: '000aHmbL2aPXWH' },
+  // 女歌手：四大三小 + SHE + 张惠妹 + 邓紫棋
+  stefanie: { name: '孙燕姿', singermid: '001pWERg3vFgg8' },
+  jolin: { name: '蔡依林', singermid: '0027pdHE4STooO' },
+  fish: { name: '梁静茹', singermid: '000GGDys0yA0Nk' },
+  elva: { name: '萧亚轩', singermid: '002tkdEU4gLVqO' },
+  angela: { name: '张韶涵', singermid: '002raUWw3PXdkT' },
+  cyndi: { name: '王心凌', singermid: '003RVAdJ1YT5AI' },
+  rainie: { name: '杨丞琳', singermid: '000ZVS6E1f6f0d' },
+  she: { name: 'S.H.E', singermid: '003u5H9x1vACGo' },
+  amei: { name: '张惠妹', singermid: '003JGrNQ3RjelA' },
+  gem: { name: '邓紫棋', singermid: '001fNHEf1SFEFN' },
 };
 
 // ---------- 工具函数 ----------

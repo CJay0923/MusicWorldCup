@@ -26,5 +26,49 @@
   "eason": {
     "songCount": 704,
     "albumCount": 136
+  },
+  "leehom": {
+    "songCount": 323,
+    "albumCount": 82
+  },
+  "khalil": {
+    "songCount": 222,
+    "albumCount": 52
+  },
+  "mayday": {
+    "songCount": 301,
+    "albumCount": 63
+  },
+  "lironghao": {
+    "songCount": 189,
+    "albumCount": 60
+  },
+  "fish": {
+    "songCount": 275,
+    "albumCount": 52
+  },
+  "elva": {
+    "songCount": 203,
+    "albumCount": 33
+  },
+  "angela": {
+    "songCount": 295,
+    "albumCount": 135
+  },
+  "cyndi": {
+    "songCount": 222,
+    "albumCount": 52
+  },
+  "rainie": {
+    "songCount": 235,
+    "albumCount": 72
+  },
+  "amei": {
+    "songCount": 322,
+    "albumCount": 71
+  },
+  "gem": {
+    "songCount": 317,
+    "albumCount": 90
   }
 }

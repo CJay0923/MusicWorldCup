@@ -4,18 +4,37 @@
 
 // ---------- 歌手元数据（仅用于初始 UI 显示，歌曲数据懒加载）----------
 export const SINGERS = {
-  stefanie: { name: '孙燕姿', nameEn: 'SUN', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
-  jj: { name: '林俊杰', nameEn: 'JJ', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  // 男歌手：周王陶林 + 方大同 + 陈奕迅 + 五月天 + 李荣浩
   jay: { name: '周杰伦', nameEn: 'JAY', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
-  jolin: { name: '蔡依林', nameEn: 'JOLIN', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  leehom: { name: '王力宏', nameEn: 'LEEHOM', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
   david: { name: '陶喆', nameEn: 'DAVID', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
-  she: { name: 'S.H.E', nameEn: 'SHE', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  jj: { name: '林俊杰', nameEn: 'JJ', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  khalil: { name: '方大同', nameEn: 'KHALIL', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
   eason: { name: '陈奕迅', nameEn: 'EASON', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  mayday: { name: '五月天', nameEn: 'MAYDAY', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  lironghao: { name: '李荣浩', nameEn: 'LI', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  // 女歌手：四大三小 + SHE + 张惠妹 + 邓紫棋
+  stefanie: { name: '孙燕姿', nameEn: 'SUN', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  jolin: { name: '蔡依林', nameEn: 'JOLIN', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  fish: { name: '梁静茹', nameEn: 'FISH', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  elva: { name: '萧亚轩', nameEn: 'ELVA', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  angela: { name: '张韶涵', nameEn: 'ANGELA', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  cyndi: { name: '王心凌', nameEn: 'CYNDI', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  rainie: { name: '杨丞琳', nameEn: 'RAINIE', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  she: { name: 'S.H.E', nameEn: 'SHE', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  amei: { name: '张惠妹', nameEn: 'AMEI', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  gem: { name: '邓紫棋', nameEn: 'GEM', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
 };
 
 export const STATIC_SINGERS = SINGERS;
 
-export const SINGER_ICONS = { stefanie: '🎵', jj: '🎶', jay: '🎹', jolin: '💃', david: '🎸', she: '🌟', eason: '🎤' };
+export const SINGER_ICONS = {
+  jay: '🎹', leehom: '🎻', david: '🎸', jj: '🎶', khalil: '🎷',
+  eason: '🎤', mayday: '🌟', lironghao: '🎵',
+  stefanie: '☀️', jolin: '💃', fish: '🐠', elva: '⚡',
+  angela: '🌈', cyndi: '💝', rainie: '🌺',
+  she: '👯', amei: '🔥', gem: '💎',
+};
 
 // World Cup constants
 export const WC_GROUPS = 12;

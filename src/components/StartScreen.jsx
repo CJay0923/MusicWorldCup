@@ -87,6 +87,17 @@ export default function StartScreen({
   // 夯到拉排名 props
   rankingCategory,
   onRankingCategoryChange,
+  rankingScope,
+  onRankingScopeChange,
+  rankingSubMode,
+  onRankingSubModeChange,
+  rankingAlbumMid,
+  onRankingAlbumMidChange,
+  rankingTopX,
+  onRankingTopXChange,
+  rankingCanStart,
+  baseSingerData,
+  crossSingerDataList,
 }) {
   const isClassic = selectedMode === 'classic';
   const isCustom = selectedMode === 'custom';
@@ -369,8 +380,8 @@ export default function StartScreen({
         </ul>
       </div>
 
-      {/* 歌手选择（经典/世界杯/自选/排名模式显示，混战模式使用自己的多选器） */}
-      {!isCrossBattle && (
+      {/* 歌手选择（经典/世界杯/自选/单歌手排名模式显示，混战和多歌手排名使用自己的多选器） */}
+      {!isCrossBattle && !(isRanking && rankingScope === 'cross') && (
         <SingerSelector
           singers={singers}
           current={currentSinger}
@@ -409,26 +420,146 @@ export default function StartScreen({
         />
       )}
 
-      {/* 夯到拉排名：选择排名对象 */}
+      {/* 夯到拉排名：排名范围 + 子模式选择 */}
       {isRanking && (
-        <div className="size-selector">
-          <span className="size-label">排名对象</span>
-          <div className="size-btns">
-            {[
-              { value: 'song', label: '歌曲' },
-              { value: 'album', label: '专辑' },
-              { value: 'singer', label: '歌手' },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                className={clsx('size-btn', { active: rankingCategory === opt.value })}
-                onClick={() => onRankingCategoryChange?.(opt.value)}
-                type="button"
-              >
-                {opt.label}
-              </button>
-            ))}
+        <div className="ranking-setup">
+          {/* 排名范围：单歌手 / 多歌手 */}
+          <div className="size-selector">
+            <span className="size-label">排名范围</span>
+            <div className="size-btns">
+              {[
+                { value: 'single', label: '单歌手' },
+                { value: 'cross', label: '多歌手' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  className={clsx('size-btn', { active: rankingScope === opt.value })}
+                  onClick={() => {
+                    onRankingScopeChange?.(opt.value);
+                    // 切换范围时重置子模式
+                    if (opt.value === 'single') {
+                      onRankingSubModeChange?.('all-songs');
+                    } else {
+                      onRankingSubModeChange?.('songs');
+                    }
+                  }}
+                  type="button"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* 单歌手：子模式选择 */}
+          {rankingScope === 'single' && (
+            <>
+              <div className="size-selector">
+                <span className="size-label">排名对象</span>
+                <div className="size-btns">
+                  {[
+                    { value: 'all-songs', label: '所有歌曲' },
+                    { value: 'album-songs', label: '专辑内歌曲' },
+                    { value: 'top-x', label: '收藏量前N' },
+                    { value: 'all-albums', label: '所有专辑' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      className={clsx('size-btn', { active: rankingSubMode === opt.value })}
+                      onClick={() => onRankingSubModeChange?.(opt.value)}
+                      type="button"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 专辑内歌曲：选择专辑 */}
+              {rankingSubMode === 'album-songs' && baseSingerData?.entrants && (
+                <div className="ranking-album-picker">
+                  <span className="size-label">选择专辑</span>
+                  <select
+                    className="ranking-album-select"
+                    value={rankingAlbumMid}
+                    onChange={(e) => onRankingAlbumMidChange?.(e.target.value)}
+                  >
+                    <option value="">自动选择（所有有专辑的歌曲）</option>
+                    {(() => {
+                      const albumMap = new Map();
+                      for (const e of baseSingerData.entrants) {
+                        const key = e.albumMid || e.albumName;
+                        if (key && !albumMap.has(key)) {
+                          albumMap.set(key, e.albumName || key);
+                        }
+                      }
+                      return [...albumMap.entries()].map(([key, name]) => (
+                        <option key={key} value={key}>{name}</option>
+                      ));
+                    })()}
+                  </select>
+                </div>
+              )}
+
+              {/* 收藏量前N：选择N */}
+              {rankingSubMode === 'top-x' && (
+                <div className="size-selector">
+                  <span className="size-label">取前几首</span>
+                  <div className="size-btns">
+                    {[8, 16, 32, 64].map((n) => (
+                      <button
+                        key={n}
+                        className={clsx('size-btn', { active: rankingTopX === n })}
+                        onClick={() => onRankingTopXChange?.(n)}
+                        type="button"
+                      >
+                        {n}首
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* 多歌手：子模式选择 */}
+          {rankingScope === 'cross' && (
+            <>
+              <CrossSingerSelector
+                selectedSingers={crossSelectedSingers}
+                onToggleSinger={onCrossToggleSinger}
+                singerDataMap={crossSingerDataMap}
+                loading={crossLoading}
+                mode="ranking"
+                crossSearchKeyword={crossSearchKeyword}
+                onCrossSearch={onCrossSearch}
+                crossSearchResults={crossSearchResults}
+                isCrossSearching={isCrossSearching}
+                onAddDynamicSinger={onAddDynamicSinger}
+                dynamicSingers={crossDynamicSingers}
+                loadingMids={crossLoadingMids}
+              />
+              <div className="size-selector">
+                <span className="size-label">排名对象</span>
+                <div className="size-btns">
+                  {[
+                    { value: 'songs', label: '歌曲' },
+                    { value: 'albums', label: '专辑' },
+                    { value: 'singers', label: '歌手' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      className={clsx('size-btn', { active: rankingSubMode === opt.value })}
+                      onClick={() => onRankingSubModeChange?.(opt.value)}
+                      type="button"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

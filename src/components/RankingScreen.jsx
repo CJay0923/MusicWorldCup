@@ -260,6 +260,141 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
 
   const categoryLabel = category === 'song' ? '歌曲' : category === 'album' ? '专辑' : '歌手';
 
+  // ---------- 导出图片 ----------
+  const [exporting, setExporting] = useState(false);
+
+  const exportImage = useCallback(async () => {
+    setExporting(true);
+    try {
+      const TIER_COLORS = ['#E74C3C', '#F39C12', '#F1C40F', '#FEF9E7', '#BDC3C7'];
+      const TIER_TEXT_COLORS = ['#fff', '#fff', '#333', '#333', '#333'];
+      const LABEL_W = 80;
+      const IMG_SIZE = 56;
+      const IMG_GAP = 4;
+      const ROW_PAD = 8;
+      const TITLE_H = 50;
+      const FOOTER_H = 30;
+      const CANVAS_W = 800;
+
+      // 计算每行高度
+      const rowHeights = tiers.map((tier, i) => {
+        const count = state.assignments[i].length;
+        if (count === 0) return IMG_SIZE + ROW_PAD * 2;
+        const cols = Math.floor((CANVAS_W - LABEL_W - ROW_PAD * 2) / (IMG_SIZE + IMG_GAP));
+        const rows = Math.ceil(count / cols);
+        return Math.max(IMG_SIZE + ROW_PAD * 2, rows * (IMG_SIZE + IMG_GAP) + ROW_PAD);
+      });
+
+      const totalH = TITLE_H + rowHeights.reduce((a, b) => a + b, 0) + FOOTER_H;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = CANVAS_W;
+      canvas.height = totalH;
+      const ctx = canvas.getContext('2d');
+
+      // 背景
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, CANVAS_W, totalH);
+
+      // 标题
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`🏆 ${singerName} ${categoryLabel}夯到拉排名`, CANVAS_W / 2, 32);
+
+      // CORS 代理
+      const corsProxy = (url) => {
+        if (!url) return '';
+        if (url.startsWith('data:')) return url;
+        return `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
+      };
+
+      // 加载图片
+      const loadImage = (url) =>
+        new Promise((resolve) => {
+          if (!url) { resolve(null); return; }
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = corsProxy(url);
+        });
+
+      // 逐行绘制
+      let y = TITLE_H;
+      for (let i = 0; i < tiers.length; i++) {
+        const h = rowHeights[i];
+
+        // 等级标签背景
+        ctx.fillStyle = TIER_COLORS[i];
+        ctx.fillRect(0, y, LABEL_W, h);
+
+        // 等级标签文字
+        ctx.fillStyle = TIER_TEXT_COLORS[i];
+        ctx.font = 'bold 16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(tiers[i].label, LABEL_W / 2, y + h / 2);
+
+        // 行背景（轻微着色）
+        ctx.fillStyle = TIER_COLORS[i] + '15';
+        ctx.fillRect(LABEL_W, y, CANVAS_W - LABEL_W, h);
+
+        // 绘制项目图片
+        const assignments = state.assignments[i];
+        const cols = Math.floor((CANVAS_W - LABEL_W - ROW_PAD * 2) / (IMG_SIZE + IMG_GAP));
+        for (let j = 0; j < assignments.length; j++) {
+          const col = j % cols;
+          const row = Math.floor(j / cols);
+          const x = LABEL_W + ROW_PAD + col * (IMG_SIZE + IMG_GAP);
+          const iy = y + ROW_PAD + row * (IMG_SIZE + IMG_GAP);
+
+          const item = assignments[j];
+          const art = getItemArt(item);
+          const img = await loadImage(art);
+          if (img) {
+            ctx.drawImage(img, x, iy, IMG_SIZE, IMG_SIZE);
+          } else {
+            ctx.fillStyle = '#333';
+            ctx.fillRect(x, iy, IMG_SIZE, IMG_SIZE);
+            ctx.fillStyle = '#888';
+            ctx.font = '20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎵', x + IMG_SIZE / 2, iy + IMG_SIZE / 2);
+          }
+          // 名称
+          ctx.fillStyle = '#ccc';
+          ctx.font = '9px sans-serif';
+          ctx.textAlign = 'center';
+          const name = item.name.length > 8 ? item.name.slice(0, 7) + '…' : item.name;
+          ctx.fillText(name, x + IMG_SIZE / 2, iy + IMG_SIZE + 8);
+        }
+
+        y += h;
+      }
+
+      // 底部水印
+      ctx.fillStyle = '#666';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('song-worldcup.surge.sh', CANVAS_W - 10, totalH - 10);
+
+      // 导出
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `夯到拉排名_${singerName}_${categoryLabel}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setExporting(false);
+    }
+  }, [tiers, state.assignments, singerName, categoryLabel, category, getItemArt]);
+
   // ---------- 空状态 ----------
   if (!items || items.length === 0) {
     return (
@@ -337,6 +472,14 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
         <div className="ranking-actions">
           <button className="btn primary" type="button" onClick={() => setShowResult(false)}>
             ↩ 重新调整
+          </button>
+          <button
+            className="btn"
+            type="button"
+            onClick={exportImage}
+            disabled={exporting}
+          >
+            {exporting ? '⏳ 生成中...' : '📥 导出图片'}
           </button>
           <button className="btn" type="button" onClick={onReset}>
             ↺ 重新开始

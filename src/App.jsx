@@ -42,6 +42,11 @@ function App() {
   const [crossSelectedSingers, setCrossSelectedSingers] = useState(new Set());
   const [rankingCategory, setRankingCategory] = useState('song');
   const [rankingItems, setRankingItems] = useState([]);
+  // 夯到拉排名子模式
+  const [rankingScope, setRankingScope] = useState('single'); // 'single' | 'cross'
+  const [rankingSubMode, setRankingSubMode] = useState('all-songs'); // single: all-songs/album-songs/top-x/all-albums; cross: songs/albums/singers
+  const [rankingAlbumMid, setRankingAlbumMid] = useState('');
+  const [rankingTopX, setRankingTopX] = useState(16);
 
   const { singerData: localData, loading: singerLoading } = useSingerData(currentSinger);
 
@@ -97,7 +102,20 @@ function App() {
     return list;
   }, [selectedMode, crossSelectedSingers, crossSingerDataMap, crossDynamicSingers]);
 
-  // 跨歌手混战：计算可用规模
+  // 夯到拉排名模式：判断是否可开始
+  const rankingCanStart = (() => {
+    if (selectedMode !== 'ranking') return false;
+    if (rankingScope === 'cross') {
+      return crossSingerDataList.length >= 2;
+    }
+    // single
+    if (!baseSingerData?.entrants?.length) return false;
+    if (rankingSubMode === 'album-songs') {
+      // 需要选择专辑（或有专辑数据）
+      return baseSingerData.entrants.some((e) => e.albumMid || e.albumName);
+    }
+    return true;
+  })();
   const crossTotalSongs = useMemo(
     () => crossSingerDataList.reduce((sum, sd) => sum + (sd?.entrants?.length || 0), 0),
     [crossSingerDataList],
@@ -278,23 +296,60 @@ function App() {
     // 夯到拉排名模式：准备排名项目
     if (selectedMode === 'ranking') {
       let items = [];
-      if (rankingCategory === 'song') {
-        items = (baseSingerData?.entrants || []).map((e) => ({ ...e }));
-      } else if (rankingCategory === 'album') {
-        const groups = getAlbumGroups(baseSingerData?.entrants || []);
-        items = groups.map((g) => ({
-          name: g.name,
-          pic: g.pic,
-          date: g.date,
-          songs: g.songs,
-        }));
-      } else if (rankingCategory === 'singer') {
-        items = Object.entries(SINGER_REGISTRY).map(([id, reg]) => ({
-          name: reg.name,
-          photo: reg.photo,
-          singermid: reg.singermid,
-        }));
+
+      if (rankingScope === 'cross') {
+        // ---- 多歌手排名 ----
+        const singerDataList = crossSingerDataList;
+        if (rankingSubMode === 'songs') {
+          // 歌手间歌曲排序：合并所有歌手的歌曲
+          items = [];
+          for (const sd of singerDataList) {
+            for (const e of (sd?.entrants || [])) {
+              items.push({ ...e, singerName: sd.name, singerPhoto: sd.singerPhoto });
+            }
+          }
+        } else if (rankingSubMode === 'albums') {
+          // 歌手间专辑排序：合并所有歌手的专辑
+          items = [];
+          for (const sd of singerDataList) {
+            const groups = getAlbumGroups(sd?.entrants || []);
+            for (const g of groups) {
+              if (g.isMisc) continue; // 跳过未分类
+              items.push({ ...g, singerName: sd.name });
+            }
+          }
+        } else if (rankingSubMode === 'singers') {
+          // 歌手本身排序
+          items = singerDataList.map((sd) => ({
+            name: sd.name,
+            photo: sd.singerPhoto || '',
+            singermid: sd.singermid || '',
+          }));
+        }
+      } else {
+        // ---- 单歌手排名 ----
+        const entrants = baseSingerData?.entrants || [];
+        if (rankingSubMode === 'all-songs') {
+          items = entrants.map((e) => ({ ...e }));
+        } else if (rankingSubMode === 'album-songs') {
+          // 某张专辑内的歌曲排序
+          const filtered = rankingAlbumMid
+            ? entrants.filter((e) => e.albumMid === rankingAlbumMid)
+            : entrants.filter((e) => e.albumName);
+          items = filtered.map((e) => ({ ...e }));
+        } else if (rankingSubMode === 'top-x') {
+          // 收藏量前 X 首
+          const sorted = [...entrants].sort((a, b) => (b.favCount || 0) - (a.favCount || 0));
+          items = sorted.slice(0, rankingTopX).map((e) => ({ ...e }));
+        } else if (rankingSubMode === 'all-albums') {
+          // 所有专辑排序
+          const groups = getAlbumGroups(entrants);
+          items = groups
+            .filter((g) => !g.isMisc)
+            .map((g) => ({ name: g.name, pic: g.pic, date: g.date, songs: g.songs }));
+        }
       }
+
       // 洗牌
       items = items.sort(() => Math.random() - 0.5);
       setRankingItems(items);
@@ -305,7 +360,11 @@ function App() {
     setGameStarted(true);
     if (selectedMode === 'wc') wcState.startWorldCup(false);
     else gameState.startGame(false);
-  }, [selectedMode, wcState, gameState, audio, rankingCategory, baseSingerData]);
+  }, [
+    selectedMode, wcState, gameState, audio,
+    rankingScope, rankingSubMode, rankingAlbumMid, rankingTopX,
+    baseSingerData, crossSingerDataList,
+  ]);
 
   const handleResume = useCallback(() => {
     audio.stopAudition();
@@ -692,6 +751,17 @@ function App() {
           // 夯到拉排名 props
           rankingCategory={rankingCategory}
           onRankingCategoryChange={setRankingCategory}
+          rankingScope={rankingScope}
+          onRankingScopeChange={setRankingScope}
+          rankingSubMode={rankingSubMode}
+          onRankingSubModeChange={setRankingSubMode}
+          rankingAlbumMid={rankingAlbumMid}
+          onRankingAlbumMidChange={setRankingAlbumMid}
+          rankingTopX={rankingTopX}
+          onRankingTopXChange={setRankingTopX}
+          rankingCanStart={rankingCanStart}
+          baseSingerData={baseSingerData}
+          crossSingerDataList={crossSingerDataList}
         />
       )}
 
@@ -757,8 +827,8 @@ function App() {
       {gameStarted && isRanking && rankingItems.length > 0 && (
         <RankingScreen
           items={rankingItems}
-          category={rankingCategory}
-          singerName={baseSingerData?.name || ''}
+          category={rankingSubMode === 'all-albums' || rankingSubMode === 'albums' ? 'album' : rankingSubMode === 'singers' ? 'singer' : 'song'}
+          singerName={rankingScope === 'cross' ? '多歌手' : (baseSingerData?.name || '')}
           onReset={handleReset}
         />
       )}

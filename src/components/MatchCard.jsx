@@ -22,17 +22,29 @@ export default function MatchCard({
     'seed-card': entrant?.isSeed,
   });
 
-  // 图片 onError fallback：专辑封面 → 歌曲封面 → T062 CDN → T002 CDN → 空
+  // 图片 onError fallback：本地封面 → 歌曲封面 → T062 CDN → T002 CDN → 空
   const t062Url = entrant?.songmid
     ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${entrant.songmid}.jpg`
     : '';
   const t002Url = entrant?.albumMid
     ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${entrant.albumMid}.jpg`
     : '';
+  // 优先使用本地预下载的封面（最可靠），其次 CDN URL
+  const coverSrc = entrant?.picLocal || entrant?.pic || entrant?.songPic || t062Url || t002Url || '';
 
   const handleImgError = (e) => {
     const img = e.currentTarget;
     const tried = img.dataset.tried || '';
+    if (tried !== 'picLocal' && entrant?.picLocal) {
+      img.dataset.tried = 'picLocal';
+      img.src = entrant.picLocal;
+      return;
+    }
+    if (tried !== 'pic' && entrant?.pic) {
+      img.dataset.tried = 'pic';
+      img.src = entrant.pic;
+      return;
+    }
     if (tried !== 'songPic' && entrant?.songPic) {
       img.dataset.tried = 'songPic';
       img.src = entrant.songPic;
@@ -74,11 +86,11 @@ export default function MatchCard({
           <span className="card-singer-name">{entrant.singerName}</span>
         </div>
       )}
-      <div className={clsx('album-wrap', { empty: !entrant?.pic })}>
-        {entrant?.pic && (
+      <div className={clsx('album-wrap', { empty: !coverSrc })}>
+        {coverSrc && (
           <img
             className="album-cover"
-            src={entrant.pic}
+            src={coverSrc}
             alt="专辑封面"
             loading="lazy"
             onError={handleImgError}

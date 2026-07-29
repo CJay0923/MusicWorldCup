@@ -67,16 +67,16 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
   // ---------- 封面图获取 ----------
   const getItemArt = useCallback((item) => {
     if (!item) return '';
-    if (category === 'album') return item.pic || '';
-    if (category === 'singer') return item.photo || '';
-    // song
+    if (category === 'album') return item.pic || item.picLocal || '';
+    if (category === 'singer') return item.photo || item.singerPhoto || '';
+    // song: 尝试所有可能的封面来源
     const t062 = item.songmid
       ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${item.songmid}.jpg`
       : '';
     const t002 = item.albumMid
       ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${item.albumMid}.jpg`
       : '';
-    return item.songPic || item.pic || t062 || t002 || '';
+    return item.picLocal || item.songPic || item.pic || t062 || t002 || '';
   }, [category]);
 
   const handleArtError = useCallback((e, item) => {
@@ -88,6 +88,10 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
     const t002 = item.albumMid
       ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${item.albumMid}.jpg`
       : '';
+    // 依次尝试所有可能的封面来源
+    if (tried !== 'picLocal' && item.picLocal) { img.dataset.tried = 'picLocal'; img.src = item.picLocal; return; }
+    if (tried !== 'songPic' && item.songPic) { img.dataset.tried = 'songPic'; img.src = item.songPic; return; }
+    if (tried !== 'pic' && item.pic) { img.dataset.tried = 'pic'; img.src = item.pic; return; }
     if (tried !== 't062' && t062) { img.dataset.tried = 't062'; img.src = t062; return; }
     if (tried !== 't002' && t002) { img.dataset.tried = 't002'; img.src = t002; return; }
     img.style.display = 'none';
@@ -96,14 +100,6 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
   // ---------- 移动项目 ----------
   const moveItem = useCallback((from, toType, toIndex) => {
     setState((prev) => {
-      const t = tiersRef.current;
-      // 容量检查：目标等级已满且不是同一等级
-      if (toType === 'tier') {
-        const isSameTier = from.type === 'tier' && from.tierIndex === toIndex;
-        if (!isSameTier && prev.assignments[toIndex].length >= t[toIndex].count) {
-          return prev; // 已满，不允许
-        }
-      }
       const next = {
         assignments: prev.assignments.map((a) => [...a]),
         pool: [...prev.pool],
@@ -166,18 +162,6 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       const zone = el?.closest('[data-drop-zone]');
       if (zone) {
         const target = zone.dataset.dropZone;
-        if (target !== 'pool') {
-          const tierIdx = parseInt(target);
-          const s = stateRef.current;
-          const t = tiersRef.current;
-          const isSameTier =
-            dragRef.current.from.type === 'tier' &&
-            dragRef.current.from.tierIndex === tierIdx;
-          if (!isSameTier && s.assignments[tierIdx].length >= t[tierIdx].count) {
-            setDropTarget(null); // 已满不高亮
-            return;
-          }
-        }
         setDropTarget(target);
       } else {
         setDropTarget(null);
@@ -226,15 +210,14 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
         const j = Math.floor(Math.random() * (i + 1));
         [next.pool[i], next.pool[j]] = [next.pool[j], next.pool[i]];
       }
-      // 依次填入有空位的等级
+      // 均匀分配到各等级（无数量限制）
       let poolIdx = 0;
-      for (let ti = 0; ti < t.length && poolIdx < next.pool.length; ti++) {
-        while (next.assignments[ti].length < t[ti].count && poolIdx < next.pool.length) {
-          next.assignments[ti].push(next.pool[poolIdx]);
-          poolIdx++;
-        }
+      const numTiers = t.length;
+      for (let poolIdx = 0; poolIdx < next.pool.length; poolIdx++) {
+        const ti = poolIdx % numTiers;
+        next.assignments[ti].push(next.pool[poolIdx]);
       }
-      next.pool = next.pool.slice(poolIdx);
+      next.pool = [];
       return next;
     });
   }, []);
@@ -268,57 +251,121 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
     try {
       const TIER_COLORS = ['#E74C3C', '#F39C12', '#F1C40F', '#FEF9E7', '#BDC3C7'];
       const TIER_TEXT_COLORS = ['#fff', '#fff', '#333', '#333', '#333'];
-      const LABEL_W = 80;
-      const IMG_SIZE = 56;
-      const IMG_GAP = 4;
-      const ROW_PAD = 8;
-      const TITLE_H = 50;
-      const FOOTER_H = 30;
+      const LABEL_W = 90;
+      const IMG_SIZE = 60;
+      const IMG_GAP = 6;
+      const ROW_PAD = 10;
+      const TITLE_H = 60;
+      const FOOTER_H = 36;
       const CANVAS_W = 800;
+      // 更好看的中文字体栈
+      const FONT_TITLE = 'bold 22px "PingFang SC", "Microsoft YaHei", "Heiti SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif';
+      const FONT_LABEL = 'bold 18px "PingFang SC", "Microsoft YaHei", "Heiti SC", "Noto Sans CJK SC", sans-serif';
+      const FONT_NAME = '11px "PingFang SC", "Microsoft YaHei", "Heiti SC", "Noto Sans CJK SC", sans-serif';
+      const FONT_FOOTER = '11px "PingFang SC", "Microsoft YaHei", sans-serif';
+
+      // 收集所有需要加载的图片 URL
+      const allItems = [];
+      for (let i = 0; i < tiers.length; i++) {
+        for (const item of state.assignments[i]) {
+          allItems.push({ tier: i, item, art: getItemArt(item) });
+        }
+      }
+
+      // 多 CORS 代理列表
+      const CORS_PROXIES = [
+        (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+        (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+        (u) => `https://cors-anywhere.herokuapp.com/${u}`,
+      ];
+
+      // 加载单张图片，依次尝试直接加载和多个代理
+      const loadImage = (url) =>
+        new Promise((resolve) => {
+          if (!url) { resolve(null); return; }
+          // 本地路径直接加载（无 CORS 问题）
+          if (url.startsWith('./') || url.startsWith('/') || url.startsWith('data:')) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = url;
+            return;
+          }
+          // 远程图片：先试直连，再试代理
+          const urlsToTry = [url, ...CORS_PROXIES.map((p) => p(url))];
+          let attempt = 0;
+          const tryLoad = () => {
+            if (attempt >= urlsToTry.length) { resolve(null); return; }
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = () => { attempt++; setTimeout(tryLoad, 200); };
+            img.src = urlsToTry[attempt];
+          };
+          tryLoad();
+        });
+
+      // 批量加载所有图片（并发）
+      const imageMap = new Map();
+      const BATCH_SIZE = 15;
+      for (let i = 0; i < allItems.length; i += BATCH_SIZE) {
+        const batch = allItems.slice(i, i + BATCH_SIZE);
+        await Promise.allSettled(
+          batch.map(async ({ item, art }) => {
+            const img = await loadImage(art);
+            if (img) imageMap.set(item, img);
+          }),
+        );
+      }
 
       // 计算每行高度
+      const cols = Math.floor((CANVAS_W - LABEL_W - ROW_PAD * 2) / (IMG_SIZE + IMG_GAP));
       const rowHeights = tiers.map((tier, i) => {
         const count = state.assignments[i].length;
         if (count === 0) return IMG_SIZE + ROW_PAD * 2;
-        const cols = Math.floor((CANVAS_W - LABEL_W - ROW_PAD * 2) / (IMG_SIZE + IMG_GAP));
         const rows = Math.ceil(count / cols);
-        return Math.max(IMG_SIZE + ROW_PAD * 2, rows * (IMG_SIZE + IMG_GAP) + ROW_PAD);
+        return Math.max(IMG_SIZE + ROW_PAD * 2 + 14, rows * (IMG_SIZE + IMG_GAP + 14) + ROW_PAD);
       });
 
       const totalH = TITLE_H + rowHeights.reduce((a, b) => a + b, 0) + FOOTER_H;
 
+      // 使用 2x 分辨率以获得更清晰的输出
+      const dpr = 2;
       const canvas = document.createElement('canvas');
-      canvas.width = CANVAS_W;
-      canvas.height = totalH;
+      canvas.width = CANVAS_W * dpr;
+      canvas.height = totalH * dpr;
       const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
 
-      // 背景
-      ctx.fillStyle = '#1a1a2e';
+      // 背景（渐变）
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, totalH);
+      bgGrad.addColorStop(0, '#1a1a2e');
+      bgGrad.addColorStop(1, '#16213e');
+      ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, CANVAS_W, totalH);
 
       // 标题
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 20px sans-serif';
+      ctx.font = FONT_TITLE;
       ctx.textAlign = 'center';
-      ctx.fillText(`🏆 ${singerName} ${categoryLabel}夯到拉排名`, CANVAS_W / 2, 32);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${singerName} ${categoryLabel}夯到拉排名`, CANVAS_W / 2, TITLE_H / 2);
 
-      // CORS 代理
-      const corsProxy = (url) => {
-        if (!url) return '';
-        if (url.startsWith('data:')) return url;
-        return `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
+      // 圆角矩形辅助函数
+      const roundRect = (x, y, w, h, r) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
       };
-
-      // 加载图片
-      const loadImage = (url) =>
-        new Promise((resolve) => {
-          if (!url) { resolve(null); return; }
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => resolve(img);
-          img.onerror = () => resolve(null);
-          img.src = corsProxy(url);
-        });
 
       // 逐行绘制
       let y = TITLE_H;
@@ -331,53 +378,64 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
 
         // 等级标签文字
         ctx.fillStyle = TIER_TEXT_COLORS[i];
-        ctx.font = 'bold 16px sans-serif';
+        ctx.font = FONT_LABEL;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(tiers[i].label, LABEL_W / 2, y + h / 2);
 
         // 行背景（轻微着色）
-        ctx.fillStyle = TIER_COLORS[i] + '15';
+        ctx.fillStyle = TIER_COLORS[i] + '12';
         ctx.fillRect(LABEL_W, y, CANVAS_W - LABEL_W, h);
 
         // 绘制项目图片
         const assignments = state.assignments[i];
-        const cols = Math.floor((CANVAS_W - LABEL_W - ROW_PAD * 2) / (IMG_SIZE + IMG_GAP));
         for (let j = 0; j < assignments.length; j++) {
           const col = j % cols;
           const row = Math.floor(j / cols);
           const x = LABEL_W + ROW_PAD + col * (IMG_SIZE + IMG_GAP);
-          const iy = y + ROW_PAD + row * (IMG_SIZE + IMG_GAP);
+          const iy = y + ROW_PAD + row * (IMG_SIZE + IMG_GAP + 14);
 
           const item = assignments[j];
-          const art = getItemArt(item);
-          const img = await loadImage(art);
+          const img = imageMap.get(item);
           if (img) {
+            // 圆角裁剪
+            ctx.save();
+            roundRect(x, iy, IMG_SIZE, IMG_SIZE, 6);
+            ctx.clip();
             ctx.drawImage(img, x, iy, IMG_SIZE, IMG_SIZE);
+            ctx.restore();
           } else {
-            ctx.fillStyle = '#333';
-            ctx.fillRect(x, iy, IMG_SIZE, IMG_SIZE);
-            ctx.fillStyle = '#888';
-            ctx.font = '20px sans-serif';
+            // 占位符：渐变背景 + 音符
+            const placeholderGrad = ctx.createLinearGradient(x, iy, x + IMG_SIZE, iy + IMG_SIZE);
+            placeholderGrad.addColorStop(0, '#3a3a5e');
+            placeholderGrad.addColorStop(1, '#2a2a4e');
+            ctx.fillStyle = placeholderGrad;
+            roundRect(x, iy, IMG_SIZE, IMG_SIZE, 6);
+            ctx.fill();
+            ctx.fillStyle = '#666';
+            ctx.font = '24px sans-serif';
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             ctx.fillText('🎵', x + IMG_SIZE / 2, iy + IMG_SIZE / 2);
           }
           // 名称
-          ctx.fillStyle = '#ccc';
-          ctx.font = '9px sans-serif';
+          ctx.fillStyle = '#ddd';
+          ctx.font = FONT_NAME;
           ctx.textAlign = 'center';
-          const name = item.name.length > 8 ? item.name.slice(0, 7) + '…' : item.name;
-          ctx.fillText(name, x + IMG_SIZE / 2, iy + IMG_SIZE + 8);
+          ctx.textBaseline = 'top';
+          const name = item.name.length > 7 ? item.name.slice(0, 6) + '…' : item.name;
+          ctx.fillText(name, x + IMG_SIZE / 2, iy + IMG_SIZE + 2);
         }
 
         y += h;
       }
 
       // 底部水印
-      ctx.fillStyle = '#666';
-      ctx.font = '11px sans-serif';
+      ctx.fillStyle = '#555';
+      ctx.font = FONT_FOOTER;
       ctx.textAlign = 'right';
-      ctx.fillText('song-worldcup.surge.sh', CANVAS_W - 10, totalH - 10);
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('song-worldcup.surge.sh', CANVAS_W - 12, totalH - 8);
 
       // 导出
       canvas.toBlob((blob) => {
@@ -465,7 +523,6 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
                   ))
                 )}
               </div>
-              <div className="ranking-tier-count">{state.assignments[i].length}/{tier.count}</div>
             </div>
           ))}
         </div>
@@ -511,8 +568,6 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       {/* 等级行 */}
       <div className="ranking-dd-tiers">
         {tiers.map((tier, i) => {
-          const remaining = tier.count - state.assignments[i].length;
-          const isFull = remaining <= 0;
           const isActive = dropTarget === String(i);
           return (
             <div
@@ -520,14 +575,13 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
               data-drop-zone={String(i)}
               className={clsx('ranking-dd-tier', `tier-${i}`, {
                 'drop-active': isActive,
-                full: isFull,
               })}
             >
               <div className="ranking-dd-tier-label-section">
                 <span className="ranking-dd-tier-label">{tier.label}</span>
                 <small className="ranking-dd-tier-desc">{TIER_DESCRIPTIONS[i]}</small>
                 <span className="ranking-dd-tier-count">
-                  {state.assignments[i].length}/{tier.count}
+                  {state.assignments[i].length}
                 </span>
               </div>
               <div className="ranking-dd-tier-items">

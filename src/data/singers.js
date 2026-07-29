@@ -195,49 +195,18 @@ export function buildCrossSingerData(singerDataList, bracketSize) {
 /**
  * 计算夯到拉排名模式的分层结构
  * 等级：夯 → 顶级 → 人上人 → NPC → 拉完了
- * 夯的个数 = floor(total/8) + 1（8个备选2个夯，16个3个夯）
- * 其余等级数量曲线递增，拉完了最多
+ * 不设数量限制，用户可自由分配任意数量到任意等级
  *
- * @param {number} totalItems - 总项目数
- * @returns {{tiers: {label, count, start, end}[], totalSlots: number}}
+ * @param {number} totalItems - 总项目数（仅用于参考，不限制）
+ * @returns {{tiers: {label, count: number}[], totalSlots: number}}
  */
 export function buildRankingTiers(totalItems) {
   const TIER_LABELS = ['夯', '顶级', '人上人', 'NPC', '拉完了'];
-  const tiers = [];
-
-  // 夯的个数：8个备选→2个夯，16个→3个夯，即 floor(n/8)+1
-  const hangCount = Math.floor(totalItems / 8) + 1;
-  const remaining = totalItems - hangCount;
-
-  // 其余 4 个等级按比例分配，数量曲线递增
-  // 顶级: 15%, 人上人: 20%, NPC: 30%, 拉完了: 剩余(最多)
-  const ratios = [0.15, 0.20, 0.30];
-  const counts = [hangCount];
-  let allocated = hangCount;
-
-  for (let i = 0; i < 3; i++) {
-    const c = Math.max(1, Math.floor(remaining * ratios[i]));
-    counts.push(c);
-    allocated += c;
-  }
-  // 拉完了拿到所有剩余，确保最多
-  counts.push(Math.max(1, totalItems - allocated));
-
-  // 构建 tiers
-  let accumulated = 0;
-  for (let i = 0; i < 5; i++) {
-    const count = Math.min(counts[i], totalItems - accumulated);
-    if (count <= 0) break;
-    tiers.push({
-      label: TIER_LABELS[i],
-      count,
-      start: accumulated,
-      end: accumulated + count - 1,
-    });
-    accumulated += count;
-  }
-
-  return { tiers, totalSlots: accumulated };
+  const tiers = TIER_LABELS.map((label) => ({
+    label,
+    count: Infinity, // 无限制
+  }));
+  return { tiers, totalSlots: totalItems || 0 };
 }
 
 /**
@@ -261,16 +230,28 @@ export function buildCustomSingerData(selected, bracketSize, singerName) {
   const used = sorted.slice(0, bs);
 
   // 重新编号：id 0..N-1，seedRank 1..N
+  // 保留所有封面相关字段以支持完整的 fallback 链
   const entrants = used.map((src, i) => ({
     name: src.name,
     id: i,
     side: i < bs / 2 ? 'L' : 'R',
     seed: i + 1,
     nid: src.nid || null,
+    songmid: src.songmid || '',
+    songid: src.songid || 0,
     pic: src.pic || '',
+    picLocal: src.picLocal || '',
+    songPic: src.songPic || '',
+    albumMid: src.albumMid || '',
+    albumName: src.albumName || '',
+    albumDate: src.albumDate || '',
+    albumType: src.albumType || '',
+    albumDesc: src.albumDesc || '',
     chorus: src.chorus || null,
     seedRank: i + 1,
     isSeed: i < Math.min(32, bs),
+    itunesPreviewUrl: src.itunesPreviewUrl || '',
+    itunesTrackUrl: src.itunesTrackUrl || '',
   }));
 
   // seeds = [0, 1, ..., N-1] 表示按热度排序后的索引。

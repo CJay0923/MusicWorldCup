@@ -163,9 +163,9 @@ export default function SongPicker({
           const isDescExpanded = expandedDesc.has(pic || `misc-${ai}`);
           const hasDesc = albumDesc.length > 0;
 
-          // 专辑头部封面 fallback：尝试 T002 CDN
-          const albumHeaderFallback = alb.songs[0]?.albumMid
-            ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${alb.songs[0].albumMid}.jpg`
+          // 专辑头部封面 fallback：尝试 picLocal 和 T002 CDN
+          const albumHeaderFallback = alb.songs[0]?.picLocal || alb.songs[0]?.albumMid
+            ? (alb.songs[0]?.picLocal || `https://y.gtimg.cn/music/photo_new/T002R300x300M000${alb.songs[0].albumMid}.jpg`)
             : '';
           const handleHeaderImgError = (e) => {
             const img = e.currentTarget;
@@ -253,17 +253,20 @@ export default function SongPicker({
                       ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
                       : '';
                     const songArt = alb.isMisc
-                      ? (song.songPic || song.pic || t062Url || t002Url || '')
-                      : (pic || song.songPic || t062Url || t002Url || '');
+                      ? (song.picLocal || song.songPic || song.pic || t062Url || t002Url || '')
+                      : (pic || song.picLocal || song.songPic || t062Url || t002Url || '');
                     const handleArtError = (e) => {
                       const img = e.currentTarget;
                       const tried = img.dataset.tried || '';
                       // 依次尝试 fallback URL
                       if (alb.isMisc) {
-                        if (tried === '' && song.pic) { img.dataset.tried = 'pic'; img.src = song.pic; return; }
+                        if (tried === '' && song.picLocal) { img.dataset.tried = 'picLocal'; img.src = song.picLocal; return; }
+                        if (tried !== 'pic' && song.pic) { img.dataset.tried = 'pic'; img.src = song.pic; return; }
+                        if (tried !== 'songPic' && song.songPic) { img.dataset.tried = 'songPic'; img.src = song.songPic; return; }
                         if (tried !== 't062' && t062Url) { img.dataset.tried = 't062'; img.src = t062Url; return; }
                         if (tried !== 't002' && t002Url) { img.dataset.tried = 't002'; img.src = t002Url; return; }
                       } else {
+                        if (tried !== 'picLocal' && song.picLocal) { img.dataset.tried = 'picLocal'; img.src = song.picLocal; return; }
                         if (tried !== 'songPic' && song.songPic) { img.dataset.tried = 'songPic'; img.src = song.songPic; return; }
                         if (tried !== 't062' && t062Url) { img.dataset.tried = 't062'; img.src = t062Url; return; }
                         if (tried !== 't002' && t002Url) { img.dataset.tried = 't002'; img.src = t002Url; return; }

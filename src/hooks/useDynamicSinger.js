@@ -116,6 +116,7 @@ export function transformDynamicSingerData(raw, albumDetails, favMap) {
       songmid: song.songmid,
       songid: song.songid,
       pic: cdnPic || songCdnPic,
+      picLocal: '',
       songPic: songCdnPic,
       albumMid: song.albumMid,
       albumName: song.albumName,

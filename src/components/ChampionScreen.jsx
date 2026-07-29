@@ -41,26 +41,45 @@ export default function ChampionScreen({
 
   const toggleRecap = () => setShowRecap((v) => !v);
 
-  // 图片 onError fallback：专辑封面 → 歌曲封面 → 空
-  const handleImgError = (e, songPic) => {
+  // 封面图获取：本地 → pic → songPic → T062 CDN → T002 CDN
+  const getCover = (song) => {
+    if (!song) return '';
+    const t062 = song.songmid
+      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
+      : '';
+    const t002 = song.albumMid
+      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
+      : '';
+    return song.picLocal || song.pic || song.songPic || t062 || t002 || '';
+  };
+
+  // 图片 onError fallback
+  const handleImgError = (e, song) => {
     const img = e.currentTarget;
-    if (songPic && img.src !== songPic) {
-      img.src = songPic;
-    } else {
-      img.style.display = 'none';
-    }
+    const tried = img.dataset.tried || '';
+    const t062 = song?.songmid
+      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
+      : '';
+    const t002 = song?.albumMid
+      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
+      : '';
+    if (tried !== 'pic' && song?.pic) { img.dataset.tried = 'pic'; img.src = song.pic; return; }
+    if (tried !== 'songPic' && song?.songPic) { img.dataset.tried = 'songPic'; img.src = song.songPic; return; }
+    if (tried !== 't062' && t062) { img.dataset.tried = 't062'; img.src = t062; return; }
+    if (tried !== 't002' && t002) { img.dataset.tried = 't002'; img.src = t002; return; }
+    img.style.display = 'none';
   };
 
   return (
     <section className="champion active">
       <TrophySvg size={128} />
 
-      <div className={clsx('champ-cover-wrap', { empty: !champion?.pic })}>
-        {champion?.pic && (
+      <div className={clsx('champ-cover-wrap', { empty: !getCover(champion) })}>
+        {getCover(champion) && (
           <img
-            src={champion.pic}
+            src={getCover(champion)}
             alt="冠军专辑封面"
-            onError={(e) => handleImgError(e, champion?.songPic)}
+            onError={(e) => handleImgError(e, champion)}
           />
         )}
       </div>
@@ -90,24 +109,24 @@ export default function ChampionScreen({
               <div className="step" key={i}>
                 <span className="r">{s.roundName}</span>
                 <div className="step-covers">
-                  <div className={clsx('step-cover', { empty: !s.winner?.pic })}>
-                    {s.winner?.pic && (
+                  <div className={clsx('step-cover', { empty: !getCover(s.winner) })}>
+                    {getCover(s.winner) && (
                       <img
-                        src={s.winner.pic}
+                        src={getCover(s.winner)}
                         alt="胜者封面"
                         loading="lazy"
-                        onError={(e) => handleImgError(e, s.winner?.songPic)}
+                        onError={(e) => handleImgError(e, s.winner)}
                       />
                     )}
                   </div>
                   <span className="step-vs">VS</span>
-                  <div className={clsx('step-cover loser', { empty: !s.loser?.pic })}>
-                    {s.loser?.pic && (
+                  <div className={clsx('step-cover loser', { empty: !getCover(s.loser) })}>
+                    {getCover(s.loser) && (
                       <img
-                        src={s.loser?.pic}
+                        src={getCover(s.loser)}
                         alt="败者封面"
                         loading="lazy"
-                        onError={(e) => handleImgError(e, s.loser?.songPic)}
+                        onError={(e) => handleImgError(e, s.loser)}
                       />
                     )}
                   </div>

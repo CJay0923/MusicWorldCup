@@ -4,9 +4,56 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>歌曲世界杯 · 二选一</title>
+<link rel="preconnect" href="https://y.gtimg.cn" crossorigin>
+<link rel="preconnect" href="https://u.y.qq.com" crossorigin>
+<style>
+  /* 内联首屏加载样式 — 不依赖打包后的 CSS，确保 HTML 下载即可显示 */
+  #initial-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: linear-gradient(160deg, #0b0f24 0%, #161b3a 60%, #1f2550 100%);
+    color: #f3f4fb;
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', system-ui, sans-serif;
+  }
+  #initial-loader .il-trophy {
+    font-size: 56px;
+    filter: drop-shadow(0 4px 20px rgba(255, 210, 74, 0.4));
+    animation: il-bounce 1.6s ease-in-out infinite;
+  }
+  #initial-loader .il-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    border-top-color: #ffd24a;
+    border-radius: 50%;
+    animation: il-spin 0.7s linear infinite;
+  }
+  #initial-loader .il-text {
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  @keyframes il-spin { to { transform: rotate(360deg); } }
+  @keyframes il-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+</style>
 </head>
 <body>
-<div id="root"></div>
+<div id="root">
+  <div id="initial-loader">
+    <div class="il-trophy">🏆</div>
+    <div class="il-spinner"></div>
+    <div class="il-text">正在加载歌曲世界杯…</div>
+  </div>
+</div>
 <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

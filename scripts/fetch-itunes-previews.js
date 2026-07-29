@@ -16,7 +16,7 @@ import { baseKey } from '../src/utils/text.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, '..');
-const DATA_DIR = join(PROJECT_ROOT, 'src', 'data', 'singerData');
+const DATA_DIR = join(PROJECT_ROOT, 'public', 'singerData');
 
 const ITUNES_BASE = 'https://itunes.apple.com';
 
@@ -198,7 +198,7 @@ function buildITunesIndex(tracks) {
 
 // ---------- 主流程 ----------
 
-const SINGERS = ['stefanie', 'jj', 'jay', 'jolin', 'david', 'she', 'eason'];
+const SINGERS = ['stefanie', 'jj', 'jay', 'jolin', 'david', 'she', 'eason', 'amei', 'angela', 'cyndi', 'elva', 'fish', 'gem', 'khalil', 'lala', 'leehom', 'lironghao', 'mayday', 'rainie', 'sandy'];
 
 async function main() {
   console.log('🎵 开始预取 iTunes 试听数据（含简繁转换）...\n');
@@ -260,9 +260,9 @@ async function main() {
       console.log(`  未匹配歌曲(前20): ${unmatchedNames.slice(0, 20).join(', ')}...`);
     }
 
-    // 保存
-    await writeFile(jsonPath, JSON.stringify(raw, null, 2));
-    console.log(`  💾 已保存: src/data/singerData/${singerId}.json`);
+    // 保存（紧凑格式，与优化后的 JSON 保持一致）
+    await writeFile(jsonPath, JSON.stringify(raw));
+    console.log(`  💾 已保存: public/singerData/${singerId}.json`);
 
     await sleep(500);
   }

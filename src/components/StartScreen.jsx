@@ -84,6 +84,9 @@ export default function StartScreen({
   onAddDynamicSinger,
   crossDynamicSingers,
   crossLoadingMids,
+  crossBattleType,
+  onCrossBattleTypeChange,
+  crossTotalItems,
   // 夯到拉排名 props
   rankingCategory,
   onRankingCategoryChange,
@@ -401,23 +404,44 @@ export default function StartScreen({
 
       {/* 跨歌手混战：多选歌手选择器 */}
       {isCrossBattle && (
-        <CrossSingerSelector
-          selectedSingers={crossSelectedSingers}
-          onToggleSinger={onCrossToggleSinger}
-          singerDataMap={crossSingerDataMap}
-          loading={crossLoading}
-          bracketSize={selectedSize}
-          onSelectSize={onSelectSize}
-          availableSizes={crossAvailableSizes}
-          mode="cross-battle"
-          crossSearchKeyword={crossSearchKeyword}
-          onCrossSearch={onCrossSearch}
-          crossSearchResults={crossSearchResults}
-          isCrossSearching={isCrossSearching}
-          onAddDynamicSinger={onAddDynamicSinger}
-          dynamicSingers={crossDynamicSingers}
-          loadingMids={crossLoadingMids}
-        />
+        <>
+          {/* 对决类型选择器 */}
+          <div className="cross-battle-type-selector">
+            {[
+              { value: 'songs', label: '🎵 歌曲' },
+              { value: 'albums', label: '💿 专辑' },
+              { value: 'singers', label: '🎤 歌手' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                className={clsx('cross-battle-type-btn', { active: crossBattleType === opt.value })}
+                onClick={() => onCrossBattleTypeChange?.(opt.value)}
+                type="button"
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <CrossSingerSelector
+            selectedSingers={crossSelectedSingers}
+            onToggleSinger={onCrossToggleSinger}
+            singerDataMap={crossSingerDataMap}
+            loading={crossLoading}
+            bracketSize={selectedSize}
+            onSelectSize={onSelectSize}
+            availableSizes={crossAvailableSizes}
+            mode="cross-battle"
+            crossSearchKeyword={crossSearchKeyword}
+            onCrossSearch={onCrossSearch}
+            crossSearchResults={crossSearchResults}
+            isCrossSearching={isCrossSearching}
+            onAddDynamicSinger={onAddDynamicSinger}
+            dynamicSingers={crossDynamicSingers}
+            loadingMids={crossLoadingMids}
+            crossBattleType={crossBattleType}
+            crossTotalItems={crossTotalItems}
+          />
+        </>
       )}
 
       {/* 夯到拉排名：排名范围 + 子模式选择 */}

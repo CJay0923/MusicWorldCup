@@ -1,74 +1,82 @@
 {
   "stefanie": {
-    "songCount": 220,
+    "songCount": 184,
     "albumCount": 49
   },
   "jj": {
-    "songCount": 486,
+    "songCount": 397,
     "albumCount": 123
   },
   "jay": {
-    "songCount": 369,
+    "songCount": 324,
     "albumCount": 68
   },
   "jolin": {
-    "songCount": 329,
+    "songCount": 275,
     "albumCount": 76
   },
   "david": {
-    "songCount": 207,
+    "songCount": 184,
     "albumCount": 57
   },
   "she": {
-    "songCount": 169,
+    "songCount": 152,
     "albumCount": 34
   },
   "eason": {
-    "songCount": 704,
+    "songCount": 606,
     "albumCount": 136
   },
   "leehom": {
-    "songCount": 323,
+    "songCount": 285,
     "albumCount": 82
   },
   "khalil": {
-    "songCount": 222,
+    "songCount": 194,
     "albumCount": 52
   },
   "mayday": {
-    "songCount": 301,
+    "songCount": 264,
     "albumCount": 63
   },
   "lironghao": {
-    "songCount": 189,
+    "songCount": 154,
     "albumCount": 60
   },
   "fish": {
-    "songCount": 275,
+    "songCount": 229,
     "albumCount": 52
   },
   "elva": {
-    "songCount": 203,
+    "songCount": 184,
     "albumCount": 33
   },
   "angela": {
-    "songCount": 295,
+    "songCount": 261,
     "albumCount": 135
   },
   "cyndi": {
-    "songCount": 222,
+    "songCount": 202,
     "albumCount": 52
   },
   "rainie": {
-    "songCount": 235,
+    "songCount": 208,
     "albumCount": 72
   },
   "amei": {
-    "songCount": 322,
+    "songCount": 272,
     "albumCount": 71
   },
   "gem": {
-    "songCount": 317,
+    "songCount": 236,
     "albumCount": 90
+  },
+  "sandy": {
+    "songCount": 499,
+    "albumCount": 130
+  },
+  "lala": {
+    "songCount": 215,
+    "albumCount": 101
   }
 }

@@ -38,6 +38,8 @@ export default function CrossSingerSelector({
   onAddDynamicSinger,
   dynamicSingers,
   loadingMids,
+  crossBattleType,
+  crossTotalItems,
 }) {
   const selectedList = [...(selectedSingers || [])];
   const selectedCount = selectedList.length;
@@ -241,7 +243,10 @@ export default function CrossSingerSelector({
           <span className="size-label">
             淘汰赛规模
             {perSinger > 0 && (
-              <small>（每位歌手约 {perSinger} 首）</small>
+              <small>
+                （每位歌手约 {perSinger}
+                {crossBattleType === 'albums' ? ' 张专辑' : crossBattleType === 'singers' ? ' 位' : ' 首'}）
+              </small>
             )}
           </span>
           <div className="size-btns">

@@ -87,11 +87,68 @@ function buildStaticNameMap(singerId) {
 /**
  * 将本地预取的 JSON 数据转换为 entrant 格式（兼容现有 SINGERS 结构）
  * 合并静态数据的 nid/chorus，修复图片路径
+ * 
+ * 如果数据已预处理（raw.preprocessed === true），走快速路径：
+ * - 跳过 Live/伴奏正则过滤（下载时已过滤）
+ * - 跳过 favCount 排序（已预排序）
+ * - 跳过 seedRank 映射构建（已预计算）
  */
 function transformToSingerData(raw, registry, singerId) {
   const staticNameMap = buildStaticNameMap(singerId);
   const albumDescs = raw.albumDescs || {};
 
+  // ===== 快速路径：已预处理的数据 =====
+  if (raw.preprocessed === true) {
+    const allEntrants = raw.entrants.map((song, i) => {
+      const normName = normalizeName(song.name);
+      const staticMatch = staticNameMap.get(normName);
+
+      const cdnPic = song.pic || (song.albumMid
+        ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
+        : '');
+      const songCdnPic = song.songPic || (song.songmid
+        ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
+        : '');
+
+      const sr = song.seedRank || i + 1;
+
+      return {
+        name: song.name,
+        id: i,
+        side: i < raw.entrants.length / 2 ? 'L' : 'R',
+        seed: sr,
+        nid: song.nid ?? staticMatch?.nid ?? null,
+        songmid: song.songmid,
+        songid: song.songid,
+        pic: cdnPic || songCdnPic,
+        picLocal: toRelativePath(song.pic),
+        songPic: songCdnPic,
+        albumMid: song.albumMid,
+        albumName: song.albumName,
+        albumDate: song.albumDate || '',
+        albumType: song.albumType || '',
+        albumDesc: song.albumDesc || albumDescs[song.albumMid] || '',
+        chorus: song.chorus ?? staticMatch?.chorus ?? null,
+        seedRank: sr,
+        isSeed: sr <= Math.min(32, raw.entrants.length),
+        itunesPreviewUrl: song.itunesPreviewUrl || '',
+        itunesTrackUrl: song.itunesTrackUrl || '',
+      };
+    });
+
+    return {
+      name: raw.singerName || registry.name,
+      nameEn: registry.nameEn,
+      bracketSize: registry.bracketSize,
+      entrants: allEntrants,
+      seeds: allEntrants.map((_, i) => i),
+      seedRank: Object.fromEntries(allEntrants.map((e, i) => [i, e.seedRank])),
+      singerPhoto: raw.singerPhoto || `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid}.jpg`,
+      source: 'local',
+    };
+  }
+
+  // ===== 慢速路径：未预处理的数据（向后兼容）=====
   // 运行时过滤 Live/伴奏 + baseKey 去重 + 低收藏量无封面过滤
   const MIN_FAV_WITHOUT_COVER = 1000; // 无封面时收藏量需≥1000才保留
   const seenKeys = new Set();
@@ -200,6 +257,8 @@ export async function loadSingerData(singerId) {
       const res = await fetch(`./singerData/${singerId}.json`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const raw = await res.json();
+      // 让出主线程，让 loading 动画有机会渲染
+      await new Promise(r => setTimeout(r, 0));
       const data = transformToSingerData(raw, registry, singerId);
       dataCache.set(singerId, data);
       return data;

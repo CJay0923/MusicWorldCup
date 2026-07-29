@@ -52,6 +52,9 @@ const SINGERS = {
   she: { name: 'S.H.E', singermid: '003u5H9x1vACGo' },
   amei: { name: '张惠妹', singermid: '003JGrNQ3RjelA' },
   gem: { name: '邓紫棋', singermid: '001fNHEf1SFEFN' },
+  // 实力派女歌手
+  sandy: { name: '林忆莲', singermid: '002u0TJy47WWOj' },
+  lala: { name: '徐佳莹', singermid: '002LZVMH0zc8F4' },
 };
 
 // ---------- 工具函数 ----------

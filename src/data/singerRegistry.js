@@ -133,6 +133,21 @@ export const SINGER_REGISTRY = {
     bracketSize: 128,
     photo: 'https://y.gtimg.cn/music/photo_new/T001R300x300M000001fNHEf1SFEFN.jpg',
   },
+  // 实力派女歌手
+  sandy: {
+    name: '林忆莲',
+    nameEn: 'SANDY',
+    singermid: '002u0TJy47WWOj',
+    bracketSize: 128,
+    photo: 'https://y.gtimg.cn/music/photo_new/T001R300x300M000002u0TJy47WWOj.jpg',
+  },
+  lala: {
+    name: '徐佳莹',
+    nameEn: 'LALA',
+    singermid: '002LZVMH0zc8F4',
+    bracketSize: 128,
+    photo: 'https://y.gtimg.cn/music/photo_new/T001R300x300M000002LZVMH0zc8F4.jpg',
+  },
 };
 
 // 歌手列表 (保持顺序：先男后女)

@@ -24,6 +24,8 @@ export const SINGERS = {
   she: { name: 'S.H.E', nameEn: 'SHE', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
   amei: { name: '张惠妹', nameEn: 'AMEI', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
   gem: { name: '邓紫棋', nameEn: 'GEM', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  sandy: { name: '林忆莲', nameEn: 'SANDY', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  lala: { name: '徐佳莹', nameEn: 'LALA', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
 };
 
 export const STATIC_SINGERS = SINGERS;
@@ -34,6 +36,7 @@ export const SINGER_ICONS = {
   stefanie: '☀️', jolin: '💃', fish: '🐠', elva: '⚡',
   angela: '🌈', cyndi: '💝', rainie: '🌺',
   she: '👯', amei: '🔥', gem: '💎',
+  sandy: '🌙', lala: '⭐',
 };
 
 // World Cup constants
@@ -212,6 +215,174 @@ export function buildCrossSingerData(singerDataList, bracketSize) {
 }
 
 /**
+ * 跨歌手专辑对决：将多位歌手的专辑作为参赛选手
+ * @param {object[]} singerDataList - 多个歌手的 singerData 对象数组
+ * @param {number} bracketSize - 目标淘汰赛规模
+ * @returns {{name, nameEn, bracketSize, entrants, seeds, seedRank}|null}
+ */
+export function buildCrossSingerAlbumData(singerDataList, bracketSize) {
+  const valid = singerDataList.filter((s) => s?.entrants?.length);
+  if (valid.length < 2) return null;
+
+  const numSingers = valid.length;
+  const perSinger = Math.max(2, Math.floor(bracketSize / numSingers));
+
+  let totalAlbums = perSinger * numSingers;
+  let bs = 1;
+  while (bs * 2 <= totalAlbums) bs *= 2;
+  const actualPerSinger = Math.floor(bs / numSingers);
+  const finalTotal = actualPerSinger * numSingers;
+  const finalSize = Math.max(finalTotal, 4);
+
+  // 每位歌手提取专辑（跳过未分类），按发行日期取前 N 张
+  const collected = [];
+  for (const sd of valid) {
+    const groups = getAlbumGroups(sd.entrants || []);
+    const personalAlbums = groups.filter((g) => !g.isMisc);
+    // 按收藏量（专辑内歌曲总收藏量）降序排序
+    const sorted = personalAlbums
+      .map((g) => ({
+        ...g,
+        totalFav: g.songs.reduce((sum, s) => sum + (s.favCount || 0), 0),
+      }))
+      .sort((a, b) => b.totalFav - a.totalFav);
+    const topN = sorted.slice(0, actualPerSinger);
+    collected.push({
+      singerName: sd.name,
+      singerPhoto: sd.singerPhoto || null,
+      albums: topN,
+    });
+  }
+
+  // 交叉排序
+  const merged = [];
+  for (let rank = 0; rank < actualPerSinger; rank++) {
+    for (const c of collected) {
+      if (rank < c.albums.length) {
+        const album = c.albums[rank];
+        merged.push({
+          type: 'album',
+          name: album.name,
+          pic: album.pic || '',
+          singerName: c.singerName,
+          singerPhoto: c.singerPhoto,
+          songCount: album.songs.length,
+          albumDate: album.date || '',
+          albumDesc: album.desc || '',
+          seedRank: rank + 1,
+        });
+      }
+    }
+  }
+
+  let used = merged.slice(0, finalSize);
+
+  // 避免同歌手首轮内战（复用算法）
+  const avoidSameSingerFirstRound = (items) => {
+    const result = [...items];
+    const n = result.length;
+    for (let i = 0; i < n; i += 2) {
+      const a = result[i];
+      const b = result[i + 1];
+      if (!a || !b) continue;
+      if (a.singerName !== b.singerName) continue;
+      let bestSwap = -1;
+      for (let j = i + 2; j < n; j++) {
+        const candidate = result[j];
+        if (!candidate || candidate.singerName === a.singerName) continue;
+        const partnerIdx = j % 2 === 0 ? j + 1 : j - 1;
+        const partner = result[partnerIdx];
+        if (partner && partner.singerName === b.singerName) continue;
+        bestSwap = j;
+        break;
+      }
+      if (bestSwap >= 0) {
+        [result[i + 1], result[bestSwap]] = [result[bestSwap], result[i + 1]];
+      }
+    }
+    return result;
+  };
+
+  const finalItems = avoidSameSingerFirstRound(used);
+
+  const entrants = finalItems.map((src, i) => ({
+    ...src,
+    id: i,
+    side: i < finalSize / 2 ? 'L' : 'R',
+    seed: i + 1,
+    seedRank: i + 1,
+    isSeed: i < Math.min(32, finalSize),
+  }));
+
+  const singerNames = valid.map((s) => s.name).join(' vs ');
+
+  return {
+    name: singerNames,
+    nameEn: 'CROSS_ALBUM',
+    bracketSize: finalSize,
+    entrants,
+    seeds: entrants.map((_, i) => i),
+    seedRank: Object.fromEntries(entrants.map((e, i) => [i, i + 1])),
+  };
+}
+
+/**
+ * 跨歌手歌手对决：将歌手本身作为参赛选手
+ * @param {object[]} singerDataList - 多个歌手的 singerData 对象数组
+ * @returns {{name, nameEn, bracketSize, entrants, seeds, seedRank}|null}
+ */
+export function buildCrossSingerSingerData(singerDataList) {
+  const valid = singerDataList.filter((s) => s?.entrants?.length);
+  if (valid.length < 2) return null;
+
+  // bracketSize 向下对齐到 2 的幂
+  let bs = 1;
+  while (bs * 2 <= valid.length) bs *= 2;
+  const finalSize = Math.max(bs, 2);
+
+  // 取前 finalSize 位歌手
+  const used = valid.slice(0, finalSize);
+
+  // 构建 entrants
+  const merged = used.map((sd, i) => {
+    const topSong = sd.entrants?.[0];
+    const groups = getAlbumGroups(sd.entrants || []);
+    const albumCount = groups.filter((g) => !g.isMisc).length;
+    return {
+      type: 'singer',
+      name: sd.name,
+      pic: sd.singerPhoto || '',
+      singerName: sd.name,
+      singerPhoto: sd.singerPhoto,
+      songCount: sd.entrants?.length || 0,
+      albumCount,
+      topSong: topSong?.name || '',
+      seedRank: i + 1,
+    };
+  });
+
+  const entrants = merged.map((src, i) => ({
+    ...src,
+    id: i,
+    side: i < finalSize / 2 ? 'L' : 'R',
+    seed: i + 1,
+    seedRank: i + 1,
+    isSeed: i < Math.min(32, finalSize),
+  }));
+
+  const singerNames = used.map((s) => s.name).join(' vs ');
+
+  return {
+    name: singerNames,
+    nameEn: 'CROSS_SINGER',
+    bracketSize: finalSize,
+    entrants,
+    seeds: entrants.map((_, i) => i),
+    seedRank: Object.fromEntries(entrants.map((e, i) => [i, i + 1])),
+  };
+}
+
+/**
  * 计算夯到拉排名模式的分层结构
  * 等级：夯 → 顶级 → 人上人 → NPC → 拉完了
  * 不设数量限制，用户可自由分配任意数量到任意等级
@@ -297,7 +468,7 @@ export function buildCustomSingerData(selected, bracketSize, singerName) {
  */
 export function getAlbumGroups(entrants) {
   const MISC_KEY = '__misc__';
-  const MIN_SONGS_FOR_ALBUM = 3;
+  const MIN_SONGS_FOR_ALBUM = 6;
   // 专辑名关键词兜底：排除合辑/精选/原声带/游戏/广告等
   const EXCLUDE_NAME_PATTERNS =
     /精选|合辑|现场|演唱会|Live|LIVE|live|致敬|Tribute|翻唱|Cover|Remix|混音|原声带|OST|游戏|广告|公益|晚会|跨年|春晚|盛典|金曲|音乐节|梦想的声音|我是歌手|我想和你唱/i;

@@ -3,7 +3,7 @@
 // 根据当前歌手、模式和游戏阶段渲染对应的界面。
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { SINGERS, buildCustomSingerData, buildCrossSingerData, classicOptions, getAlbumGroups } from './data/singers.js';
+import { SINGERS, buildCustomSingerData, buildCrossSingerData, buildCrossSingerAlbumData, buildCrossSingerSingerData, classicOptions, getAlbumGroups } from './data/singers.js';
 import { SINGER_REGISTRY } from './data/singerRegistry.js';
 import { useSingerData } from './hooks/useSingerData.js';
 import { useDynamicSinger } from './hooks/useDynamicSinger.js';
@@ -25,6 +25,7 @@ import DrawScreen from './components/wc/DrawScreen.jsx';
 import WildcardScreen from './components/wc/WildcardScreen.jsx';
 import PreviewModal from './components/PreviewModal.jsx';
 import RankingScreen from './components/RankingScreen.jsx';
+import LoadingOverlay from './components/LoadingOverlay.jsx';
 import { WC_TOTAL_MATCHES, WC_KO_TEAMS } from './data/singers.js';
 
 const KO_ROUND_NAMES = ['32强', '16强', '8强', '4强', '决赛'];
@@ -40,6 +41,7 @@ function App() {
 
   // 跨歌手混战状态
   const [crossSelectedSingers, setCrossSelectedSingers] = useState(new Set());
+  const [crossBattleType, setCrossBattleType] = useState('songs'); // 'songs' | 'albums' | 'singers'
   const [rankingCategory, setRankingCategory] = useState('song');
   const [rankingItems, setRankingItems] = useState([]);
   // 夯到拉排名子模式
@@ -116,24 +118,39 @@ function App() {
     }
     return true;
   })();
-  const crossTotalSongs = useMemo(
-    () => crossSingerDataList.reduce((sum, sd) => sum + (sd?.entrants?.length || 0), 0),
-    [crossSingerDataList],
-  );
+  // 跨歌手混战：根据对决类型计算可用规模
+  const crossTotalItems = useMemo(() => {
+    if (crossBattleType === 'singers') {
+      return crossSingerDataList.length;
+    }
+    if (crossBattleType === 'albums') {
+      return crossSingerDataList.reduce((sum, sd) => {
+        const groups = getAlbumGroups(sd?.entrants || []);
+        return sum + groups.filter(g => !g.isMisc).length;
+      }, 0);
+    }
+    return crossSingerDataList.reduce((sum, sd) => sum + (sd?.entrants?.length || 0), 0);
+  }, [crossSingerDataList, crossBattleType]);
   const crossAvailableSizes = useMemo(
-    () => classicOptions(Math.min(crossTotalSongs, 128)),
-    [crossTotalSongs],
+    () => classicOptions(Math.min(crossTotalItems, 128)),
+    [crossTotalItems],
   );
   const crossBracketSize = useMemo(() => {
     const sizes = crossAvailableSizes;
     return selectedSize && sizes.includes(selectedSize) ? selectedSize : sizes[0] || 32;
   }, [crossAvailableSizes, selectedSize]);
 
-  // 跨歌手混战：构建合并数据
+  // 跨歌手混战：构建合并数据（根据对决类型选择构建函数）
   const crossSingerData = useMemo(() => {
     if (selectedMode !== 'cross-battle' || crossSingerDataList.length < 2) return null;
+    if (crossBattleType === 'albums') {
+      return buildCrossSingerAlbumData(crossSingerDataList, crossBracketSize);
+    }
+    if (crossBattleType === 'singers') {
+      return buildCrossSingerSingerData(crossSingerDataList);
+    }
     return buildCrossSingerData(crossSingerDataList, crossBracketSize);
-  }, [selectedMode, crossSingerDataList, crossBracketSize]);
+  }, [selectedMode, crossSingerDataList, crossBracketSize, crossBattleType]);
 
   // 游戏状态用的歌手标识：动态歌手使用独立 key（避免覆盖内置歌手存档），
   // 切换内置歌手 / 动态歌手时此值变化，触发 useGameState / useWorldCup 重置
@@ -686,6 +703,15 @@ function App() {
   // ==================== 渲染 ====================
   return (
     <div className="wrap">
+      {/* Loading Overlay */}
+      <LoadingOverlay
+        visible={!!(singerLoading || crossLoading || isLoadingSinger)}
+        text={
+          isLoadingSinger ? (loadingProgress || '正在加载歌曲数据…')
+          : crossLoading ? '正在加载多歌手数据…'
+          : '正在加载歌曲数据…'
+        }
+      />
       {/* 顶栏 */}
       <div className="topbar">
         <div className="brand">
@@ -748,6 +774,9 @@ function App() {
           onAddDynamicSinger={handleCrossAddDynamicSinger}
           crossDynamicSingers={crossDynamicSingers}
           crossLoadingMids={crossLoadingMids}
+          crossBattleType={crossBattleType}
+          onCrossBattleTypeChange={setCrossBattleType}
+          crossTotalItems={crossTotalItems}
           // 夯到拉排名 props
           rankingCategory={rankingCategory}
           onRankingCategoryChange={setRankingCategory}

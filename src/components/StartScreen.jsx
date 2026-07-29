@@ -475,29 +475,67 @@ export default function StartScreen({
                 </div>
               </div>
 
-              {/* 专辑内歌曲：选择专辑 */}
+              {/* 专辑内歌曲：选择专辑（卡片式） */}
               {rankingSubMode === 'album-songs' && baseSingerData?.entrants && (
                 <div className="ranking-album-picker">
                   <span className="size-label">选择专辑</span>
-                  <select
-                    className="ranking-album-select"
-                    value={rankingAlbumMid}
-                    onChange={(e) => onRankingAlbumMidChange?.(e.target.value)}
-                  >
-                    <option value="">自动选择（所有有专辑的歌曲）</option>
+                  <div className="ranking-album-grid">
+                    <div
+                      className={clsx('ranking-album-card', { selected: !rankingAlbumMid })}
+                      onClick={() => onRankingAlbumMidChange?.('')}
+                    >
+                      <div className="ranking-album-card-art all-songs">
+                        <span>🎵</span>
+                      </div>
+                      <span className="ranking-album-card-name">全部歌曲</span>
+                    </div>
                     {(() => {
                       const albumMap = new Map();
                       for (const e of baseSingerData.entrants) {
                         const key = e.albumMid || e.albumName;
                         if (key && !albumMap.has(key)) {
-                          albumMap.set(key, e.albumName || key);
+                          albumMap.set(key, {
+                            name: e.albumName || key,
+                            pic: e.picLocal || e.pic || (e.albumMid
+                              ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${e.albumMid}.jpg`
+                              : ''),
+                            date: e.albumDate || '',
+                            count: 0,
+                          });
                         }
+                        if (key) albumMap.get(key).count++;
                       }
-                      return [...albumMap.entries()].map(([key, name]) => (
-                        <option key={key} value={key}>{name}</option>
-                      ));
+                      return [...albumMap.entries()]
+                        .sort(([, a], [, b]) => (a.date || '').localeCompare(b.date || ''))
+                        .map(([key, info]) => (
+                          <div
+                            key={key}
+                            className={clsx('ranking-album-card', { selected: rankingAlbumMid === key })}
+                            onClick={() => onRankingAlbumMidChange?.(key)}
+                          >
+                            <div className="ranking-album-card-art">
+                              {info.pic ? (
+                                <img
+                                  src={info.pic}
+                                  alt=""
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    const img = e.currentTarget;
+                                    const t002 = `https://y.gtimg.cn/music/photo_new/T002R300x300M000${key}.jpg`;
+                                    if (img.src !== t002) { img.src = t002; }
+                                    else { img.style.display = 'none'; }
+                                  }}
+                                />
+                              ) : (
+                                <span>💿</span>
+                              )}
+                            </div>
+                            <span className="ranking-album-card-name">{info.name}</span>
+                            <span className="ranking-album-card-meta">{info.count}首</span>
+                          </div>
+                        ));
                     })()}
-                  </select>
+                  </div>
                 </div>
               )}
 

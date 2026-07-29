@@ -85,9 +85,9 @@ function App() {
   // 当动态歌手加载完成时，覆盖内置歌手数据
   const baseSingerData = dynamicSingerData || localData || SINGERS[currentSinger];
 
-  // 跨歌手混战：收集所有选中歌手的数据
+  // 跨歌手混战/排名：收集所有选中歌手的数据
   const crossSingerDataList = useMemo(() => {
-    if (selectedMode !== 'cross-battle' || !crossSelectedSingers?.size) return [];
+    if ((selectedMode !== 'cross-battle' && !(selectedMode === 'ranking' && rankingScope === 'cross')) || !crossSelectedSingers?.size) return [];
     const list = [];
     for (const id of crossSelectedSingers) {
       if (id.startsWith('dyn_')) {
@@ -100,7 +100,7 @@ function App() {
       }
     }
     return list;
-  }, [selectedMode, crossSelectedSingers, crossSingerDataMap, crossDynamicSingers]);
+  }, [selectedMode, rankingScope, crossSelectedSingers, crossSingerDataMap, crossDynamicSingers]);
 
   // 夯到拉排名模式：判断是否可开始
   const rankingCanStart = (() => {

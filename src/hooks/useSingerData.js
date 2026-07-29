@@ -180,7 +180,7 @@ function transformToSingerData(raw, registry, singerId) {
  * @param {string} singerId
  * @returns {Promise<object|null>}
  */
-async function loadSingerData(singerId) {
+export async function loadSingerData(singerId) {
   // 1. 命中缓存直接返回
   if (dataCache.has(singerId)) {
     return dataCache.get(singerId);

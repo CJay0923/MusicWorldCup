@@ -4,6 +4,7 @@ import TrophySvg from './TrophySvg.jsx';
 import SingerSelector from './SingerSelector.jsx';
 import ModeSelector from './ModeSelector.jsx';
 import SongPicker from './SongPicker.jsx';
+import CrossSingerSelector from './CrossSingerSelector.jsx';
 import { classicOptions } from '../data/singers.js';
 
 /**
@@ -70,15 +71,35 @@ export default function StartScreen({
   loadingProgress,
   onLoadSinger,
   onClearDynamicSinger,
+  // 跨歌手混战 props
+  crossSelectedSingers,
+  onCrossToggleSinger,
+  crossSingerDataMap,
+  crossLoading,
+  crossAvailableSizes,
+  onCrossSearch,
+  crossSearchKeyword,
+  crossSearchResults,
+  isCrossSearching,
+  onAddDynamicSinger,
+  crossDynamicSingers,
+  crossLoadingMids,
+  // 夯到拉排名 props
+  rankingCategory,
+  onRankingCategoryChange,
 }) {
   const isClassic = selectedMode === 'classic';
   const isCustom = selectedMode === 'custom';
+  const isCrossBattle = selectedMode === 'cross-battle';
+  const isRanking = selectedMode === 'ranking';
 
   // 赛制说明折叠状态（默认展开）
   const [rulesCollapsed, setRulesCollapsed] = useState({
     classic: false,
     wc: false,
     custom: false,
+    cross: false,
+    ranking: false,
   });
   const toggleRules = (key) =>
     setRulesCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -101,12 +122,17 @@ export default function StartScreen({
   const customValidCount = customSelectedIds?.size || 0;
   const canStartCustom = customValidCount >= 4 && customValidCount >= customBracketSize;
 
+  // Cross-battle: calculate if enough singers selected
+  const crossSingerCount = crossSelectedSingers?.size || 0;
+  const canStartCross = crossSingerCount >= 2;
+
+  // Ranking: always can start if singer data is available
+  const canStartRanking = !!singer?.entrants?.length || !!singer;
+
   // Decide whether to show the resume button and its label
-  const showResume = isClassic
+  const showResume = (isClassic || isCustom)
     ? hasSaved || hasSavedWC
-    : isCustom
-      ? hasSaved || hasSavedWC
-      : hasSavedWC || hasSaved;
+    : hasSavedWC || hasSaved;
   const resumeLabel = (() => {
     if (isClassic || isCustom) {
       if (hasSaved) return '继续上次';
@@ -121,7 +147,15 @@ export default function StartScreen({
   return (
     <section className="hero">
       <TrophySvg size={104} />
-      <h1>{isCustom ? '自选歌曲世界杯' : `${singer?.name}歌曲世界杯`}</h1>
+      <h1>
+        {isCustom
+          ? '自选歌曲世界杯'
+          : isCrossBattle
+            ? '多歌手混战世界杯'
+            : isRanking
+              ? '夯到拉排名'
+              : `${singer?.name}歌曲世界杯`}
+      </h1>
       <p className="sub">
         {isCustom ? (
           <>
@@ -130,6 +164,14 @@ export default function StartScreen({
         ) : isClassic ? (
           <>
             {bracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军
+          </>
+        ) : isCrossBattle ? (
+          <>
+            多位歌手 · <b>公平分配</b> · 跨歌手对决决出终极冠军
+          </>
+        ) : isRanking ? (
+          <>
+            歌手/歌曲/专辑 · <b>分层排名</b> · 从最夯到最拉
           </>
         ) : (
           <>
@@ -186,7 +228,7 @@ export default function StartScreen({
         className={clsx('rules', 'wc-rules', {
           collapsed: rulesCollapsed.wc,
         })}
-        style={{ display: !isClassic && !isCustom ? 'block' : 'none' }}
+        style={{ display: selectedMode === 'wc' ? 'block' : 'none' }}
       >
         <h3
           className="rules-toggle"
@@ -259,22 +301,134 @@ export default function StartScreen({
         </ul>
       </div>
 
-      {/* 歌手选择（所有模式都显示，自选模式也需要选歌手来确定歌曲池） */}
-      <SingerSelector
-        singers={singers}
-        current={currentSinger}
-        onSelect={onSelectSinger}
-        searchKeyword={searchKeyword}
-        onSearch={onSearch}
-        searchResults={searchResults}
-        isSearching={isSearching}
-        dynamicSinger={dynamicSinger}
-        isLoadingSinger={isLoadingSinger}
-        loadingProgress={loadingProgress}
-        onLoadSinger={onLoadSinger}
-        onClearDynamicSinger={onClearDynamicSinger}
-        singerLoading={singerLoading}
-      />
+      {/* Cross-battle rules */}
+      <div
+        className={clsx('rules', { collapsed: rulesCollapsed.cross })}
+        style={{ display: isCrossBattle ? 'block' : 'none' }}
+      >
+        <h3
+          className="rules-toggle"
+          onClick={() => toggleRules('cross')}
+        >
+          <span>赛制说明 · 多歌手混战</span>
+          <span className="rules-arrow">
+            {rulesCollapsed.cross ? '▶' : '▼'}
+          </span>
+        </h3>
+        <ul>
+          <li>
+            选择 <b>2-8 位歌手</b> 参战，可从内置歌手中选择，也可搜索添加更多歌手。
+          </li>
+          <li>
+            系统从每位歌手中<b>等量取样</b>（按热度排序取前 N 首），确保公平。
+          </li>
+          <li>
+            各歌手歌曲<b>交叉排列</b>，首轮<b>尽量避免同歌手内战</b>。
+          </li>
+          <li>
+            玩法与经典模式相同：每场<b>二选一</b>，胜者晋级，直到决出跨歌手终极冠军。
+          </li>
+          <li>支持试听功能，每次开始重新抽签。</li>
+          <li>纯娱乐性质，不具有任何官方性。</li>
+        </ul>
+      </div>
+
+      {/* Ranking rules */}
+      <div
+        className={clsx('rules', { collapsed: rulesCollapsed.ranking })}
+        style={{ display: isRanking ? 'block' : 'none' }}
+      >
+        <h3
+          className="rules-toggle"
+          onClick={() => toggleRules('ranking')}
+        >
+          <span>赛制说明 · 夯到拉排名</span>
+          <span className="rules-arrow">
+            {rulesCollapsed.ranking ? '▶' : '▼'}
+          </span>
+        </h3>
+        <ul>
+          <li>
+            选择排名对象：<b>歌曲</b>、<b>专辑</b> 或 <b>歌手</b>。
+          </li>
+          <li>
+            系统将所有项目随机洗牌后逐一展示，你将每个项目分配到 5 个等级之一。
+          </li>
+          <li>
+            5 个等级从<b>最夯</b>到<b>最拉</b>，每个等级的容量<b>按曲线递增</b>：
+            最夯 1 个 → 很夯 2 个 → 还行 4 个 → 一般 8 个 → 拉 16 个。
+          </li>
+          <li>
+            当某等级已满时，该按钮自动禁用，需将项目分配到其他等级。
+          </li>
+          <li>支持<b>撤销</b>操作，随时查看当前排名进度。</li>
+          <li>排名完成后展示完整的<b>分层排名</b>结果。</li>
+          <li>纯娱乐性质，不具有任何官方性。</li>
+        </ul>
+      </div>
+
+      {/* 歌手选择（经典/世界杯/自选/排名模式显示，混战模式使用自己的多选器） */}
+      {!isCrossBattle && (
+        <SingerSelector
+          singers={singers}
+          current={currentSinger}
+          onSelect={onSelectSinger}
+          searchKeyword={searchKeyword}
+          onSearch={onSearch}
+          searchResults={searchResults}
+          isSearching={isSearching}
+          dynamicSinger={dynamicSinger}
+          isLoadingSinger={isLoadingSinger}
+          loadingProgress={loadingProgress}
+          onLoadSinger={onLoadSinger}
+          onClearDynamicSinger={onClearDynamicSinger}
+          singerLoading={singerLoading}
+        />
+      )}
+
+      {/* 跨歌手混战：多选歌手选择器 */}
+      {isCrossBattle && (
+        <CrossSingerSelector
+          selectedSingers={crossSelectedSingers}
+          onToggleSinger={onCrossToggleSinger}
+          singerDataMap={crossSingerDataMap}
+          loading={crossLoading}
+          bracketSize={selectedSize}
+          onSelectSize={onSelectSize}
+          availableSizes={crossAvailableSizes}
+          mode="cross-battle"
+          crossSearchKeyword={crossSearchKeyword}
+          onCrossSearch={onCrossSearch}
+          crossSearchResults={crossSearchResults}
+          isCrossSearching={isCrossSearching}
+          onAddDynamicSinger={onAddDynamicSinger}
+          dynamicSingers={crossDynamicSingers}
+          loadingMids={crossLoadingMids}
+        />
+      )}
+
+      {/* 夯到拉排名：选择排名对象 */}
+      {isRanking && (
+        <div className="size-selector">
+          <span className="size-label">排名对象</span>
+          <div className="size-btns">
+            {[
+              { value: 'song', label: '歌曲' },
+              { value: 'album', label: '专辑' },
+              { value: 'singer', label: '歌手' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                className={clsx('size-btn', { active: rankingCategory === opt.value })}
+                onClick={() => onRankingCategoryChange?.(opt.value)}
+                type="button"
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <ModeSelector
         selected={selectedMode}
@@ -339,16 +493,23 @@ export default function StartScreen({
         className="btn primary start-cta"
         onClick={onStart}
         type="button"
-        disabled={isCustom && !canStartCustom}
+        disabled={
+          (isCustom && !canStartCustom) ||
+          (isCrossBattle && !canStartCross)
+        }
       >
         {isCustom
           ? `🏆 开始 ${customBracketSize} 强`
-          : selectedMode === 'wc'
-            ? '⚽ 开始世界杯'
-            : `🏆 开始 ${bracketSize} 强`}
+          : isCrossBattle
+            ? `⚔️ 开始混战`
+            : isRanking
+              ? '📊 开始排名'
+              : selectedMode === 'wc'
+                ? '⚽ 开始世界杯'
+                : `🏆 开始 ${bracketSize} 强`}
       </button>
 
-      {showResume && !isCustom && (
+      {showResume && !isCustom && !isCrossBattle && !isRanking && (
         <button
           className="btn"
           onClick={onResume}
@@ -362,7 +523,11 @@ export default function StartScreen({
       <div className="hint">
         {isCustom
           ? '提示：点击歌曲勾选/取消 · 可按专辑全选 · 每次开始对阵随机生成'
-          : '提示：可用键盘 ← 选左、→ 选右 · 每次开始对阵随机生成'}
+          : isCrossBattle
+            ? '提示：选择 2-8 位歌手 · 每位歌手歌曲数量一致 · 首轮避免同歌手对决'
+            : isRanking
+              ? '提示：逐个将项目分配到等级 · 等级容量按曲线递增 · 支持撤销'
+              : '提示：可用键盘 ← 选左、→ 选右 · 每次开始对阵随机生成'}
       </div>
     </section>
   );

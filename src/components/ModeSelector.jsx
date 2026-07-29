@@ -2,9 +2,9 @@ import React from 'react';
 import { clsx } from 'clsx';
 
 /**
- * Mode selection (classic / world cup / custom).
- * @param {'classic'|'wc'|'custom'} selected - currently selected mode
- * @param {(mode: 'classic'|'wc'|'custom') => void} onSelect - callback when a mode is selected
+ * Mode selection (classic / wc / custom / cross-battle / ranking).
+ * @param {'classic'|'wc'|'custom'|'cross-battle'|'ranking'} selected - currently selected mode
+ * @param {(mode: string) => void} onSelect - callback when a mode is selected
  * @param {number} bracketSize - bracket size number for the classic mode label
  */
 export default function ModeSelector({ selected, onSelect, bracketSize }) {
@@ -44,6 +44,30 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
           自定义歌曲
           <br />
           单败淘汰 · 随心对战
+        </span>
+      </div>
+      <div
+        className={clsx('mode-btn', 'cross-btn', { active: selected === 'cross-battle' })}
+        onClick={() => onSelect('cross-battle')}
+      >
+        <span className="mode-ico">⚔️</span>
+        <span className="mode-title">多歌手混战</span>
+        <span className="mode-desc">
+          选多位歌手
+          <br />
+          跨歌手对决 · 公平分配
+        </span>
+      </div>
+      <div
+        className={clsx('mode-btn', 'rank-btn', { active: selected === 'ranking' })}
+        onClick={() => onSelect('ranking')}
+      >
+        <span className="mode-ico">📊</span>
+        <span className="mode-title">夯到拉排名</span>
+        <span className="mode-desc">
+          歌手/歌曲/专辑
+          <br />
+          分层排名 · 曲线递增
         </span>
       </div>
     </div>

@@ -302,3 +302,82 @@ export async function fetchAlbumDetail(albumMid) {
     return { mid: albumMid, name: '', aDate: '', albumType: '', desc: '' };
   }
 }
+
+/**
+ * 批量拉取专辑详情
+ * @param {string[]} albumMids - 专辑 mid 数组
+ * @param {(done: number, total: number) => void} [onProgress] - 进度回调
+ * @param {number} [concurrency=4] - 并发数
+ * @returns {Promise<Map<string, {albumType, albumDesc}>>}
+ */
+export async function fetchAlbumDetailsBatch(albumMids, onProgress, concurrency = 4) {
+  const result = new Map();
+  const total = albumMids.length;
+  let done = 0;
+  let nextIdx = 0;
+
+  const worker = async () => {
+    while (true) {
+      const i = nextIdx++;
+      if (i >= total) break;
+      const mid = albumMids[i];
+      try {
+        const detail = await fetchAlbumDetail(mid);
+        result.set(mid, {
+          albumType: detail.albumType || '',
+          albumDesc: detail.desc || '',
+        });
+      } catch {
+        // 忽略单张专辑失败
+      }
+      done++;
+      if (onProgress) onProgress(done, total);
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, total) }, () => worker()),
+  );
+  return result;
+}
+
+/**
+ * 批量拉取歌曲收藏量
+ * 使用 QQ Music musicu.fcg 接口查询歌曲信息
+ * @param {number[]} songIds - 歌曲 ID 数组
+ * @returns {Promise<Object<string, number>>} songId -> favCount 映射
+ */
+export async function fetchSongFavCounts(songIds) {
+  if (!songIds || songIds.length === 0) return {};
+
+  const result = {};
+  const BATCH_SIZE = 30;
+
+  for (let i = 0; i < songIds.length; i += BATCH_SIZE) {
+    const batch = songIds.slice(i, i + BATCH_SIZE);
+    const dataObj = {
+      comm: { ct: 24, cv: 0 },
+      req_1: {
+        module: 'music.personginfo.QuerySongInfo',
+        method: 'QuerySongInfo',
+        param: {
+          songIds: batch,
+          songType: 0,
+        },
+      },
+    };
+    try {
+      const data = await requestMusicu(dataObj);
+      const songs = data?.req_1?.data?.songs || [];
+      for (const song of songs) {
+        const id = song.id || song.songid;
+        if (id) {
+          result[id] = song.favCount || song.fav || 0;
+        }
+      }
+    } catch {
+      // 忽略批量失败
+    }
+  }
+  return result;
+}

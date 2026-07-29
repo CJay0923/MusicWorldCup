@@ -62,6 +62,198 @@ export const BYFUNS_API = 'https://api.byfuns.top/1/?id=';
 export const METING_API = 'https://api.injahow.cn/meting/?server=netease&type=url&id=';
 
 /**
+ * 将多个歌手的歌曲合并为跨歌手对战数据集
+ * 确保：① 每位歌手歌曲数量一致（取最小值，向下对齐到 bracketSize/numSingers）
+ *      ② 交叉排序（interleave）使各歌手代表作均匀分布
+ *      ③ 首轮避免同歌手内战
+ *
+ * @param {object[]} singerDataList - 多个歌手的 singerData 对象数组
+ * @param {number} bracketSize - 目标淘汰赛规模（2 的幂）
+ * @returns {{name, nameEn, bracketSize, entrants, seeds, seedRank}|null}
+ */
+export function buildCrossSingerData(singerDataList, bracketSize) {
+  const valid = singerDataList.filter((s) => s?.entrants?.length);
+  if (valid.length < 2) return null;
+
+  const numSingers = valid.length;
+
+  // 每位歌手取样数：确保各歌手数量一致
+  // 取 bracketSize / numSingers 向下取整，但至少 2 首
+  const perSinger = Math.max(2, Math.floor(bracketSize / numSingers));
+
+  // 实际 bracketSize = perSinger * numSingers，向下对齐到 2 的幂
+  let totalSongs = perSinger * numSingers;
+  let bs = 1;
+  while (bs * 2 <= totalSongs) bs *= 2;
+  // 如果对齐后每位歌手的歌曲数变了，重新计算
+  const actualPerSinger = Math.floor(bs / numSingers);
+  const finalTotal = actualPerSinger * numSingers;
+  const finalSize = Math.max(finalTotal, 4);
+
+  // 1. 每位歌手按 seedRank 升序取前 actualPerSinger 首，注入歌手信息
+  const collected = [];
+  for (const sd of valid) {
+    const sorted = [...sd.entrants].sort(
+      (a, b) => (a.seedRank || 999) - (b.seedRank || 999),
+    );
+    const topN = sorted.slice(0, actualPerSinger);
+    collected.push({
+      singerName: sd.name,
+      singerPhoto: sd.singerPhoto || null,
+      songs: topN,
+    });
+  }
+
+  // 2. 交叉排序（interleave）：A1, B1, C1, A2, B2, C2, ...
+  const merged = [];
+  for (let rank = 0; rank < actualPerSinger; rank++) {
+    for (const c of collected) {
+      if (rank < c.songs.length) {
+        merged.push({
+          ...c.songs[rank],
+          singerName: c.singerName,
+          singerPhoto: c.singerPhoto,
+        });
+      }
+    }
+  }
+
+  let used = merged.slice(0, finalSize);
+
+  // 3. 避免同歌手歌曲首轮对决
+  //    检查每对 (0,1), (2,3), (4,5)... 是否同歌手，若冲突则与最近的不同歌手歌曲交换
+  const avoidSameSingerFirstRound = (songs) => {
+    const result = [...songs];
+    const n = result.length;
+    for (let i = 0; i < n; i += 2) {
+      const a = result[i];
+      const b = result[i + 1];
+      if (!a || !b) continue;
+      if (!a.singerName || !b.singerName) continue;
+      if (a.singerName !== b.singerName) continue;
+
+      // 冲突：a 和 b 同歌手，需要找一个不同歌手的歌曲交换 b
+      let bestSwap = -1;
+      let bestSwapRankDiff = Infinity;
+      for (let j = i + 2; j < n; j++) {
+        const candidate = result[j];
+        if (!candidate || !candidate.singerName) continue;
+        if (candidate.singerName === a.singerName) continue;
+
+        // 检查交换后是否会在候选位置产生新的冲突
+        const partnerIdx = j % 2 === 0 ? j + 1 : j - 1;
+        const partner = result[partnerIdx];
+        if (partner && partner.singerName && partner.singerName === b.singerName) {
+          continue;
+        }
+        // 优先选择 seedRank 接近的进行交换，减少种子位混乱
+        const rankDiff = Math.abs(
+          (candidate.seedRank || 999) - (b.seedRank || 999),
+        );
+        if (rankDiff < bestSwapRankDiff) {
+          bestSwap = j;
+          bestSwapRankDiff = rankDiff;
+        }
+      }
+
+      if (bestSwap >= 0) {
+        [result[i + 1], result[bestSwap]] = [result[bestSwap], result[i + 1]];
+      }
+    }
+    return result;
+  };
+
+  const finalSongs = avoidSameSingerFirstRound(used);
+
+  // 4. 重新编号 id / side / seed / seedRank
+  const entrants = finalSongs.map((src, i) => ({
+    ...src,
+    id: i,
+    side: i < finalSize / 2 ? 'L' : 'R',
+    seed: i + 1,
+    seedRank: i + 1,
+    isSeed: i < Math.min(32, finalSize),
+  }));
+
+  const seeds = entrants.map((_, i) => i);
+  const seedRank = Object.fromEntries(
+    entrants.map((e, i) => [i, i + 1]),
+  );
+
+  const singerNames = valid.map((s) => s.name).join(' vs ');
+
+  return {
+    name: singerNames,
+    nameEn: 'CROSS',
+    bracketSize: finalSize,
+    entrants,
+    seeds,
+    seedRank,
+  };
+}
+
+/**
+ * 计算夯到拉排名模式的分层结构
+ * 数量按 2 的幂曲线递增：1, 2, 4, 8, 16, ...
+ * @param {number} totalItems - 总项目数
+ * @returns {{tiers: {label, count, start, end}[], totalSlots: number}}
+ */
+export function buildRankingTiers(totalItems) {
+  // 夯到拉 5 个等级，数量曲线递增
+  const TIER_LABELS = ['最夯🔥', '很夯🔥', '还行🎵', '一般😕', '拉💀'];
+  const tiers = [];
+  let remaining = totalItems;
+  let accumulated = 0;
+
+  // 从最后一层（最拉）开始分配，确保曲线递增
+  // 最后一层分最多，第一层分最少
+  const tierCounts = [];
+  let slot = 1;
+  for (let i = 0; i < 5; i++) {
+    tierCounts.push(slot);
+    slot *= 2;
+  }
+  // tierCounts = [1, 2, 4, 8, 16], total = 31
+
+  // 如果总数超过 31，扩展最后一层
+  const baseTotal = tierCounts.reduce((a, b) => a + b, 0);
+  if (totalItems > baseTotal) {
+    tierCounts[4] += totalItems - baseTotal;
+  }
+
+  // 如果总数少于 31，从最后一层开始减少
+  let actualCounts = [...tierCounts];
+  let actualTotal = actualCounts.reduce((a, b) => a + b, 0);
+  while (actualTotal > totalItems && actualCounts[4] > 0) {
+    actualCounts[4]--;
+    actualTotal--;
+  }
+  // 如果还不够减，继续减倒数第二层
+  for (let i = 3; i >= 0 && actualTotal > totalItems; i--) {
+    while (actualCounts[i] > 0 && actualTotal > totalItems) {
+      actualCounts[i]--;
+      actualTotal--;
+    }
+  }
+
+  for (let i = 0; i < 5; i++) {
+    const count = Math.min(actualCounts[i], remaining);
+    if (count <= 0 && i < 4) continue;
+    tiers.push({
+      label: TIER_LABELS[i],
+      count,
+      start: accumulated,
+      end: accumulated + count - 1,
+    });
+    accumulated += count;
+    remaining -= count;
+    if (remaining <= 0) break;
+  }
+
+  return { tiers, totalSlots: accumulated };
+}
+
+/**
  * 根据选中的 entrant 对象数组构建自定义歌手数据（自选模式）
  * 保留原始 nid / pic / chorus 等元数据，使试听功能可用
  * @param {object[]} selected - 选中的 entrant 对象数组

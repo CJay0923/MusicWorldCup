@@ -159,17 +159,35 @@ export default function SongPicker({
           const albumCompany = alb.company || '';
           const albumSelected = alb.songs.filter((s) => selectedIds.has(s.id)).length;
           const allSelected = albumSelected === alb.songs.length;
-          const isCollapsed = collapsedAlbums.has(pic);
-          const isDescExpanded = expandedDesc.has(pic);
+          const isCollapsed = collapsedAlbums.has(pic || `misc-${ai}`);
+          const isDescExpanded = expandedDesc.has(pic || `misc-${ai}`);
           const hasDesc = albumDesc.length > 0;
+
+          // 专辑头部封面 fallback：尝试 T002 CDN
+          const albumHeaderFallback = alb.songs[0]?.albumMid
+            ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${alb.songs[0].albumMid}.jpg`
+            : '';
+          const handleHeaderImgError = (e) => {
+            const img = e.currentTarget;
+            if (albumHeaderFallback && img.src !== albumHeaderFallback) {
+              img.src = albumHeaderFallback;
+            } else {
+              img.style.display = 'none';
+              const placeholder = img.parentElement.querySelector('.album-section-placeholder');
+              if (placeholder) placeholder.style.display = '';
+            }
+          };
 
           return (
             <div key={pic || `album-${ai}`} className="album-section">
               {/* 专辑头部 */}
-              <div className="album-section-header" onClick={() => toggleCollapse(pic)}>
+              <div className="album-section-header" onClick={() => toggleCollapse(pic || `misc-${ai}`)}>
                 <div className="album-section-thumb">
                   {pic ? (
-                    <img src={pic} alt="" loading="lazy" />
+                    <>
+                      <img src={pic} alt="" loading="lazy" onError={handleHeaderImgError} />
+                      <div className="album-section-placeholder" style={{ display: 'none' }}>🎵</div>
+                    </>
                   ) : (
                     <div className="album-section-placeholder">🎵</div>
                   )}
@@ -203,7 +221,7 @@ export default function SongPicker({
                 <div className="album-section-desc-wrap">
                   <div
                     className={clsx('album-section-desc', { expanded: isDescExpanded })}
-                    onClick={() => toggleDesc(pic)}
+                    onClick={() => toggleDesc(pic || `misc-${ai}`)}
                   >
                     {albumDesc}
                   </div>
@@ -212,7 +230,7 @@ export default function SongPicker({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleDesc(pic);
+                      toggleDesc(pic || `misc-${ai}`);
                     }}
                   >
                     {isDescExpanded ? '收起' : '展开简介'}
@@ -225,15 +243,32 @@ export default function SongPicker({
                 <div className="song-card-grid">
                   {alb.songs.map((song, k) => {
                     const isSelected = selectedIds.has(song.id);
-                    // 未分类组用每首歌自己的歌曲封面，专辑组用专辑封面
-                    const songArt = alb.isMisc ? (song.songPic || song.pic || '') : (pic || '');
+                    // 封面 URL 优先级链：
+                    // 未分类组：songPic > pic > T062 CDN(songmid) > T002 CDN(albumMid)
+                    // 专辑组：专辑封面 pic > songPic > T062 CDN > T002 CDN
+                    const t062Url = song.songmid
+                      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
+                      : '';
+                    const t002Url = song.albumMid
+                      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
+                      : '';
+                    const songArt = alb.isMisc
+                      ? (song.songPic || song.pic || t062Url || t002Url || '')
+                      : (pic || song.songPic || t062Url || t002Url || '');
                     const handleArtError = (e) => {
                       const img = e.currentTarget;
-                      if (alb.isMisc && song.pic && img.src !== song.pic) {
-                        img.src = song.pic;
+                      const tried = img.dataset.tried || '';
+                      // 依次尝试 fallback URL
+                      if (alb.isMisc) {
+                        if (tried === '' && song.pic) { img.dataset.tried = 'pic'; img.src = song.pic; return; }
+                        if (tried !== 't062' && t062Url) { img.dataset.tried = 't062'; img.src = t062Url; return; }
+                        if (tried !== 't002' && t002Url) { img.dataset.tried = 't002'; img.src = t002Url; return; }
                       } else {
-                        img.style.display = 'none';
+                        if (tried !== 'songPic' && song.songPic) { img.dataset.tried = 'songPic'; img.src = song.songPic; return; }
+                        if (tried !== 't062' && t062Url) { img.dataset.tried = 't062'; img.src = t062Url; return; }
+                        if (tried !== 't002' && t002Url) { img.dataset.tried = 't002'; img.src = t002Url; return; }
                       }
+                      img.style.display = 'none';
                     };
                     const isThisPlaying = playingId === song.id;
                     const showPause = isThisPlaying && isPlaying && !previewLoading;

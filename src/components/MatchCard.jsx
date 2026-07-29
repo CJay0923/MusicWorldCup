@@ -3,7 +3,7 @@ import { clsx } from 'clsx';
 
 /**
  * A single song battle card.
- * @param {object|null} entrant - song object {name, side, seed, nid, pic, songPic, chorus, seedRank, isSeed} or null
+ * @param {object|null} entrant - song object {name, side, seed, nid, pic, songPic, chorus, seedRank, isSeed, singerName, singerPhoto} or null
  * @param {'left'|'right'} side - which side the card is on
  * @param {'default'|'win'|'lose'|'locked'} state - card visual state
  * @param {boolean} showSideTag - whether to show the left/right half tag (hidden in WC mode)
@@ -22,14 +22,33 @@ export default function MatchCard({
     'seed-card': entrant?.isSeed,
   });
 
-  // 图片 onError fallback：专辑封面 → 歌曲封面 → 空
+  // 图片 onError fallback：专辑封面 → 歌曲封面 → T062 CDN → T002 CDN → 空
+  const t062Url = entrant?.songmid
+    ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${entrant.songmid}.jpg`
+    : '';
+  const t002Url = entrant?.albumMid
+    ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${entrant.albumMid}.jpg`
+    : '';
+
   const handleImgError = (e) => {
     const img = e.currentTarget;
-    if (entrant?.songPic && img.src !== entrant.songPic) {
+    const tried = img.dataset.tried || '';
+    if (tried !== 'songPic' && entrant?.songPic) {
+      img.dataset.tried = 'songPic';
       img.src = entrant.songPic;
-    } else {
-      img.style.display = 'none';
+      return;
     }
+    if (tried !== 't062' && t062Url) {
+      img.dataset.tried = 't062';
+      img.src = t062Url;
+      return;
+    }
+    if (tried !== 't002' && t002Url) {
+      img.dataset.tried = 't002';
+      img.src = t002Url;
+      return;
+    }
+    img.style.display = 'none';
   };
 
   return (
@@ -40,6 +59,21 @@ export default function MatchCard({
       <span className="seed">
         {entrant?.isSeed ? `种子#${entrant.seedRank}` : `#${entrant?.seed}`}
       </span>
+      {/* 跨歌手模式：歌手头像+名称 */}
+      {entrant?.singerName && (
+        <div className="card-singer-info">
+          {entrant.singerPhoto && (
+            <img
+              className="card-singer-avatar"
+              src={entrant.singerPhoto}
+              alt=""
+              loading="lazy"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          )}
+          <span className="card-singer-name">{entrant.singerName}</span>
+        </div>
+      )}
       <div className={clsx('album-wrap', { empty: !entrant?.pic })}>
         {entrant?.pic && (
           <img

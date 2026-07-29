@@ -64,9 +64,11 @@ function computeBracketSize(count) {
  * 应用 Live/伴奏过滤 + baseKey 去重；种子排位使用 API 顺序（已按热度排序）。
  *
  * @param {{songs: Array, singerName: string, singermid: string}} raw
+ * @param {Map<string, {albumType, albumDesc}>} [albumDetails] - 专辑详情映射（可选）
+ * @param {Object<string, number>} [favMap] - 收藏量映射（可选）
  * @returns {{name, nameEn, bracketSize, entrants, seeds, seedRank, singerPhoto, source}}
  */
-function transformDynamicSingerData(raw) {
+export function transformDynamicSingerData(raw, albumDetails, favMap) {
   const seenKeys = new Set();
   const filteredSongs = [];
   for (const song of raw.songs) {
@@ -100,6 +102,11 @@ function transformDynamicSingerData(raw) {
       ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
       : '';
 
+    // 从 albumDetails 映射中获取专辑类型和简介
+    const albumDetail = albumDetails?.get(song.albumMid);
+    // 从 favMap 中获取收藏量
+    const fav = favMap?.[song.songid] || 0;
+
     return {
       name: song.name,
       id: i,
@@ -113,14 +120,14 @@ function transformDynamicSingerData(raw) {
       albumMid: song.albumMid,
       albumName: song.albumName,
       albumDate: song.albumDate || '',
-      albumType: '',
-      albumDesc: '',
+      albumType: albumDetail?.albumType || '',
+      albumDesc: albumDetail?.albumDesc || '',
       chorus: null,
       seedRank: sr,
       isSeed: sr <= Math.min(32, filteredSongs.length),
       itunesPreviewUrl: '',
       itunesTrackUrl: '',
-      favCount: 0,
+      favCount: fav,
     };
   });
 

@@ -3,36 +3,45 @@
 #
 # 用法: bash scripts/deploy-surge.sh
 #
-# Surge 账户信息:
+# 凭证保存在项目根目录的 .env.surge 文件中（已被 .gitignore 排除，不会提交到 Git）。
+# 首次使用前，请手动创建 .env.surge 文件并填入以下字段：
 #
-#   ★ 主账号（song-worldcup.surge.sh，未被451封锁）:
-#     邮箱:   songworldcup2026@example.com
-#     密码:   SongWorldCup2026!
-#     Token:  67ea54e01f532d5372da0bd85eacfaa7
-#     域名:   song-worldcup.surge.sh
-#
-#   备用账号（songcup-test-2026.surge.sh，被451封锁）:
-#     邮箱:   songcup2026test@gmail.com
-#     密码:   SongCup2026Test!
-#     Token:  727ead98bd78e359b0a9f9cbeebaaf87
-#     域名:   songcup-test-2026.surge.sh
-#
-#   已封禁账号（勿用）:
-#     - songworldcup2026@gmail.com / song-worldcup-app.surge.sh → 451 法律封锁
+#   SURGE_EMAIL=your_email@example.com
+#   SURGE_PASSWORD=your_password
+#   SURGE_TOKEN=your_token
+#   SURGE_DOMAIN=your-domain.surge.sh
 #
 # 注意:
-#   - song-worldcup.surge.sh 在封锁政策生效前部署，未被 451 封锁
-#   - 如需更换域名，修改下面的 DOMAIN 变量即可
+#   - .env.surge 已在 .gitignore 中排除，不会上传到任何远程仓库
+#   - 如忘记密码，访问 https://surge.sh/help/resetting-your-password 重置
 #   - Token 可通过 surge SDK 重新生成:
 #     node -e "const s=require('surge-sdk')({endpoint:'https://surge.surge.sh'});s.token({user:'email',pass:'pass'},{msg:'x'},(e,c)=>console.log(e,c))"
-#   - 如忘记密码，访问 https://surge.sh/help/resetting-your-password 重置
 
 set -e
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST_DIR="$PROJECT_ROOT/dist"
-DOMAIN="song-worldcup.surge.sh"
-SURGE_TOKEN="67ea54e01f532d5372da0bd85eacfaa7"
+ENV_FILE="$PROJECT_ROOT/.env.surge"
+
+# 读取 .env.surge
+if [ ! -f "$ENV_FILE" ]; then
+  echo "❌ 未找到 .env.surge 文件！"
+  echo "   请在项目根目录创建 .env.surge 并填入 SURGE_TOKEN 和 SURGE_DOMAIN"
+  echo "   示例见 scripts/deploy-surge.sh 注释"
+  exit 1
+fi
+
+# 加载环境变量
+set -a
+source "$ENV_FILE"
+set +a
+
+DOMAIN="${SURGE_DOMAIN:-song-worldcup.surge.sh}"
+
+if [ -z "$SURGE_TOKEN" ]; then
+  echo "❌ .env.surge 中缺少 SURGE_TOKEN"
+  exit 1
+fi
 
 echo "🚀 开始部署到 surge.sh..."
 echo "   域名: $DOMAIN"
@@ -59,8 +68,3 @@ SURGE_TOKEN="$SURGE_TOKEN" surge ./dist "https://$DOMAIN"
 echo ""
 echo "✅ 部署成功！"
 echo "   访问地址: https://$DOMAIN"
-echo ""
-echo "📋 账户信息:"
-echo "   邮箱: songworldcup2026@example.com"
-echo "   密码: SongWorldCup2026!"
-echo "   域名: $DOMAIN"

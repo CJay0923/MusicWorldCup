@@ -10,6 +10,8 @@ dist/
 # Environment
 .env
 .env.local
+.env.surge
+.env.*
 
 # IDE
 .vscode/

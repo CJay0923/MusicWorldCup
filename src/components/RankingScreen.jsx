@@ -4,14 +4,24 @@ import { buildRankingTiers } from '../data/singers.js';
 
 /**
  * 夯到拉排名模式
- * 用户将歌曲/专辑/歌手逐个分配到不同等级（最夯→拉），
- * 每个等级的容量按 2 的幂曲线递增：1, 2, 4, 8, 16
+ * 用户将歌曲/专辑/歌手逐个分配到 5 个等级：
+ * 夯 → 顶级 → 人上人 → NPC → 拉完了
+ * 夯的个数 = floor(total/8) + 1，其余等级曲线递增，拉完了最多
  *
  * @param {object[]} items - 待排名的项目数组（已洗牌）
  * @param {string} category - 'song' | 'album' | 'singer'
  * @param {string} singerName - 歌手名称（用于显示）
  * @param {() => void} onReset - 返回重置
  */
+
+// 标准夯到拉等级描述（参考 1ktools / 哈基榜 / 掘金等同类网站）
+const TIER_DESCRIPTIONS = [
+  '天花板，强到无需多言',
+  '标杆水平，几乎没有瑕疵',
+  '中上游，性价比高',
+  '平庸无奇，中规中矩',
+  '垫底，体验极差',
+];
 export default function RankingScreen({ items, category, singerName, onReset }) {
   const { tiers } = useMemo(() => buildRankingTiers(items.length), [items.length]);
 
@@ -113,7 +123,10 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
         <div className="ranking-tiers" ref={scrollRef}>
           {tiers.map((tier, i) => (
             <div key={i} className={clsx('ranking-tier-row', `tier-${i}`)}>
-              <div className="ranking-tier-label">{tier.label}</div>
+              <div className="ranking-tier-label">
+                {tier.label}
+                <small className="ranking-tier-desc">{TIER_DESCRIPTIONS[i]}</small>
+              </div>
               <div className="ranking-tier-items">
                 {assignments[i].length === 0 ? (
                   <span className="ranking-tier-empty">（空）</span>
@@ -179,6 +192,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             })}
           >
             <span className="tier-cap-label">{tier.label}</span>
+            <span className="tier-cap-desc">{TIER_DESCRIPTIONS[i]}</span>
             <span className="tier-cap-count">
               {assignments[i].length}/{tier.count}
             </span>
@@ -224,7 +238,10 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             disabled={tierRemaining[i] <= 0}
             type="button"
           >
-            <span className="tier-btn-label">{tier.label}</span>
+            <div className="tier-btn-left">
+              <span className="tier-btn-label">{tier.label}</span>
+              <span className="tier-btn-desc">{TIER_DESCRIPTIONS[i]}</span>
+            </div>
             <span className="tier-btn-remaining">
               {tierRemaining[i] > 0 ? `剩 ${tierRemaining[i]}` : '已满'}
             </span>

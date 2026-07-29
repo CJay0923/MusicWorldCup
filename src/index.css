@@ -3441,14 +3441,20 @@ body::after {
 .tier-cap-chip.full {
   opacity: 0.4;
 }
-.tier-cap-chip.tier-0 { border-color: #ff4757; }
-.tier-cap-chip.tier-1 { border-color: #ff6b81; }
-.tier-cap-chip.tier-2 { border-color: #ffa502; }
-.tier-cap-chip.tier-3 { border-color: #7bed9f; }
-.tier-cap-chip.tier-4 { border-color: #70a1ff; }
+.tier-cap-chip.tier-0 { border-color: #ff4757; background: rgba(255, 71, 87, 0.06); }
+.tier-cap-chip.tier-1 { border-color: #ffa502; background: rgba(255, 165, 2, 0.06); }
+.tier-cap-chip.tier-2 { border-color: #7bed9f; background: rgba(123, 237, 159, 0.06); }
+.tier-cap-chip.tier-3 { border-color: #a4b0be; background: rgba(164, 176, 190, 0.06); }
+.tier-cap-chip.tier-4 { border-color: #70a1ff; background: rgba(112, 161, 255, 0.06); }
 .tier-cap-label {
   font-size: 11px;
   font-weight: 700;
+}
+.tier-cap-desc {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.2;
+  text-align: center;
 }
 .tier-cap-count {
   font-size: 10px;
@@ -3527,22 +3533,34 @@ body::after {
 }
 .tier-btn.tier-0 { border-color: #ff4757; background: rgba(255, 71, 87, 0.08); }
 .tier-btn.tier-0:hover:not(.disabled) { background: rgba(255, 71, 87, 0.15); }
-.tier-btn.tier-1 { border-color: #ff6b81; background: rgba(255, 107, 129, 0.08); }
-.tier-btn.tier-1:hover:not(.disabled) { background: rgba(255, 107, 129, 0.15); }
-.tier-btn.tier-2 { border-color: #ffa502; background: rgba(255, 165, 2, 0.08); }
-.tier-btn.tier-2:hover:not(.disabled) { background: rgba(255, 165, 2, 0.15); }
-.tier-btn.tier-3 { border-color: #7bed9f; background: rgba(123, 237, 159, 0.08); }
-.tier-btn.tier-3:hover:not(.disabled) { background: rgba(123, 237, 159, 0.15); }
+.tier-btn.tier-1 { border-color: #ffa502; background: rgba(255, 165, 2, 0.08); }
+.tier-btn.tier-1:hover:not(.disabled) { background: rgba(255, 165, 2, 0.15); }
+.tier-btn.tier-2 { border-color: #7bed9f; background: rgba(123, 237, 159, 0.08); }
+.tier-btn.tier-2:hover:not(.disabled) { background: rgba(123, 237, 159, 0.15); }
+.tier-btn.tier-3 { border-color: #a4b0be; background: rgba(164, 176, 190, 0.08); }
+.tier-btn.tier-3:hover:not(.disabled) { background: rgba(164, 176, 190, 0.15); }
 .tier-btn.tier-4 { border-color: #70a1ff; background: rgba(112, 161, 255, 0.08); }
 .tier-btn.tier-4:hover:not(.disabled) { background: rgba(112, 161, 255, 0.15); }
 .tier-btn-label {
   font-size: 15px;
   font-weight: 800;
 }
+.tier-btn-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+.tier-btn-desc {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted);
+}
 .tier-btn-remaining {
   font-size: 12px;
   color: var(--muted);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .ranking-actions {
@@ -3587,9 +3605,9 @@ body::after {
   border: 1px solid var(--rule);
 }
 .ranking-tier-row.tier-0 { border-left: 4px solid #ff4757; background: rgba(255, 71, 87, 0.05); }
-.ranking-tier-row.tier-1 { border-left: 4px solid #ff6b81; background: rgba(255, 107, 129, 0.05); }
-.ranking-tier-row.tier-2 { border-left: 4px solid #ffa502; background: rgba(255, 165, 2, 0.05); }
-.ranking-tier-row.tier-3 { border-left: 4px solid #7bed9f; background: rgba(123, 237, 159, 0.05); }
+.ranking-tier-row.tier-1 { border-left: 4px solid #ffa502; background: rgba(255, 165, 2, 0.05); }
+.ranking-tier-row.tier-2 { border-left: 4px solid #7bed9f; background: rgba(123, 237, 159, 0.05); }
+.ranking-tier-row.tier-3 { border-left: 4px solid #a4b0be; background: rgba(164, 176, 190, 0.05); }
 .ranking-tier-row.tier-4 { border-left: 4px solid #70a1ff; background: rgba(112, 161, 255, 0.05); }
 .ranking-tier-label {
   font-size: 14px;
@@ -3597,6 +3615,16 @@ body::after {
   white-space: nowrap;
   min-width: 70px;
   padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ranking-tier-desc {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted);
+  white-space: normal;
+  line-height: 1.2;
 }
 .ranking-tier-items {
   flex: 1;

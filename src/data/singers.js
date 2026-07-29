@@ -194,51 +194,40 @@ export function buildCrossSingerData(singerDataList, bracketSize) {
 
 /**
  * 计算夯到拉排名模式的分层结构
- * 数量按 2 的幂曲线递增：1, 2, 4, 8, 16, ...
+ * 等级：夯 → 顶级 → 人上人 → NPC → 拉完了
+ * 夯的个数 = floor(total/8) + 1（8个备选2个夯，16个3个夯）
+ * 其余等级数量曲线递增，拉完了最多
+ *
  * @param {number} totalItems - 总项目数
  * @returns {{tiers: {label, count, start, end}[], totalSlots: number}}
  */
 export function buildRankingTiers(totalItems) {
-  // 夯到拉 5 个等级，数量曲线递增
-  const TIER_LABELS = ['最夯🔥', '很夯🔥', '还行🎵', '一般😕', '拉💀'];
+  const TIER_LABELS = ['夯', '顶级', '人上人', 'NPC', '拉完了'];
   const tiers = [];
-  let remaining = totalItems;
+
+  // 夯的个数：8个备选→2个夯，16个→3个夯，即 floor(n/8)+1
+  const hangCount = Math.floor(totalItems / 8) + 1;
+  const remaining = totalItems - hangCount;
+
+  // 其余 4 个等级按比例分配，数量曲线递增
+  // 顶级: 15%, 人上人: 20%, NPC: 30%, 拉完了: 剩余(最多)
+  const ratios = [0.15, 0.20, 0.30];
+  const counts = [hangCount];
+  let allocated = hangCount;
+
+  for (let i = 0; i < 3; i++) {
+    const c = Math.max(1, Math.floor(remaining * ratios[i]));
+    counts.push(c);
+    allocated += c;
+  }
+  // 拉完了拿到所有剩余，确保最多
+  counts.push(Math.max(1, totalItems - allocated));
+
+  // 构建 tiers
   let accumulated = 0;
-
-  // 从最后一层（最拉）开始分配，确保曲线递增
-  // 最后一层分最多，第一层分最少
-  const tierCounts = [];
-  let slot = 1;
   for (let i = 0; i < 5; i++) {
-    tierCounts.push(slot);
-    slot *= 2;
-  }
-  // tierCounts = [1, 2, 4, 8, 16], total = 31
-
-  // 如果总数超过 31，扩展最后一层
-  const baseTotal = tierCounts.reduce((a, b) => a + b, 0);
-  if (totalItems > baseTotal) {
-    tierCounts[4] += totalItems - baseTotal;
-  }
-
-  // 如果总数少于 31，从最后一层开始减少
-  let actualCounts = [...tierCounts];
-  let actualTotal = actualCounts.reduce((a, b) => a + b, 0);
-  while (actualTotal > totalItems && actualCounts[4] > 0) {
-    actualCounts[4]--;
-    actualTotal--;
-  }
-  // 如果还不够减，继续减倒数第二层
-  for (let i = 3; i >= 0 && actualTotal > totalItems; i--) {
-    while (actualCounts[i] > 0 && actualTotal > totalItems) {
-      actualCounts[i]--;
-      actualTotal--;
-    }
-  }
-
-  for (let i = 0; i < 5; i++) {
-    const count = Math.min(actualCounts[i], remaining);
-    if (count <= 0 && i < 4) continue;
+    const count = Math.min(counts[i], totalItems - accumulated);
+    if (count <= 0) break;
     tiers.push({
       label: TIER_LABELS[i],
       count,
@@ -246,8 +235,6 @@ export function buildRankingTiers(totalItems) {
       end: accumulated + count - 1,
     });
     accumulated += count;
-    remaining -= count;
-    if (remaining <= 0) break;
   }
 
   return { tiers, totalSlots: accumulated };

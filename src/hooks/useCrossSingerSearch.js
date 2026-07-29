@@ -15,6 +15,12 @@ const SEARCH_DEBOUNCE_MS = 300;
 const ALBUM_FETCH_CAP = 50;
 const FAV_FETCH_CAP = 300;
 
+// ---------- 模块级缓存（跨组件复用，防止重挂载重新拉取）----------
+// mid -> {name, mid, photo, data}
+// 与 useSingerData.js 的 dataCache 同思路：组件卸载后数据仍在，
+// 重新挂载时直接从缓存恢复 dynamicSingers，避免重复请求
+const singerDataCache = new Map();
+
 /**
  * 跨歌手搜索 hook
  * 管理搜索状态和动态歌手数据加载
@@ -35,7 +41,10 @@ export function useCrossSingerSearch() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [dynamicSingers, setDynamicSingers] = useState(new Map());
+  // 初始值：优先从模块级缓存恢复，避免组件重挂载后重复拉取
+  const [dynamicSingers, setDynamicSingers] = useState(
+    () => new Map(singerDataCache),
+  );
   const [loadingMids, setLoadingMids] = useState(new Set());
 
   const searchTimerRef = useRef(null);
@@ -120,14 +129,17 @@ export function useCrossSingerSearch() {
       if (loadTokenRef.current !== myToken) return;
       if (data.entrants.length === 0) return;
 
+      // 构建一次 entry，同时写入模块级缓存与 React 状态
+      const entry = {
+        name: singerName || singer.name,
+        mid: singer.mid,
+        photo: singer.photo,
+        data,
+      };
+      singerDataCache.set(singer.mid, entry);
       setDynamicSingers((prev) => {
         const next = new Map(prev);
-        next.set(singer.mid, {
-          name: singerName || singer.name,
-          mid: singer.mid,
-          photo: singer.photo,
-          data,
-        });
+        next.set(singer.mid, entry);
         return next;
       });
     } catch {

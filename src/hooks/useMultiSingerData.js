@@ -33,18 +33,20 @@ export function useMultiSingerData(singerIds) {
     setLoading(true);
     setLoadingCount(ids.length);
 
-    // 串行加载每位歌手，避免多个同步 transformToSingerData 叠加阻塞主线程
-    // 每位歌手加载完即更新 dataMap（增量更新）
+    // 并行 fetch + transform（loadSingerData 内部有缓存和去重）
+    // 每位歌手加载完即增量更新 dataMap
     (async () => {
       const map = {};
-      for (const id of ids) {
-        if (cancelled) return;
+      const promises = ids.map(async (id) => {
         const data = await loadSingerData(id);
-        if (data) map[id] = data;
-        setLoadingCount(ids.length - Object.keys(map).length);
-        // 增量更新（已加载的先显示）
-        if (!cancelled) setDataMap({ ...map });
-      }
+        if (cancelled) return;
+        if (data) {
+          map[id] = data;
+          setLoadingCount(ids.length - Object.keys(map).length);
+          setDataMap({ ...map });
+        }
+      });
+      await Promise.all(promises);
       if (!cancelled) {
         setLoading(false);
         setLoadingCount(0);

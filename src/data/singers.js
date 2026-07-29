@@ -260,10 +260,13 @@ export function buildCrossSingerAlbumData(singerDataList, bracketSize) {
     for (const c of collected) {
       if (rank < c.albums.length) {
         const album = c.albums[rank];
+        const albumMid = album.albumMid || '';
         merged.push({
           type: 'album',
           name: album.name,
-          pic: album.pic || '',
+          pic: album.pic || (albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg` : ''),
+          picLocal: albumMid ? `./covers/album_${albumMid}.jpg` : '',
+          albumMid,
           singerName: c.singerName,
           singerPhoto: c.singerPhoto,
           songCount: album.songs.length,
@@ -468,7 +471,7 @@ export function buildCustomSingerData(selected, bracketSize, singerName) {
  */
 export function getAlbumGroups(entrants) {
   const MISC_KEY = '__misc__';
-  const MIN_SONGS_FOR_ALBUM = 6;
+  const MIN_SONGS_FOR_ALBUM = 5;
   // 专辑名关键词兜底：排除合辑/精选/原声带/游戏/广告等
   const EXCLUDE_NAME_PATTERNS =
     /精选|合辑|现场|演唱会|Live|LIVE|live|致敬|Tribute|翻唱|Cover|Remix|混音|原声带|OST|游戏|广告|公益|晚会|跨年|春晚|盛典|金曲|音乐节|梦想的声音|我是歌手|我想和你唱/i;
@@ -484,6 +487,7 @@ export function getAlbumGroups(entrants) {
       rawGroups.set(key, {
         pic: e.pic || '',
         name: albumName,
+        albumMid: albumMid,
         desc: e.albumDesc || '',
         date: e.albumDate || '',
         albumType: e.albumType || '',
@@ -522,6 +526,7 @@ export function getAlbumGroups(entrants) {
       nameMap.set(key, {
         pic: g.pic === '__no_cover__' ? '' : g.pic,
         name: g.name,
+        albumMid: g.albumMid || key,
         desc: g.desc,
         date: g.date,
         company: '',

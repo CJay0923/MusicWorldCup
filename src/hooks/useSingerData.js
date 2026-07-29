@@ -44,93 +44,56 @@ function isJunkTrack(name) {
 }
 
 /**
- * 规范化歌名用于匹配（去括号内容、去空格、转小写）
- */
-function normalizeName(name) {
-  if (!name) return '';
-  let s = name.replace(/[（(].*?[)）]/g, ''); // 移除半角/全角括号内容
-  s = s.replace(/[【\[].*?[\]】]/g, ''); // 移除中括号内容
-  s = s.replace(/[（(）)]/g, ''); // 移除残留的孤立括号
-  return s.toLowerCase().replace(/\s+/g, ' ').trim();
-}
-
-/**
- * 将绝对路径 /covers/... 转为相对路径 ./covers/...
- * 适配 base: './' 的静态部署
- */
-function toRelativePath(path) {
-  if (!path) return '';
-  if (path.startsWith('/')) return '.' + path;
-  return path;
-}
-
-/**
- * 为指定歌手构建静态数据的歌名 -> {nid, chorus} 映射表
- */
-const staticNameMapCache = {};
-function buildStaticNameMap(singerId) {
-  if (staticNameMapCache[singerId]) return staticNameMapCache[singerId];
-  const staticSinger = STATIC_SINGERS[singerId];
-  const map = new Map();
-  if (staticSinger?.entrants) {
-    for (const e of staticSinger.entrants) {
-      const key = normalizeName(e.name);
-      if (key) {
-        map.set(key, { nid: e.nid || null, chorus: e.chorus || null });
-      }
-    }
-  }
-  staticNameMapCache[singerId] = map;
-  return map;
-}
-
-/**
- * 将本地预取的 JSON 数据转换为 entrant 格式（兼容现有 SINGERS 结构）
- * 合并静态数据的 nid/chorus，修复图片路径
- * 
+ * 将本地预取的 JSON 数据转换为 entrant 格式
+ *
  * 如果数据已预处理（raw.preprocessed === true），走快速路径：
  * - 跳过 Live/伴奏正则过滤（下载时已过滤）
  * - 跳过 favCount 排序（已预排序）
  * - 跳过 seedRank 映射构建（已预计算）
+ * - 跳过 normalizeName/staticNameMap（STATIC_SINGERS 全为空，无 nid/chorus 可合并）
+ *
+ * 图片路径策略：
+ * - picLocal → ./covers/album_{albumMid}.jpg（本地预下载封面，加载最快）
+ * - pic → CDN URL（picLocal 加载失败时的 fallback）
  */
 function transformToSingerData(raw, registry, singerId) {
-  const staticNameMap = buildStaticNameMap(singerId);
   const albumDescs = raw.albumDescs || {};
 
   // ===== 快速路径：已预处理的数据 =====
   if (raw.preprocessed === true) {
+    const half = raw.entrants.length / 2;
+    const seedThreshold = Math.min(32, raw.entrants.length);
     const allEntrants = raw.entrants.map((song, i) => {
-      const normName = normalizeName(song.name);
-      const staticMatch = staticNameMap.get(normName);
-
-      const cdnPic = song.pic || (song.albumMid
-        ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
-        : '');
-      const songCdnPic = song.songPic || (song.songmid
-        ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
-        : '');
-
+      const albumMid = song.albumMid || '';
       const sr = song.seedRank || i + 1;
+
+      // pic: 优先用 JSON 中的值（旧格式），否则从 albumMid 重建 CDN URL
+      const cdnAlbumPic = albumMid
+        ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg`
+        : '';
+      const cdnSongPic = song.songmid
+        ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
+        : '';
 
       return {
         name: song.name,
         id: i,
-        side: i < raw.entrants.length / 2 ? 'L' : 'R',
+        side: i < half ? 'L' : 'R',
         seed: sr,
-        nid: song.nid ?? staticMatch?.nid ?? null,
+        nid: null,
         songmid: song.songmid,
         songid: song.songid,
-        pic: cdnPic || songCdnPic,
-        picLocal: toRelativePath(song.pic),
-        songPic: songCdnPic,
-        albumMid: song.albumMid,
+        pic: song.pic || cdnAlbumPic || cdnSongPic,
+        picLocal: albumMid ? `./covers/album_${albumMid}.jpg` : '',
+        songPic: song.songPic || cdnSongPic,
+        albumMid,
         albumName: song.albumName,
         albumDate: song.albumDate || '',
         albumType: song.albumType || '',
-        albumDesc: song.albumDesc || albumDescs[song.albumMid] || '',
-        chorus: song.chorus ?? staticMatch?.chorus ?? null,
+        albumDesc: song.albumDesc || albumDescs[albumMid] || '',
+        chorus: null,
         seedRank: sr,
-        isSeed: sr <= Math.min(32, raw.entrants.length),
+        isSeed: sr <= seedThreshold,
         itunesPreviewUrl: song.itunesPreviewUrl || '',
         itunesTrackUrl: song.itunesTrackUrl || '',
       };
@@ -143,14 +106,16 @@ function transformToSingerData(raw, registry, singerId) {
       entrants: allEntrants,
       seeds: allEntrants.map((_, i) => i),
       seedRank: Object.fromEntries(allEntrants.map((e, i) => [i, e.seedRank])),
-      singerPhoto: raw.singerPhoto || `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid}.jpg`,
+      singerPhoto: raw.singerPhoto
+        ? (raw.singerPhoto.startsWith('/') ? '.' + raw.singerPhoto : raw.singerPhoto)
+        : `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid}.jpg`,
       source: 'local',
     };
   }
 
   // ===== 慢速路径：未预处理的数据（向后兼容）=====
   // 运行时过滤 Live/伴奏 + baseKey 去重 + 低收藏量无封面过滤
-  const MIN_FAV_WITHOUT_COVER = 1000; // 无封面时收藏量需≥1000才保留
+  const MIN_FAV_WITHOUT_COVER = 1000;
   const seenKeys = new Set();
   const filteredSongs = [];
   for (const song of raw.entrants) {
@@ -159,7 +124,6 @@ function transformToSingerData(raw, registry, singerId) {
     if (isJunkTrack(name)) continue;
     if (isLiveTrack(name)) continue;
     if (isLiveAlbum(song.albumName)) continue;
-    // 无专辑封面且收藏量过低 → 过滤掉（串烧/翻唱/花絮等低质量条目）
     const hasCover = !!(song.albumMid || song.pic);
     const fav = song.favCount || 0;
     if (!hasCover && fav < MIN_FAV_WITHOUT_COVER) continue;
@@ -169,52 +133,46 @@ function transformToSingerData(raw, registry, singerId) {
     filteredSongs.push(song);
   }
 
-  // 按收藏量降序排序，收藏量高的作为种子选手
   const sortedByFav = [...filteredSongs].sort(
     (a, b) => (b.favCount || 0) - (a.favCount || 0),
   );
 
-  // 构建 songmid → seedRank 映射（收藏量越高 seedRank 越小）
   const seedRankByMid = new Map();
   sortedByFav.forEach((song, idx) => {
     seedRankByMid.set(song.songmid, idx + 1);
   });
 
+  const half2 = filteredSongs.length / 2;
+  const seedThreshold2 = Math.min(32, filteredSongs.length);
   const allEntrants = filteredSongs.map((song, i) => {
-    const normName = normalizeName(song.name);
-    const staticMatch = staticNameMap.get(normName);
-
-    const cdnPic = song.albumMid
-      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
+    const albumMid = song.albumMid || '';
+    const cdnAlbumPic = albumMid
+      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg`
       : '';
-    // 歌曲封面 fallback：当无专辑封面时使用歌曲封面
-    const songCdnPic = song.songmid
+    const cdnSongPic = song.songmid
       ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
       : '';
-
-    // seedRank 基于收藏量排序，而非数组索引
     const sr = seedRankByMid.get(song.songmid) || i + 1;
 
     return {
       name: song.name,
       id: i,
-      side: i < filteredSongs.length / 2 ? 'L' : 'R',
+      side: i < half2 ? 'L' : 'R',
       seed: sr,
-      nid: song.nid ?? staticMatch?.nid ?? null,
+      nid: null,
       songmid: song.songmid,
       songid: song.songid,
-      pic: cdnPic || songCdnPic,
-      picLocal: toRelativePath(song.pic),
-      songPic: songCdnPic,
-      albumMid: song.albumMid,
+      pic: cdnAlbumPic || cdnSongPic,
+      picLocal: albumMid ? `./covers/album_${albumMid}.jpg` : '',
+      songPic: cdnSongPic,
+      albumMid,
       albumName: song.albumName,
       albumDate: song.albumDate || '',
       albumType: song.albumType || '',
-      albumDesc: albumDescs[song.albumMid] || '',
-      chorus: song.chorus ?? staticMatch?.chorus ?? null,
+      albumDesc: albumDescs[albumMid] || '',
+      chorus: null,
       seedRank: sr,
-      isSeed: sr <= Math.min(32, filteredSongs.length),
-      // 预取的 iTunes 试听数据（由 fetch-itunes-previews.js 写入）
+      isSeed: sr <= seedThreshold2,
       itunesPreviewUrl: song.itunesPreviewUrl || '',
       itunesTrackUrl: song.itunesTrackUrl || '',
     };

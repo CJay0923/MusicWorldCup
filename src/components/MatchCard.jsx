@@ -31,10 +31,10 @@ export default function MatchCard({
 
   // 图片 onError fallback：本地封面 → 歌曲封面 → T062 CDN → T002 CDN → 空
   const t062Url = entrant?.songmid
-    ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${entrant.songmid}.jpg`
+    ? `https://y.gtimg.cn/music/photo_new/T062R150x150M000${entrant.songmid}.jpg`
     : '';
   const t002Url = entrant?.albumMid
-    ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${entrant.albumMid}.jpg`
+    ? `https://y.gtimg.cn/music/photo_new/T002R150x150M000${entrant.albumMid}.jpg`
     : '';
   // 优先使用本地预下载的封面（最可靠），其次 CDN URL
   const coverSrc = entrant?.picLocal || entrant?.pic || entrant?.songPic || t062Url || t002Url || '';

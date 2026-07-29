@@ -332,7 +332,19 @@ function App() {
             const groups = getAlbumGroups(sd?.entrants || []);
             for (const g of groups) {
               if (g.isMisc) continue; // 跳过未分类
-              items.push({ ...g, singerName: sd.name });
+              const albumMid = g.albumMid || '';
+              items.push({
+                type: 'album',
+                name: g.name,
+                pic: g.pic || (albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg` : ''),
+                picLocal: albumMid ? `./covers/album_${albumMid}.jpg` : '',
+                albumMid,
+                date: g.date,
+                songCount: g.songs.length,
+                songs: g.songs,
+                singerName: sd.name,
+                singerPhoto: sd.singerPhoto || '',
+              });
             }
           }
         } else if (rankingSubMode === 'singers') {
@@ -363,7 +375,16 @@ function App() {
           const groups = getAlbumGroups(entrants);
           items = groups
             .filter((g) => !g.isMisc)
-            .map((g) => ({ name: g.name, pic: g.pic, date: g.date, songs: g.songs }));
+            .map((g) => ({
+              type: 'album',
+              name: g.name,
+              pic: g.pic || (g.albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${g.albumMid}.jpg` : ''),
+              picLocal: g.albumMid ? `./covers/album_${g.albumMid}.jpg` : '',
+              albumMid: g.albumMid || '',
+              date: g.date,
+              songCount: g.songs.length,
+              songs: g.songs,
+            }));
         }
       }
 

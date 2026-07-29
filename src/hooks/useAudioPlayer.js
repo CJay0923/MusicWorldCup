@@ -3,17 +3,15 @@
 //
 // 负责:
 //   - openAudition(ent, artistName): 开始试听某首歌
-//       音频回退链: QQ 音乐 m4a (songmid) → 网易云 (nid 懒匹配 → BYFUNS → METING) → iTunes 30s
+//       音频源优先级: iTunes 30s 预览 → QQ 音乐流媒体 → 打开 QQ 音乐搜索页
 //       loadedmetadata 时若有 chorus 且 duration>35s 则 seek 到 chorus 位置
 //       canplay 时自动播放
 //   - 播放/暂停、进度条 seek、"从头播放"、停止试听
 //   - playingId 标识当前正在播放的 entrant.id，供卡片高亮
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BYFUNS_API, METING_API } from '../data/singers.js';
 import { findITunesPreview } from '../utils/itunes.js';
 import { fetchQQSongUrl } from '../lib/api.js';
-import { matchNid } from '../utils/nidMatcher.js';
 
 const QQ_SEARCH = 'https://y.qq.com/n/ryqq/search?w=';
 
@@ -31,12 +29,7 @@ export function useAudioPlayer() {
 
   // 用 ref 保存监听器需要读取的最新值（监听器只绑定一次）
   const currentSongRef = useRef(null);
-  const nidRef = useRef(null);
-  const triedMetingRef = useRef(false);
   const triedITunesRef = useRef(false);
-  const triedQQRef = useRef(false);
-  const triedNidLazyRef = useRef(false);
-  const triedOuterUrlRef = useRef(false);
   const artistRef = useRef('');
 
   // 取消令牌：stopAudition 或新一轮 openAudition 时自增，
@@ -53,12 +46,22 @@ export function useAudioPlayer() {
       const song = currentSongRef.current;
       const cs = song?.chorus;
       if (cs && audio.duration > 35) {
+        // 有精确高潮数据 → seek 到指定位置
         try {
           audio.currentTime = cs;
         } catch {
           /* ignore seek errors */
         }
         setChorusTime(cs);
+      } else if (audio.duration > 35) {
+        // 无高潮数据 → 智能跳到 40% 位置（流行歌曲副歌通常在 35%-45%）
+        const fallbackPos = Math.min(audio.duration * 0.4, audio.duration - 10);
+        try {
+          audio.currentTime = fallbackPos;
+        } catch {
+          /* ignore seek errors */
+        }
+        setChorusTime(fallbackPos);
       } else {
         setChorusTime(null);
       }
@@ -79,76 +82,7 @@ export function useAudioPlayer() {
     const onEnded = () => setIsPlaying(false);
 
     const onError = () => {
-      const audio = audioRef.current;
-      if (!audio) return;
-      // stopAudition 已清空 currentSongRef，忽略因此触发的 error 事件
-      if (!currentSongRef.current) return;
-      const song = currentSongRef.current;
-      const nid = nidRef.current;
-      const artistName = artistRef.current;
-
-      // 回退链: 网易云 BYFUNS → METING → iTunes 30s
-      // QQ 音乐 m4a 已在 openAudition 中尝试过，这里处理后续回退
-
-      // 有 nid 且未试过 meting -> 切换到 METING_API 直链
-      if (nid && !triedMetingRef.current) {
-        triedMetingRef.current = true;
-        setIsLoading(true);
-        try {
-          audio.src = METING_API + nid;
-          audio.load();
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-
-      // METING 失败 -> 尝试网易云外链直链
-      if (nid && !triedOuterUrlRef.current) {
-        triedOuterUrlRef.current = true;
-        setIsLoading(true);
-        try {
-          audio.src = `https://music.163.com/song/media/outer/url?id=${nid}.mp3`;
-          audio.load();
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-
-      // 网易云全部走不通 -> 尝试 iTunes 预览兜底
-      if (!triedITunesRef.current) {
-        triedITunesRef.current = true;
-        setIsLoading(true);
-        if (song && song.name) {
-          findITunesPreview(artistName, song.name)
-            .then((result) => {
-              // stopAudition 期间已清空 currentSongRef，放弃设置 audio.src
-              if (!currentSongRef.current) return;
-              if (result && result.preview && audio) {
-                try {
-                  audio.src = result.preview;
-                  audio.load();
-                } catch {
-                  /* ignore */
-                }
-              } else {
-                setIsLoading(false);
-                setIsPlaying(false);
-              }
-            })
-            .catch(() => {
-              setIsLoading(false);
-              setIsPlaying(false);
-            });
-        } else {
-          setIsLoading(false);
-          setIsPlaying(false);
-        }
-        return;
-      }
-
-      // 所有回退都失败
+      // 仅使用 iTunes 30s 预览，无回退链；出错直接结束加载与播放
       setIsLoading(false);
       setIsPlaying(false);
     };
@@ -202,12 +136,7 @@ export function useAudioPlayer() {
       }
 
       // 重置每首歌的标记
-      nidRef.current = ent.nid;
-      triedMetingRef.current = false;
       triedITunesRef.current = false;
-      triedQQRef.current = false;
-      triedNidLazyRef.current = false;
-      triedOuterUrlRef.current = false;
       artistRef.current = artistName || '';
       currentSongRef.current = ent;
 
@@ -222,78 +151,15 @@ export function useAudioPlayer() {
 
       const audio = audioRef.current;
 
-      // ---------- 音频回退链 ----------
-      // 1. 有 songmid -> 先尝试 QQ 音乐 m4a
-      if (ent.songmid && !triedQQRef.current) {
-        triedQQRef.current = true;
-        try {
-          const { url } = await fetchQQSongUrl(ent.songmid);
-          if (cancelTokenRef.current !== myToken) return; // 已被取消
-          if (url && audio) {
-            audio.src = url;
-            audio.load();
-            return; // QQ 音乐 URL 加载成功，等待 canplay
-          }
-        } catch {
-          /* QQ 失败，继续回退 */
-        }
+      // ---------- 音频源：优先用预取的 iTunes 30s 预览 ----------
+      // 预取数据由 fetch-itunes-previews.js 按歌手 artistId 精确匹配写入
+      if (ent.itunesPreviewUrl && audio) {
+        audio.src = ent.itunesPreviewUrl;
+        audio.load();
+        return;
       }
 
-      // 2. QQ 失败或无 songmid -> 尝试网易云
-      //    若无 nid，先懒匹配
-      let nid = ent.nid;
-      if (!nid && !triedNidLazyRef.current) {
-        triedNidLazyRef.current = true;
-        try {
-          nid = await matchNid(ent.name, artistName || '');
-          if (cancelTokenRef.current !== myToken) return; // 已被取消
-          if (nid) {
-            nidRef.current = nid;
-          }
-        } catch {
-          /* 懒匹配失败 */
-        }
-      }
-
-      if (nid && audio) {
-        // 有 nid -> 先尝试 BYFUNS_API 获取完整 URL
-        let url = null;
-        try {
-          const res = await fetch(BYFUNS_API + nid);
-          if (cancelTokenRef.current !== myToken) return; // 已被取消
-          if (res.ok) {
-            const txt = await res.text();
-            try {
-              const j = JSON.parse(txt);
-              url =
-                j.url ||
-                (j.data && (j.data.url || j.data)) ||
-                (typeof j === 'string' ? j : null);
-            } catch {
-              url = txt.trim();
-            }
-          }
-        } catch {
-          /* 网络错误，回退 meting */
-        }
-
-        if (!url) {
-          url = METING_API + nid;
-          triedMetingRef.current = true;
-        }
-
-        if (url) {
-          try {
-            audio.src = url;
-            audio.load();
-          } catch {
-            /* ignore */
-          }
-          return;
-        }
-      }
-
-      // 3. 无 nid 或网易云也失败 -> iTunes 30s 预览
+      // 预取数据缺失 → 运行时搜索 iTunes（带 artistId 精确匹配）
       try {
         const itunesResult = await findITunesPreview(artistName, ent.name);
         if (cancelTokenRef.current !== myToken) return; // 已被取消
@@ -304,10 +170,25 @@ export function useAudioPlayer() {
           return;
         }
       } catch {
-        /* iTunes 也搜不到 */
+        /* iTunes 搜不到 */
       }
 
-      // 4. 全部失败 -> 打开 QQ 音乐搜索页
+      // iTunes 搜不到 → 尝试 QQ 音乐流媒体 URL（JSONP 直连）
+      if (ent.songmid) {
+        try {
+          const qqResult = await fetchQQSongUrl(ent.songmid);
+          if (cancelTokenRef.current !== myToken) return; // 已被取消
+          if (qqResult?.url && audio) {
+            audio.src = qqResult.url;
+            audio.load();
+            return;
+          }
+        } catch {
+          /* QQ 音乐 purl 为空或请求失败 */
+        }
+      }
+
+      // 所有音频源都失败 -> 打开 QQ 音乐搜索页
       const q = encodeURIComponent((ent.name || '') + ' ' + (artistName || ''));
       try {
         window.open(QQ_SEARCH + q, '_blank');
@@ -347,12 +228,7 @@ export function useAudioPlayer() {
     setPlayingId(null);
     setArtist('');
     currentSongRef.current = null;
-    nidRef.current = null;
-    triedMetingRef.current = false;
     triedITunesRef.current = false;
-    triedQQRef.current = false;
-    triedNidLazyRef.current = false;
-    triedOuterUrlRef.current = false;
     artistRef.current = '';
   }, []);
 

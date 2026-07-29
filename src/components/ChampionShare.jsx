@@ -18,7 +18,7 @@ import React, { useRef, useState } from 'react';
 const FONT =
   '"PingFang SC","Microsoft YaHei","Noto Sans CJK SC","Hiragino Sans GB",sans-serif';
 const GOLD = '#ffd24a';
-const IMG_TIMEOUT = 8000;
+const IMG_TIMEOUT = 5000;
 
 // ---------------- 工具函数 ----------------
 
@@ -102,11 +102,42 @@ function corsProxyUrl(url) {
     }
   }
   // CDN URL 通过 weserv 代理获取 CORS 头
-  if (url.startsWith('https://y.gtimg.cn/')) {
+  if (url.startsWith('https://y.gtimg.cn/') || url.startsWith('http://y.gtimg.cn/')) {
     const stripped = url.replace(/^https?:\/\//, '');
     return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}`;
   }
   return url;
+}
+
+// 根据 entrant 数据构建封面 URL 列表（多级 fallback）
+// 优先级：歌曲专属封面(T062) > 专辑封面(T002) > 本地专辑封面
+function buildCoverUrls(entrant, size = 300) {
+  if (!entrant) return [];
+  const urls = [];
+  const dim = `${size}x${size}`;
+  // 1. 通过 songmid 构建歌曲专属封面 CDN URL（T062）— 最高优先级
+  if (entrant.songmid) {
+    const songCdn = `https://y.gtimg.cn/music/photo_new/T062R${dim}M000${entrant.songmid}.jpg`;
+    if (!urls.includes(songCdn)) urls.push(songCdn);
+  }
+  // 2. songPic（歌曲封面，可能与 #1 重复，去重跳过）
+  if (entrant.songPic && entrant.songPic !== entrant.pic) {
+    const u = entrant.songPic.replace(/R\d+x\d+M000/, `R${dim}M000`);
+    if (!urls.includes(u)) urls.push(u);
+  }
+  // 3. pic（CDN 封面，可能是 T002 专辑或 T062 歌曲）
+  if (entrant.pic) {
+    const u = entrant.pic.replace(/R\d+x\d+M000/, `R${dim}M000`);
+    if (!urls.includes(u)) urls.push(u);
+  }
+  // 4. 通过 albumMid 构建 CDN URL（T002 专辑封面）
+  if (entrant.albumMid) {
+    const cdn = `https://y.gtimg.cn/music/photo_new/T002R${dim}M000${entrant.albumMid}.jpg`;
+    if (!urls.includes(cdn)) urls.push(cdn);
+  }
+  // 5. picLocal（本地专辑封面）— 最后兜底
+  if (entrant.picLocal) urls.push(entrant.picLocal);
+  return urls;
 }
 
 // 加载单张封面图：本地图片（同源）直接加载，远程图片通过 CORS 代理
@@ -115,10 +146,7 @@ function loadImage(url, timeout = IMG_TIMEOUT) {
   return new Promise((resolve) => {
     if (!url) return resolve(null);
 
-    // 对远程 QQ 音乐 CDN 图片使用 CORS 代理
     const proxiedUrl = corsProxyUrl(url);
-
-    // 判断是否为本地路径（同源）
     const isLocal =
       url.startsWith('/') ||
       url.startsWith('./') ||
@@ -132,58 +160,62 @@ function loadImage(url, timeout = IMG_TIMEOUT) {
     };
 
     if (isLocal) {
-      // 本地图片：直接加载，无需 crossOrigin，不会污染 canvas
       const img = new Image();
       img.onload = () => finish({ img, tainted: false });
       img.onerror = () => finish(null);
       img.src = url;
-      setTimeout(() => {
-        if (!img.complete) finish(null);
-      }, timeout);
+      setTimeout(() => { if (!img.complete) finish(null); }, timeout);
       return;
     }
 
-    // 远程图片：通过 CORS 代理加载，带 crossOrigin
-    const tryWithCORS = (attempt) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => finish({ img, tainted: false });
-      img.onerror = () => {
-        if (attempt < 1) {
-          setTimeout(() => tryWithCORS(attempt + 1), 500);
-        } else {
-          // 策略2：不带 crossOrigin 加载（会污染 canvas，但至少能显示）
-          tryWithoutCORS();
-        }
-      };
-      img.src = proxiedUrl;
-      setTimeout(() => {
-        if (!img.complete) finish(null);
-      }, timeout);
+    // 远程图片：先 CORS 代理 + crossOrigin，失败则不带 crossOrigin 兜底
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => finish({ img, tainted: false });
+    img.onerror = () => {
+      const img2 = new Image();
+      img2.onload = () => finish({ img: img2, tainted: true });
+      img2.onerror = () => finish(null);
+      img2.src = proxiedUrl;
+      setTimeout(() => { if (!img2.complete) finish(null); }, timeout);
     };
-
-    const tryWithoutCORS = () => {
-      const img = new Image();
-      img.onload = () => finish({ img, tainted: true });
-      img.onerror = () => finish(null);
-      img.src = proxiedUrl;
-      setTimeout(() => {
-        if (!img.complete) finish(null);
-      }, timeout);
-    };
-
-    tryWithCORS(0);
+    img.src = proxiedUrl;
+    setTimeout(() => { if (!img.complete) finish(null); }, timeout);
   });
 }
 
-// 占位封面：渐变 + 音符 ♪
-function drawPlaceholder(ctx, x, y, size) {
+// 加载 entrant 的封面图（并行加载所有 URL，按优先级选择最佳结果）
+function loadEntrantCover(entrant, timeout = IMG_TIMEOUT, size = 300) {
+  const urls = buildCoverUrls(entrant, size);
+  if (urls.length === 0) return Promise.resolve(null);
+
+  return (async () => {
+    const results = await Promise.allSettled(
+      urls.map((url) => loadImage(url, timeout)),
+    );
+
+    let taintedResult = null;
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) {
+        if (!r.value.tainted) return r.value;
+        if (!taintedResult) taintedResult = r.value;
+      }
+    }
+    return taintedResult;
+  })();
+}
+
+// 占位封面：基于歌曲 ID 的 hue 渐变 + 音符 ♪（照搬 music-cup share.js）
+function drawPlaceholder(ctx, x, y, size, entrant) {
+  const seed = String(entrant?.songmid || entrant?.name || entrant?.id || '♪');
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 360;
   const g = ctx.createLinearGradient(x, y, x + size, y + size);
-  g.addColorStop(0, '#2a2a48');
-  g.addColorStop(1, '#141422');
+  g.addColorStop(0, `hsl(${h}, 45%, 30%)`);
+  g.addColorStop(1, `hsl(${(h + 40) % 360}, 50%, 16%)`);
   ctx.fillStyle = g;
   ctx.fillRect(x, y, size, size);
-  ctx.fillStyle = 'rgba(255,210,74,0.55)';
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = `${Math.round(size * 0.6)}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -191,7 +223,7 @@ function drawPlaceholder(ctx, x, y, size) {
 }
 
 // 绘制封面(带圆角裁剪 + 边框)
-function drawCover(ctx, x, y, size, img, isChampPath) {
+function drawCover(ctx, x, y, size, img, isChampPath, entrant) {
   ctx.save();
   roundRect(ctx, x, y, size, size, Math.max(2, size * 0.18));
   ctx.clip();
@@ -199,10 +231,10 @@ function drawCover(ctx, x, y, size, img, isChampPath) {
     try {
       ctx.drawImage(img, x, y, size, size);
     } catch {
-      drawPlaceholder(ctx, x, y, size);
+      drawPlaceholder(ctx, x, y, size, entrant);
     }
   } else {
-    drawPlaceholder(ctx, x, y, size);
+    drawPlaceholder(ctx, x, y, size, entrant);
   }
   ctx.restore();
   ctx.lineWidth = isChampPath ? 1.5 : 1;
@@ -222,7 +254,7 @@ function drawCard(ctx, opts) {
     side,
     isChampPath,
     isWinner,
-    imgMap,
+    coverImg,
     coverSize,
     vertical,
   } = opts;
@@ -246,14 +278,14 @@ function drawCard(ctx, opts) {
       : 'rgba(255,255,255,0.13)';
   ctx.stroke();
 
-  const img = entrant.pic ? imgMap[entrant.picLocal || entrant.pic] : null;
+  const img = coverImg;
 
   if (vertical) {
     // 竖向布局：封面在上、歌名在下（小规模时用，给文字更多宽度）
     const cs = Math.min(coverSize, w - 8);
     const cx = x + (w - cs) / 2;
     const cy = y + 4;
-    drawCover(ctx, cx, cy, cs, img, isChampPath);
+    drawCover(ctx, cx, cy, cs, img, isChampPath, entrant);
 
     const textAreaH = h - cs - 8;
     const fontSize = Math.max(10, Math.min(14, textAreaH - 4));
@@ -277,13 +309,13 @@ function drawCard(ctx, opts) {
     const cs = coverSize;
     const cy = y + (h - cs) / 2;
     const cx = side === 'L' ? x + 3 : x + w - cs - 3;
-    drawCover(ctx, cx, cy, cs, img, isChampPath);
+    drawCover(ctx, cx, cy, cs, img, isChampPath, entrant);
 
     const pad = 4;
     const nameX = side === 'L' ? cx + cs + pad : cx - pad;
     const nameMaxW = w - cs - pad * 2 - 2;
     // 大规模时用更小字号，确保歌名能显示更多字符
-    const fontSize = Math.max(7, Math.min(11, Math.round(h * 0.26)));
+    const fontSize = Math.max(8, Math.min(11, Math.round(h * 0.26)));
     ctx.fillStyle = isChampPath
       ? '#ffffff'
       : isWinner
@@ -292,8 +324,10 @@ function drawCard(ctx, opts) {
     ctx.font = `${isChampPath ? 700 : 600} ${fontSize}px ${FONT}`;
     ctx.textAlign = side === 'L' ? 'left' : 'right';
     ctx.textBaseline = 'middle';
-    const lines = wrapText(ctx, entrant.name, nameMaxW, 2);
-    const lineH = fontSize * 1.2;
+    // 大规模时最多 3 行，小规模最多 2 行
+    const maxLines = w < 70 ? 3 : 2;
+    const lines = wrapText(ctx, entrant.name, nameMaxW, maxLines);
+    const lineH = fontSize * 1.15;
     const startY = y + h / 2 - ((lines.length - 1) * lineH) / 2;
     lines.forEach((line, i) => {
       ctx.fillText(line, nameX, startY + i * lineH);
@@ -395,9 +429,9 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
 
   // 画布宽度
   const sideCols = numRounds;
-  const targetCardW = bs >= 64 ? 55 : bs >= 32 ? 75 : bs >= 16 ? 95 : bs >= 8 ? 115 : 135;
+  const targetCardW = bs >= 64 ? 70 : bs >= 32 ? 75 : bs >= 16 ? 95 : bs >= 8 ? 115 : 135;
   const idealSideWidth = sideCols * (targetCardW + colGap);
-  const maxW = bs <= 8 ? 760 : bs <= 16 ? 860 : bs <= 32 ? 950 : 1080;
+  const maxW = bs <= 8 ? 760 : bs <= 16 ? 860 : bs <= 32 ? 950 : 1200;
   const W = Math.max(520, Math.min(maxW, 2 * (margin + idealSideWidth + champHalfW)));
   const centerX = W / 2;
   const centerY = headerH + sideSpan / 2;
@@ -426,27 +460,48 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   const connLineW = bs >= 64 ? 1.2 : bs >= 16 ? 1.5 : 1.8;
   const champConnLineW = Math.max(2.4, connLineW * 1.8);
 
-  // ---- 加载封面图 ----
-  const imgMap = {};
-  const urlSet = new Set();
-  if (champion && champion.pic) urlSet.add(champion.picLocal || champion.pic);
+  // ---- 加载封面图（照搬 music-cup share.js thumbs Map：按歌曲 ID 去重）----
+  const coverKey = (e) => (e && e.songmid ? e.songmid : `id-${e?.id}`);
+  const thumbs = new Map(); // coverKey -> { img, tainted }
+  const champThumbs = new Map(); // 冠军 600px 高清版
+
+  // 去重收集所有需加载封面的参赛者
+  const toLoad = new Map();
+  if (champion) toLoad.set(coverKey(champion), champion);
   for (let r = 0; r < rounds.length; r++) {
     for (const e of rounds[r] || []) {
-      if (e && e.pic) urlSet.add(e.picLocal || e.pic);
+      if (e) toLoad.set(coverKey(e), e);
     }
   }
-  const urls = [...urlSet];
+
   await Promise.race([
     Promise.all(
-      urls.map((u) =>
-        loadImage(u).then((result) => {
-          // 只存非 tainted 的 Image 元素，避免 canvas 污染导致导出失败
-          if (result && !result.tainted) imgMap[u] = result.img;
-        }),
-      ),
+      [...toLoad.entries()].map(async ([key, entrant]) => {
+        const result = await loadEntrantCover(entrant);
+        if (result) thumbs.set(key, result);
+      }),
     ),
     new Promise((r) => setTimeout(r, IMG_TIMEOUT)),
   ]);
+
+  // 冠军单独加载 600px 高清版（照搬 music-cup）
+  if (champion) {
+    const hiRes = await loadEntrantCover(champion, IMG_TIMEOUT, 600);
+    if (hiRes) champThumbs.set(coverKey(champion), hiRes);
+  }
+
+  // 照搬 music-cup thumbs.get(e.s)：按歌曲 ID 取该歌自己的封面
+  const getCoverImg = (entrant) => {
+    if (!entrant) return null;
+    const key = coverKey(entrant);
+    // 冠军优先用 600px 高清版
+    if (champion && entrant.id === champion.id) {
+      const hi = champThumbs.get(key);
+      if (hi) return hi.img;
+    }
+    const hit = thumbs.get(key);
+    return hit ? hit.img : null;
+  };
 
   // ---- 画布 ----
   const canvas = document.createElement('canvas');
@@ -616,7 +671,7 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
           side: 'L',
           isChampPath: isChamp,
           isWinner,
-          imgMap,
+          coverImg: getCoverImg(eL),
           coverSize: cs,
           vertical: useVertical,
         });
@@ -633,7 +688,7 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
           side: 'R',
           isChampPath: isChamp,
           isWinner,
-          imgMap,
+          coverImg: getCoverImg(eR),
           coverSize: cs,
           vertical: useVertical,
         });
@@ -647,7 +702,7 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
     centerY,
     size: champCover,
     champion,
-    imgMap,
+    coverImg: getCoverImg(champion),
     singerName,
   });
 
@@ -678,7 +733,7 @@ function isAdvancer(rounds, r, entrant) {
 // 绘制中央冠军块
 function drawChampionBlock(
   ctx,
-  { centerX, centerY, size, champion, imgMap, singerName },
+  { centerX, centerY, size, champion, coverImg, singerName },
 ) {
   const half = size / 2;
   const coverY = centerY - half - 6;
@@ -713,7 +768,7 @@ function drawChampionBlock(
   ctx.fillText('👑', centerX, coverY - crownFont * 0.55);
 
   // 封面
-  const img = champion && champion.pic ? imgMap[champion.picLocal || champion.pic] : null;
+  const img = coverImg;
   const cornerR = Math.max(8, Math.round(size * 0.1));
   ctx.save();
   roundRect(ctx, centerX - half, coverY, size, size, cornerR);
@@ -722,10 +777,10 @@ function drawChampionBlock(
     try {
       ctx.drawImage(img, centerX - half, coverY, size, size);
     } catch {
-      drawPlaceholder(ctx, centerX - half, coverY, size);
+      drawPlaceholder(ctx, centerX - half, coverY, size, champion);
     }
   } else {
-    drawPlaceholder(ctx, centerX - half, coverY, size);
+    drawPlaceholder(ctx, centerX - half, coverY, size, champion);
   }
   ctx.restore();
   ctx.lineWidth = 2.5;
@@ -798,7 +853,16 @@ export default function ChampionShare({
         bracketSize,
       });
       canvasRef.current = canvas;
-      const url = canvas.toDataURL('image/jpeg', 0.92);
+      let url;
+      try {
+        url = canvas.toDataURL('image/jpeg', 0.92);
+      } catch {
+        // canvas 被 CORS 污染，尝试用非 tainted 的图片重新渲染
+        // 如果仍然失败，显示错误提示
+        console.warn('[ChampionShare] Canvas tainted, cannot export');
+        setState('error');
+        return;
+      }
       // 写入缓存
       cacheRef.current = { key: cacheKey, canvas, url };
       setPreviewUrl(url);

@@ -21,6 +21,17 @@ const SHAPES = ['square', 'circle', 'star'];
 export function launchConfetti(canvas) {
   if (!canvas) return () => {};
 
+  // 显式设置 canvas 尺寸为窗口大小，确保全屏
+  const setCanvasSize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+  setCanvasSize();
+
+  // 监听窗口尺寸变化
+  const onResize = () => setCanvasSize();
+  window.addEventListener('resize', onResize);
+
   // 绑定到现有 canvas，自动处理 resize
   const fire = confetti.create(canvas, {
     resize: true,
@@ -125,6 +136,7 @@ export function launchConfetti(canvas) {
     clearTimeout(t2);
     clearInterval(ambientTimer);
     document.removeEventListener('click', onClick);
+    window.removeEventListener('resize', onResize);
     fire.reset();
   };
 }

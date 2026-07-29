@@ -37,6 +37,20 @@ export const SINGER_REGISTRY = {
     bracketSize: 128,
     photo: 'https://y.gtimg.cn/music/photo_new/T001R300x300M000002cK0F12szD9T.jpg',
   },
+  she: {
+    name: 'S.H.E',
+    nameEn: 'SHE',
+    singermid: '003u5H9x1vACGo',
+    bracketSize: 128,
+    photo: 'https://y.gtimg.cn/music/photo_new/T001R300x300M000003u5H9x1vACGo.jpg',
+  },
+  eason: {
+    name: '陈奕迅',
+    nameEn: 'EASON',
+    singermid: '003Nz2So3XXYek',
+    bracketSize: 128,
+    photo: 'https://y.gtimg.cn/music/photo_new/T001R300x300M000003Nz2So3XXYek.jpg',
+  },
 };
 
 // 歌手列表 (保持顺序)

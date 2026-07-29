@@ -218,6 +218,29 @@ body::after {
   padding: 20px 22px;
   backdrop-filter: blur(8px);
 }
+.rules-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+.rules-toggle:hover {
+  color: var(--ink);
+}
+.rules-arrow {
+  font-size: 11px;
+  opacity: 0.6;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.rules.collapsed ul {
+  display: none;
+}
+.rules.collapsed {
+  padding: 14px 22px;
+}
 .rules h3 {
   margin: 0 0 12px;
   font-size: 15px;
@@ -699,6 +722,74 @@ body::after {
 }
 .song-card.picked .song-card-art img {
   filter: brightness(0.7);
+}
+
+/* 试听按钮（覆盖在封面右下角） */
+.song-card-preview {
+  position: absolute;
+  bottom: 7px;
+  right: 7px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s, transform 0.2s, background 0.2s;
+  z-index: 3;
+}
+.song-card:hover .song-card-preview,
+.song-card.playing .song-card-preview {
+  opacity: 1;
+  transform: scale(1);
+}
+.song-card-preview:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+.song-card.playing .song-card-preview {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #1a1a2e;
+}
+.song-card-spin {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.song-card.playing .song-card-spin {
+  border-color: rgba(26, 26, 46, 0.3);
+  border-top-color: #1a1a2e;
+}
+
+/* 播放中高亮 */
+.song-card.playing {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 16px rgba(255, 210, 74, 0.3);
+}
+
+/* 听原曲链接 */
+.song-card-original {
+  display: block;
+  padding: 0 8px 7px;
+  font-size: 10px;
+  color: var(--accent);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.song-card-original:hover {
+  opacity: 1;
 }
 
 /* 歌曲名称 */
@@ -1453,6 +1544,8 @@ body::after {
 #confetti {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
   z-index: 60;
 }
@@ -1512,6 +1605,225 @@ body::after {
 .singer-btn.active .sg-avatar {
   border-color: var(--accent);
   box-shadow: 0 0 8px rgba(255, 210, 74, 0.3);
+}
+
+/* ===== 动态歌手搜索 ===== */
+.singer-select-wrap {
+  margin-bottom: 20px;
+}
+.singer-search {
+  position: relative;
+  max-width: 480px;
+  margin: 14px auto 0;
+}
+.singer-search-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 14px;
+  font-family: inherit;
+  padding: 11px 18px;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.singer-search-input:focus {
+  border-color: rgba(255, 210, 74, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 210, 74, 0.1);
+}
+.singer-search-input::placeholder {
+  color: rgba(154, 160, 200, 0.5);
+  font-size: 13px;
+}
+.singer-search-loading {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.singer-search-empty {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.singer-search-results {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.singer-search-results::-webkit-scrollbar {
+  width: 6px;
+}
+.singer-search-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+.singer-search-results::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+.singer-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid var(--rule);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  transition:
+    transform 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s,
+    background 0.2s;
+  animation: cardIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.singer-search-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 210, 74, 0.45);
+  background: rgba(255, 210, 74, 0.08);
+}
+.singer-search-item:active {
+  transform: scale(0.97);
+}
+.singer-search-item .ssi-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+.singer-search-item .ssi-ico {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+.singer-search-item .ssi-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ===== 已加载动态歌手徽章 ===== */
+.dynamic-singer-badge {
+  max-width: 480px;
+  margin: 14px auto 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 210, 74, 0.45);
+  background: linear-gradient(135deg, rgba(255, 210, 74, 0.14), rgba(255, 92, 138, 0.1));
+  box-shadow: 0 8px 24px rgba(255, 177, 61, 0.18);
+  animation: pop 0.3s cubic-bezier(0.22, 1.3, 0.36, 1);
+}
+.dynamic-singer-badge .dsb-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  flex-shrink: 0;
+}
+.dynamic-singer-badge .dsb-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dynamic-singer-badge .dsb-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dynamic-singer-badge .dsb-tag {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.dynamic-singer-badge .dsb-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.dynamic-singer-badge .dsb-clear {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--rule);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+.dynamic-singer-badge .dsb-clear:hover {
+  background: rgba(255, 92, 138, 0.18);
+  border-color: rgba(255, 92, 138, 0.4);
+  color: var(--accent2);
+}
+
+/* 旋转加载图标（搜索 / 动态歌手加载共用） */
+.dsb-spin {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .singer-search-results {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+}
+@media (max-width: 380px) {
+  .singer-search-results {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mode-select {
@@ -2322,6 +2634,27 @@ body::after {
 .card-preview-btn:hover {
   background: rgba(255, 210, 74, 0.2);
   border-color: rgba(255, 210, 74, 0.5);
+}
+
+.card-original-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #5fd4a8;
+  background: rgba(95, 212, 168, 0.1);
+  border: 1px solid rgba(95, 212, 168, 0.25);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-top: 4px;
+  text-decoration: none;
+}
+.card-original-btn:hover {
+  background: rgba(95, 212, 168, 0.2);
+  border-color: rgba(95, 212, 168, 0.5);
 }
 
 /* ========================================

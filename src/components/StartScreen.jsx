@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { clsx } from 'clsx';
 import TrophySvg from './TrophySvg.jsx';
 import SingerSelector from './SingerSelector.jsx';
@@ -24,6 +24,20 @@ import { classicOptions } from '../data/singers.js';
  * @param {(ids: Set<number>) => void} onCustomSelectedChange - callback when selection changes
  * @param {object[]} customEntrants - full entrants array of the base singer
  * @param {number} classicMaxSize - max bracket size for classic mode
+ * @param {boolean} [singerLoading] - 内置歌手数据加载中
+ * @param {(entrant: object) => void} onPreview - 试听回调（自选模式歌曲选择器用）
+ * @param {number|null} playingId - 当前正在播放的 entrant.id
+ * @param {boolean} previewLoading - 试听加载中
+ * @param {boolean} isPlaying - 是否正在播放
+ * @param {string} [searchKeyword] - 动态歌手搜索关键词
+ * @param {(v: string) => void} [onSearch] - 搜索输入回调
+ * @param {Array} [searchResults] - 歌手搜索结果
+ * @param {boolean} [isSearching] - 搜索中
+ * @param {object|null} [dynamicSinger] - 已加载的动态歌手
+ * @param {boolean} [isLoadingSinger] - 动态歌手歌曲加载中
+ * @param {string} [loadingProgress] - 加载进度文本
+ * @param {(singer: object) => void} [onLoadSinger] - 加载动态歌手
+ * @param {() => void} [onClearDynamicSinger] - 清除动态歌手
  */
 export default function StartScreen({
   singer,
@@ -42,9 +56,32 @@ export default function StartScreen({
   onCustomSelectedChange,
   customEntrants,
   classicMaxSize,
+  singerLoading,
+  onPreview,
+  playingId,
+  previewLoading,
+  isPlaying,
+  searchKeyword,
+  onSearch,
+  searchResults,
+  isSearching,
+  dynamicSinger,
+  isLoadingSinger,
+  loadingProgress,
+  onLoadSinger,
+  onClearDynamicSinger,
 }) {
   const isClassic = selectedMode === 'classic';
   const isCustom = selectedMode === 'custom';
+
+  // 赛制说明折叠状态（默认展开）
+  const [rulesCollapsed, setRulesCollapsed] = useState({
+    classic: false,
+    wc: false,
+    custom: false,
+  });
+  const toggleRules = (key) =>
+    setRulesCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
   const maxBracket = isClassic
     ? singer?.bracketSize || 128
     : classicMaxSize || singer?.bracketSize || 128;
@@ -102,8 +139,19 @@ export default function StartScreen({
       </p>
 
       {/* Classic rules */}
-      <div className="rules" style={{ display: isClassic ? 'block' : 'none' }}>
-        <h3>赛制说明 · 经典{bracketSize}强</h3>
+      <div
+        className={clsx('rules', { collapsed: rulesCollapsed.classic })}
+        style={{ display: isClassic ? 'block' : 'none' }}
+      >
+        <h3
+          className="rules-toggle"
+          onClick={() => toggleRules('classic')}
+        >
+          <span>赛制说明 · 经典{bracketSize}强</span>
+          <span className="rules-arrow">
+            {rulesCollapsed.classic ? '▶' : '▼'}
+          </span>
+        </h3>
         <ul>
           <li>
             选曲原则：取 QQ 音乐收藏量前 {bracketSize}{' '}
@@ -135,10 +183,20 @@ export default function StartScreen({
 
       {/* WC rules */}
       <div
-        className={clsx('rules', 'wc-rules', { show: !isClassic })}
+        className={clsx('rules', 'wc-rules', {
+          collapsed: rulesCollapsed.wc,
+        })}
         style={{ display: !isClassic && !isCustom ? 'block' : 'none' }}
       >
-        <h3>赛制说明 · 世界杯模式</h3>
+        <h3
+          className="rules-toggle"
+          onClick={() => toggleRules('wc')}
+        >
+          <span>赛制说明 · 世界杯模式</span>
+          <span className="rules-arrow">
+            {rulesCollapsed.wc ? '▶' : '▼'}
+          </span>
+        </h3>
         <ul>
           <li>
             <b>小组赛</b>：取 QQ 音乐收藏量前 <b>48 首</b>，按收藏量分 4 档抽签，分入{' '}
@@ -164,8 +222,19 @@ export default function StartScreen({
       </div>
 
       {/* Custom rules */}
-      <div className="rules" style={{ display: isCustom ? 'block' : 'none' }}>
-        <h3>赛制说明 · 自选模式</h3>
+      <div
+        className={clsx('rules', { collapsed: rulesCollapsed.custom })}
+        style={{ display: isCustom ? 'block' : 'none' }}
+      >
+        <h3
+          className="rules-toggle"
+          onClick={() => toggleRules('custom')}
+        >
+          <span>赛制说明 · 自选模式</span>
+          <span className="rules-arrow">
+            {rulesCollapsed.custom ? '▶' : '▼'}
+          </span>
+        </h3>
         <ul>
           <li>
             先选择<b>淘汰赛规模</b>（4/8/16/32/64/128 强），再从下方歌曲列表中
@@ -195,6 +264,16 @@ export default function StartScreen({
         singers={singers}
         current={currentSinger}
         onSelect={onSelectSinger}
+        searchKeyword={searchKeyword}
+        onSearch={onSearch}
+        searchResults={searchResults}
+        isSearching={isSearching}
+        dynamicSinger={dynamicSinger}
+        isLoadingSinger={isLoadingSinger}
+        loadingProgress={loadingProgress}
+        onLoadSinger={onLoadSinger}
+        onClearDynamicSinger={onClearDynamicSinger}
+        singerLoading={singerLoading}
       />
 
       <ModeSelector
@@ -230,6 +309,10 @@ export default function StartScreen({
           onChange={onCustomSelectedChange}
           selectedSize={customBracketSize}
           onSelectSize={onSelectSize}
+          onPreview={onPreview}
+          playingId={playingId}
+          previewLoading={previewLoading}
+          isPlaying={isPlaying}
         />
       )}
 

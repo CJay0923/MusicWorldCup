@@ -4,12 +4,16 @@ import { getAlbumGroups } from '../data/singers.js';
 
 /**
  * 按专辑分组的歌曲选择器（自选模式）
- * 采用 Music Cup 风格的卡片网格布局：大封面 + 歌名 + 选中勾选
+ * 采用 Music Cup 风格的卡片网格布局：大封面 + 歌名 + 选中勾选 + 试听按钮
  * @param {object[]} entrants - 当前歌手的全部歌曲 entrant 数组
  * @param {Set<number>} selectedIds - 已选中的 entrant id 集合
  * @param {(ids: Set<number>) => void} onChange - 选中变化回调
  * @param {number} selectedSize - 当前选择的规模（固定，由上层传入）
  * @param {(size: number) => void} onSelectSize - 规模选择回调（已废弃，保留兼容）
+ * @param {(entrant: object) => void} onPreview - 试听回调
+ * @param {number|null} playingId - 当前正在播放的 entrant.id
+ * @param {boolean} previewLoading - 试听加载中
+ * @param {boolean} isPlaying - 是否正在播放
  */
 export default function SongPicker({
   entrants,
@@ -17,6 +21,10 @@ export default function SongPicker({
   onChange,
   selectedSize,
   onSelectSize,
+  onPreview,
+  playingId,
+  previewLoading,
+  isPlaying,
 }) {
   const [search, setSearch] = useState('');
   const [collapsedAlbums, setCollapsedAlbums] = useState(new Set());
@@ -217,24 +225,67 @@ export default function SongPicker({
                 <div className="song-card-grid">
                   {alb.songs.map((song, k) => {
                     const isSelected = selectedIds.has(song.id);
+                    // 未分类组用每首歌自己的歌曲封面，专辑组用专辑封面
+                    const songArt = alb.isMisc ? (song.songPic || song.pic || '') : (pic || '');
+                    const handleArtError = (e) => {
+                      const img = e.currentTarget;
+                      if (alb.isMisc && song.pic && img.src !== song.pic) {
+                        img.src = song.pic;
+                      } else {
+                        img.style.display = 'none';
+                      }
+                    };
+                    const isThisPlaying = playingId === song.id;
+                    const showPause = isThisPlaying && isPlaying && !previewLoading;
+                    const showSpinner = isThisPlaying && previewLoading;
                     return (
                       <div
                         key={song.id}
-                        className={clsx('song-card', { picked: isSelected })}
+                        className={clsx('song-card', { picked: isSelected, playing: isThisPlaying })}
                         onClick={() => toggleSong(song.id)}
                         role="button"
                         tabIndex={0}
                         style={{ animationDelay: `${Math.min(k * 30, 500)}ms` }}
                       >
                         <div className="song-card-art">
-                          {pic ? (
-                            <img src={pic} alt="" loading="lazy" />
+                          {songArt ? (
+                            <img src={songArt} alt="" loading="lazy" onError={handleArtError} />
                           ) : (
                             <div className="song-card-noart">🎵</div>
                           )}
                           <div className="song-card-check">✓</div>
+                          {onPreview && (
+                            <button
+                              className="song-card-preview"
+                              type="button"
+                              aria-label={showPause ? '暂停' : '试听'}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onPreview(song);
+                              }}
+                            >
+                              {showSpinner ? (
+                                <span className="song-card-spin" />
+                              ) : showPause ? (
+                                '⏸'
+                              ) : (
+                                '▶'
+                              )}
+                            </button>
+                          )}
                         </div>
                         <div className="song-card-name">{song.name}</div>
+                        {(song.itunesTrackUrl || song.songmid) && (
+                          <a
+                            className="song-card-original"
+                            href={song.itunesTrackUrl || `https://y.qq.com/n/ryqq/songDetail/${song.songmid}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            ♪ 听原曲
+                          </a>
+                        )}
                       </div>
                     );
                   })}

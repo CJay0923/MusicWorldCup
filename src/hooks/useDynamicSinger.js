@@ -1,0 +1,355 @@
+// src/hooks/useDynamicSinger.js — 运行时动态歌手搜索与加载 hook
+// 通过 QQ Music JSONP 接口在运行时搜索任意歌手并加载其歌曲数据，
+// 适配 surge.sh 静态部署（无需后端）。
+//
+// 复用 useSingerData.js 的 Live/伴奏过滤与 baseKey 去重逻辑，
+// 将运行时歌曲数据转换为与本地预取数据兼容的 entrant 格式，
+// 使动态歌手可直接接入现有经典 / 世界杯 / 自选三种游戏流程。
+//
+// 与 useSingerData 的差异：
+//   - 运行时无 favCount（统一设为 0），种子排位改用 API 返回顺序（已按热度排序）
+//   - 无静态 nid/chorus/iTunes 预取数据（试听回退到运行时 iTunes 搜索 / QQ 流媒体）
+//   - 专辑详情在歌曲加载完成后后台异步拉取，到位后渐进式更新歌手数据
+
+import { useState, useRef, useCallback, useEffect } from 'react';
+import {
+  searchSingers,
+  fetchSingerSongs,
+  fetchAlbumDetail,
+} from '../lib/qqMusic.js';
+import { baseKey } from '../utils/text.js';
+
+// ---------- Live/伴奏过滤（与 useSingerData.js 完全一致的 regex）----------
+const LIVE_TRACK_PATTERNS = [
+  /[([（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
+  /\blive\s+(at|from|in|on|@)\b/i,
+  /[-–—~]\s*live\b/i,
+  /\blive\s*(version|ver\.?|session|sessions|edit|recording|album)\b/i,
+  /\b(in concert|unplugged)\b/i,
+  /(现场|現場|演唱会|演唱會|音乐会|音樂會|音乐节|音樂節|live版|巡回|巡迴|巡演|不插电|不插電|演奏会|演奏會)/i,
+];
+const LIVE_ALBUM_PATTERNS = [
+  /[([（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
+  /\blive\s+(at|from|in|on|@)\b/i,
+  /^live\b/i,
+  /\blive!?$/i,
+  /\b(in concert|unplugged|world tour)\b/i,
+  /(现场|現場|演唱会|演唱會|音乐会|音樂會|巡回|巡迴|巡演|不插电|不插電)/,
+];
+const JUNK_TRACK =
+  /(\binstrumental\b|伴奏|卡拉OK|karaoke|off\s?vocal|纯音乐|純音樂|\bcommentary\b|\bvoice memo\b)/i;
+
+function isLiveTrack(name) {
+  return LIVE_TRACK_PATTERNS.some((re) => re.test(name));
+}
+function isLiveAlbum(albumName) {
+  return LIVE_ALBUM_PATTERNS.some((re) => re.test(albumName || ''));
+}
+function isJunkTrack(name) {
+  return JUNK_TRACK.test(name);
+}
+
+/**
+ * 根据可用歌曲数计算经典模式最大淘汰赛规模（2 的幂，4~128）
+ */
+function computeBracketSize(count) {
+  for (const b of [128, 64, 32, 16, 8, 4]) {
+    if (count >= b) return b;
+  }
+  return 4;
+}
+
+/**
+ * 将运行时拉取的歌曲列表转换为与 useSingerData 兼容的歌手数据结构。
+ * 应用 Live/伴奏过滤 + baseKey 去重；种子排位使用 API 顺序（已按热度排序）。
+ *
+ * @param {{songs: Array, singerName: string, singermid: string}} raw
+ * @returns {{name, nameEn, bracketSize, entrants, seeds, seedRank, singerPhoto, source}}
+ */
+function transformDynamicSingerData(raw) {
+  const seenKeys = new Set();
+  const filteredSongs = [];
+  for (const song of raw.songs) {
+    const name = (song.name || '').trim();
+    if (!name) continue;
+    if (isJunkTrack(name)) continue;
+    if (isLiveTrack(name)) continue;
+    if (isLiveAlbum(song.albumName)) continue;
+    // 运行时无 favCount，无法做「无封面且低收藏量」过滤，统一保留
+    const key = baseKey(name);
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+    filteredSongs.push(song);
+  }
+
+  // 种子排位：以 songmid 为去重 key，使用 API 返回顺序（已按热度降序）
+  const seedRankByMid = new Map();
+  filteredSongs.forEach((song, idx) => {
+    if (!seedRankByMid.has(song.songmid)) {
+      seedRankByMid.set(song.songmid, idx + 1);
+    }
+  });
+
+  const allEntrants = filteredSongs.map((song, i) => {
+    const sr = seedRankByMid.get(song.songmid) || i + 1;
+    const cdnPic = song.albumMid
+      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
+      : '';
+    // 歌曲封面 fallback：当无专辑封面时使用歌曲封面
+    const songCdnPic = song.songmid
+      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
+      : '';
+
+    return {
+      name: song.name,
+      id: i,
+      side: i < filteredSongs.length / 2 ? 'L' : 'R',
+      seed: sr,
+      nid: null,
+      songmid: song.songmid,
+      songid: song.songid,
+      pic: cdnPic || songCdnPic,
+      songPic: songCdnPic,
+      albumMid: song.albumMid,
+      albumName: song.albumName,
+      albumDate: song.albumDate || '',
+      albumType: '',
+      albumDesc: '',
+      chorus: null,
+      seedRank: sr,
+      isSeed: sr <= Math.min(32, filteredSongs.length),
+      itunesPreviewUrl: '',
+      itunesTrackUrl: '',
+      favCount: 0,
+    };
+  });
+
+  return {
+    name: raw.singerName || '动态歌手',
+    nameEn: 'QQ',
+    bracketSize: computeBracketSize(allEntrants.length),
+    entrants: allEntrants,
+    seeds: allEntrants.map((_, i) => i),
+    seedRank: Object.fromEntries(allEntrants.map((e, i) => [i, e.seedRank])),
+    singerPhoto: `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid}.jpg`,
+    source: 'dynamic',
+  };
+}
+
+const SEARCH_DEBOUNCE_MS = 300;
+const ALBUM_FETCH_CONCURRENCY = 4;
+const ALBUM_FETCH_BATCH = 5;
+const ALBUM_FETCH_CAP = 60;
+
+/**
+ * 动态歌手搜索与加载 hook。
+ *
+ * @returns {{
+ *   searchKeyword: string,
+ *   setSearchKeyword: (v: string) => void,
+ *   searchResults: Array<{name, mid, photo}>,
+ *   isSearching: boolean,
+ *   dynamicSinger: {name, mid, photo}|null,
+ *   isLoadingSinger: boolean,
+ *   loadingProgress: string,
+ *   loadSinger: (singer: {name, mid, photo}) => void,
+ *   dynamicSingerData: object|null,
+ *   clearDynamicSinger: () => void,
+ * }}
+ */
+export function useDynamicSinger() {
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [dynamicSinger, setDynamicSinger] = useState(null);
+  const [isLoadingSinger, setIsLoadingSinger] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState('');
+  const [dynamicSingerData, setDynamicSingerData] = useState(null);
+
+  // 取消令牌：loadSinger / clearDynamicSinger 时自增，使旧 in-flight 加载失效
+  const loadTokenRef = useRef(0);
+  const searchTimerRef = useRef(null);
+  // 搜索 ID：防止旧搜索结果覆盖新搜索结果
+  const searchIdRef = useRef(0);
+
+  // ---------- 防抖搜索（300ms）----------
+  useEffect(() => {
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+    const kw = searchKeyword.trim();
+    if (!kw) {
+      searchIdRef.current++; // 使任何 in-flight 搜索失效
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    const mySearchId = ++searchIdRef.current;
+    setIsSearching(true);
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const results = await searchSingers(kw);
+        // 只接受最新一次搜索的结果
+        if (searchIdRef.current !== mySearchId) return;
+        setSearchResults(results);
+      } catch {
+        if (searchIdRef.current !== mySearchId) return;
+        setSearchResults([]);
+      } finally {
+        if (searchIdRef.current !== mySearchId) return;
+        setIsSearching(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+        searchTimerRef.current = null;
+      }
+    };
+  }, [searchKeyword]);
+
+  // ---------- 后台拉取专辑详情，渐进式更新歌手数据 ----------
+  const fetchAlbumDetailsInBackground = useCallback(
+    (data, myToken) => {
+      const uniqueAlbumMids = Array.from(
+        new Set(data.entrants.map((e) => e.albumMid).filter(Boolean)),
+      ).slice(0, ALBUM_FETCH_CAP);
+
+      if (uniqueAlbumMids.length === 0) return;
+
+      let nextIdx = 0;
+      const pending = new Map(); // albumMid -> {albumType, albumDesc}
+
+      const flush = () => {
+        if (pending.size === 0) return;
+        if (loadTokenRef.current !== myToken) return;
+        const updates = new Map(pending);
+        pending.clear();
+        setDynamicSingerData((prev) => {
+          if (!prev) return prev;
+          let changed = false;
+          const entrants = prev.entrants.map((e) => {
+            const u = updates.get(e.albumMid);
+            if (u) {
+              changed = true;
+              return {
+                ...e,
+                albumType: u.albumType || e.albumType,
+                albumDesc: u.albumDesc || e.albumDesc,
+              };
+            }
+            return e;
+          });
+          return changed ? { ...prev, entrants } : prev;
+        });
+      };
+
+      const worker = async () => {
+        while (true) {
+          const i = nextIdx++;
+          if (i >= uniqueAlbumMids.length) break;
+          if (loadTokenRef.current !== myToken) return;
+          const mid = uniqueAlbumMids[i];
+          try {
+            const detail = await fetchAlbumDetail(mid);
+            if (loadTokenRef.current !== myToken) return;
+            pending.set(mid, {
+              albumType: detail.albumType || '',
+              albumDesc: detail.desc || '',
+            });
+          } catch {
+            /* 忽略单张专辑失败 */
+          }
+          if (pending.size >= ALBUM_FETCH_BATCH) flush();
+        }
+      };
+
+      Promise.all(
+        Array.from({ length: ALBUM_FETCH_CONCURRENCY }, () => worker()),
+      ).then(() => {
+        if (loadTokenRef.current === myToken) flush();
+      });
+    },
+    [],
+  );
+
+  // ---------- 加载歌手歌曲 ----------
+  const loadSinger = useCallback(
+    async (singer) => {
+      if (!singer || !singer.mid) return;
+      // 已加载同一歌手则不重复拉取
+      if (dynamicSinger?.mid === singer.mid && dynamicSingerData) return;
+
+      const myToken = ++loadTokenRef.current;
+      searchIdRef.current++; // 取消待处理的搜索
+      setDynamicSinger(singer);
+      setIsLoadingSinger(true);
+      setLoadingProgress('加载中…');
+      setSearchResults([]);
+      setSearchKeyword('');
+      setIsSearching(false);
+      setDynamicSingerData(null);
+
+      try {
+        const { songs, singerName, singermid } = await fetchSingerSongs(
+          singer.mid,
+          (p) => {
+            if (loadTokenRef.current === myToken) setLoadingProgress(p);
+          },
+        );
+        if (loadTokenRef.current !== myToken) return;
+
+        const data = transformDynamicSingerData({ songs, singerName, singermid });
+        if (loadTokenRef.current !== myToken) return;
+
+        if (data.entrants.length === 0) {
+          setLoadingProgress('未找到可用歌曲');
+          setIsLoadingSinger(false);
+          return;
+        }
+
+        setDynamicSingerData(data);
+        setIsLoadingSinger(false);
+        setLoadingProgress('');
+
+        // 后台异步拉取专辑详情，到位后渐进式更新
+        fetchAlbumDetailsInBackground(data, myToken);
+      } catch {
+        if (loadTokenRef.current === myToken) {
+          setIsLoadingSinger(false);
+          setLoadingProgress('加载失败，请重试');
+        }
+      }
+    },
+    [dynamicSinger, dynamicSingerData, fetchAlbumDetailsInBackground],
+  );
+
+  // ---------- 清除动态歌手 ----------
+  const clearDynamicSinger = useCallback(() => {
+    loadTokenRef.current++; // 取消所有 in-flight 加载
+    searchIdRef.current++; // 取消所有 in-flight 搜索
+    setDynamicSinger(null);
+    setDynamicSingerData(null);
+    setIsLoadingSinger(false);
+    setLoadingProgress('');
+    setSearchKeyword('');
+    setSearchResults([]);
+    setIsSearching(false);
+  }, []);
+
+  return {
+    searchKeyword,
+    setSearchKeyword,
+    searchResults,
+    isSearching,
+    dynamicSinger,
+    isLoadingSinger,
+    loadingProgress,
+    loadSinger,
+    dynamicSingerData,
+    clearDynamicSinger,
+  };
+}
+
+export default useDynamicSinger;

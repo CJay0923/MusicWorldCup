@@ -37,21 +37,48 @@ const SINGERS = {
   jay: { name: '周杰伦', singermid: '0025NhlN2yWrP4' },
   jolin: { name: '蔡依林', singermid: '0027pdHE4STooO' },
   david: { name: '陶喆', singermid: '002cK0F12szD9T' },
+  she: { name: 'S.H.E', singermid: '003u5H9x1vACGo' },
+  eason: { name: '陈奕迅', singermid: '003Nz2So3XXYek' },
 };
 
 // ---------- 工具函数 ----------
 
-function normalize(name) {
-  let s = name.replace(/[（(].*?[)）]/g, '');
-  s = s.replace(/[【\[].*?[\]】]/g, '');
-  s = s.replace(/[（(）)]/g, '');
-  return s.toLowerCase().replace(/\s+/g, ' ').trim();
+// 照搬 music-cup api.js 的 Live/伴奏过滤正则
+const LIVE_TRACK_PATTERNS = [
+  /[(\[（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
+  /\blive\s+(at|from|in|on|@)\b/i,
+  /[-–—~]\s*live\b/i,
+  /\blive\s*(version|ver\.?|session|sessions|edit|recording|album)\b/i,
+  /\b(in concert|unplugged)\b/i,
+  /(现场|現場|演唱会|演唱會|音乐会|音樂會|音乐节|音樂節|live版|巡回|巡迴|巡演|不插电|不插電|演奏会|演奏會)/i,
+];
+const LIVE_ALBUM_PATTERNS = [
+  /[(\[（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
+  /\blive\s+(at|from|in|on|@)\b/i,
+  /^live\b/i,
+  /\blive!?$/i,
+  /\b(in concert|unplugged|world tour)\b/i,
+  /(现场|現場|演唱会|演唱會|音乐会|音樂會|巡回|巡迴|巡演|不插电|不插電)/,
+];
+const JUNK_TRACK = /(\binstrumental\b|伴奏|卡拉OK|karaoke|off\s?vocal|纯音乐|純音樂|\bcommentary\b|\bvoice memo\b)/i;
+
+function isLiveTrack(name) {
+  return LIVE_TRACK_PATTERNS.some((re) => re.test(name));
+}
+function isLiveAlbum(albumName) {
+  return LIVE_ALBUM_PATTERNS.some((re) => re.test(albumName || ''));
+}
+function isJunkTrack(name) {
+  return JUNK_TRACK.test(name);
 }
 
-function shouldFilter(name) {
-  return /live|现场|演唱会|伴奏|karaoke|instrumental|纯音乐|remix|DJ|demo|DEMO|伴奏版|粤语版|英文版/i.test(
-    name,
-  );
+// 照搬 music-cup baseKey：NFKC 归一化 + 去括号注记 + 去 " - xxx" 后缀 + 去空格标点
+function baseKey(name) {
+  let s = String(name).normalize('NFKC').toLowerCase();
+  s = s.replace(/[([（【][^)\]）】]*[)\]）】]/g, ' ');
+  s = s.split(/\s+[-–—]\s+/)[0];
+  s = s.replace(/[\s''"""!！?？。，、·&+]/g, '');
+  return s || String(name).toLowerCase();
 }
 
 async function sleep(ms) {
@@ -113,16 +140,19 @@ async function fetchSingerSongs(singermid) {
         const songid = song.id || 0;
 
         if (!name || !songmid) continue;
-        if (shouldFilter(name)) continue;
-
-        const norm = normalize(name);
-        if (seen.has(norm)) continue;
-        seen.add(norm);
+        if (isJunkTrack(name)) continue;
+        if (isLiveTrack(name)) continue;
 
         const album = song.album || {};
         const albumMid = album.mid || '';
         const albumName = album.name || '';
         const albumDate = album.time_public || '';
+
+        if (isLiveAlbum(albumName)) continue;
+
+        const key = baseKey(name);
+        if (seen.has(key)) continue;
+        seen.add(key);
 
         allSongs.push({
           name,
@@ -167,15 +197,31 @@ async function fetchAlbumDetail(albumMid) {
     const data = await res.json();
     const info = data?.req?.data?.basicInfo;
     if (!info) return null;
+    let desc = info.albumDesc || info.desc || '';
+    // GetAlbumDetail 无 desc → 兜底调 fcg_v8_album_info_cp.fcg
+    if (!desc) desc = await fetchAlbumDescFallback(albumMid);
     return {
       mid: albumMid,
       name: info.albumName || '',
       aDate: info.publishDate || '',
       albumType: info.albumType || '',
       type: info.type || 0,
+      desc,
     };
   } catch {
     return null;
+  }
+}
+
+// 兜底获取专辑简介（fcg 端点）
+async function fetchAlbumDescFallback(albumMid) {
+  const url = `https://c.y.qq.com/v8/fcg-bin/fcg_v8_album_info_cp.fcg?albummid=${albumMid}&format=json&inCharset=utf8&outCharset=utf-8&platform=yqq`;
+  try {
+    const res = await fetch(url, { headers: QQ_HEADERS });
+    const data = await res.json();
+    return data?.data?.desc || data?.desc || '';
+  } catch {
+    return '';
   }
 }
 
@@ -276,16 +322,18 @@ async function processSinger(singerId, singerInfo) {
   }
   console.log(`  ✅ 封面下载完成`);
 
-  // 3. 获取专辑类型（逐专辑调用 GetAlbumDetail）
-  console.log(`  📥 获取 ${uniqueAlbumMids.size} 张专辑类型...`);
+  // 3. 获取专辑类型+简介（逐专辑调用 GetAlbumDetail）
+  console.log(`  📥 获取 ${uniqueAlbumMids.size} 张专辑类型和简介...`);
   const albumTypeMap = new Map(); // albumMid → albumType
   const albumDateMap = new Map(); // albumMid → publishDate
+  const albumDescMap = new Map(); // albumMid → desc
   let albumDetailCount = 0;
   for (const albumMid of uniqueAlbumMids) {
     const detail = await fetchAlbumDetail(albumMid);
     if (detail) {
       albumTypeMap.set(albumMid, detail.albumType);
       if (detail.aDate) albumDateMap.set(albumMid, detail.aDate);
+      if (detail.desc) albumDescMap.set(albumMid, detail.desc);
     }
     albumDetailCount++;
     if (albumDetailCount % 10 === 0) {
@@ -353,6 +401,7 @@ async function processSinger(singerId, singerInfo) {
     singerPhoto: `/covers/singer_${singerInfo.singermid}.jpg`,
     totalSong,
     albumCount: uniqueAlbumMids.size,
+    albumDescs: Object.fromEntries(albumDescMap),
     entrants,
   };
 

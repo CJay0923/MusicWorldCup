@@ -3,7 +3,7 @@ import { clsx } from 'clsx';
 
 /**
  * A single song battle card.
- * @param {object|null} entrant - song object {name, side, seed, nid, pic, chorus, seedRank, isSeed} or null
+ * @param {object|null} entrant - song object {name, side, seed, nid, pic, songPic, chorus, seedRank, isSeed} or null
  * @param {'left'|'right'} side - which side the card is on
  * @param {'default'|'win'|'lose'|'locked'} state - card visual state
  * @param {boolean} showSideTag - whether to show the left/right half tag (hidden in WC mode)
@@ -22,6 +22,16 @@ export default function MatchCard({
     'seed-card': entrant?.isSeed,
   });
 
+  // 图片 onError fallback：专辑封面 → 歌曲封面 → 空
+  const handleImgError = (e) => {
+    const img = e.currentTarget;
+    if (entrant?.songPic && img.src !== entrant.songPic) {
+      img.src = entrant.songPic;
+    } else {
+      img.style.display = 'none';
+    }
+  };
+
   return (
     <div className={classes} onClick={onPick}>
       {showSideTag && (
@@ -32,7 +42,13 @@ export default function MatchCard({
       </span>
       <div className={clsx('album-wrap', { empty: !entrant?.pic })}>
         {entrant?.pic && (
-          <img className="album-cover" src={entrant.pic} alt="专辑封面" loading="lazy" />
+          <img
+            className="album-cover"
+            src={entrant.pic}
+            alt="专辑封面"
+            loading="lazy"
+            onError={handleImgError}
+          />
         )}
       </div>
       <div className="song">{entrant?.name || '—'}</div>
@@ -50,6 +66,18 @@ export default function MatchCard({
         >
           ▶ 试听
         </button>
+      )}
+      {(entrant?.itunesTrackUrl || entrant?.songmid) && (
+        <a
+          className="card-original-btn"
+          href={entrant?.itunesTrackUrl || `https://y.qq.com/n/ryqq/songDetail/${entrant.songmid}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="听原曲"
+          onClick={(e) => e.stopPropagation()}
+        >
+          ♪ 听原曲
+        </a>
       )}
       <div className="check" style={{ opacity: state === 'win' ? 1 : 0 }}>
         ✓

@@ -41,12 +41,28 @@ export default function ChampionScreen({
 
   const toggleRecap = () => setShowRecap((v) => !v);
 
+  // 图片 onError fallback：专辑封面 → 歌曲封面 → 空
+  const handleImgError = (e, songPic) => {
+    const img = e.currentTarget;
+    if (songPic && img.src !== songPic) {
+      img.src = songPic;
+    } else {
+      img.style.display = 'none';
+    }
+  };
+
   return (
     <section className="champion active">
       <TrophySvg size={128} />
 
       <div className={clsx('champ-cover-wrap', { empty: !champion?.pic })}>
-        {champion?.pic && <img src={champion.pic} alt="冠军专辑封面" />}
+        {champion?.pic && (
+          <img
+            src={champion.pic}
+            alt="冠军专辑封面"
+            onError={(e) => handleImgError(e, champion?.songPic)}
+          />
+        )}
       </div>
 
       <div className="crown-label">CHAMPION</div>
@@ -76,13 +92,23 @@ export default function ChampionScreen({
                 <div className="step-covers">
                   <div className={clsx('step-cover', { empty: !s.winner?.pic })}>
                     {s.winner?.pic && (
-                      <img src={s.winner.pic} alt="胜者封面" loading="lazy" />
+                      <img
+                        src={s.winner.pic}
+                        alt="胜者封面"
+                        loading="lazy"
+                        onError={(e) => handleImgError(e, s.winner?.songPic)}
+                      />
                     )}
                   </div>
                   <span className="step-vs">VS</span>
                   <div className={clsx('step-cover loser', { empty: !s.loser?.pic })}>
                     {s.loser?.pic && (
-                      <img src={s.loser?.pic} alt="败者封面" loading="lazy" />
+                      <img
+                        src={s.loser?.pic}
+                        alt="败者封面"
+                        loading="lazy"
+                        onError={(e) => handleImgError(e, s.loser?.songPic)}
+                      />
                     )}
                   </div>
                 </div>

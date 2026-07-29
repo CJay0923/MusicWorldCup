@@ -36,33 +36,49 @@ function jsonp(url, { timeout = 15000 } = {}) {
   });
 }
 
-// QQ 音乐播放 URL（JSONP 直连，通常返回空 purl，需依赖网易云/iTunes 回退）
+// QQ 音乐播放 URL（JSONP 直连）
+// 使用随机 guid 提高 purl 命中率；C400(M4A) 失败时尝试 M500(MP3)
+function randomGuid() {
+  return String(Math.floor(Math.random() * 1e10));
+}
+
 async function jsonpSongUrl(songmid) {
-  const dataParam = JSON.stringify({
-    comm: { ct: 24, cv: 0, uin: '0', format: 'json', platform: '20' },
-    req_1: {
-      module: 'vkey.GetVkeyServer',
-      method: 'CgiGetVkey',
-      param: {
-        filename: [`C400${songmid}.m4a`],
-        guid: '10000',
-        songmid: [songmid],
-        songtype: [0],
-        uin: '0',
-        loginflag: 1,
-        platform: '20',
+  const guid = randomGuid();
+  const formats = [
+    { filename: `C400${songmid}.m4a`, quality: 'm4a' },
+    { filename: `M500${songmid}.mp3`, quality: 'mp3' },
+  ];
+
+  for (const fmt of formats) {
+    const dataParam = JSON.stringify({
+      comm: { ct: 24, cv: 0, uin: '0', format: 'json', platform: '20' },
+      req_1: {
+        module: 'vkey.GetVkeyServer',
+        method: 'CgiGetVkey',
+        param: {
+          filename: [fmt.filename],
+          guid,
+          songmid: [songmid],
+          songtype: [0],
+          uin: '0',
+          loginflag: 1,
+          platform: '20',
+        },
       },
-    },
-  });
-  const url = `https://u.y.qq.com/cgi-bin/musicu.fcg?format=jsonp&data=${encodeURIComponent(dataParam)}`;
-  try {
-    const data = await jsonp(url);
-    const sip = data?.req_1?.data?.sip?.[0] || '';
-    const purl = data?.req_1?.data?.midurlinfo?.[0]?.purl || '';
-    return { url: purl ? sip + purl : '', quality: 'm4a' };
-  } catch {
-    return { url: '', quality: 'm4a' };
+    });
+    const url = `https://u.y.qq.com/cgi-bin/musicu.fcg?format=jsonp&data=${encodeURIComponent(dataParam)}`;
+    try {
+      const data = await jsonp(url);
+      const sip = data?.req_1?.data?.sip?.[0] || '';
+      const purl = data?.req_1?.data?.midurlinfo?.[0]?.purl || '';
+      if (purl) {
+        return { url: sip + purl, quality: fmt.quality };
+      }
+    } catch {
+      /* try next format */
+    }
   }
+  return { url: '', quality: 'm4a' };
 }
 
 // 检测后端是否可用（如有后端代理则优先使用）

@@ -5,6 +5,7 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { SINGERS, buildCustomSingerData, classicOptions } from './data/singers.js';
 import { useSingerData } from './hooks/useSingerData.js';
+import { useDynamicSinger } from './hooks/useDynamicSinger.js';
 import { useGameState } from './hooks/useGameState.js';
 import { useWorldCup } from './hooks/useWorldCup.js';
 import { useAudioPlayer } from './hooks/useAudioPlayer.js';
@@ -33,8 +34,30 @@ function App() {
   const [customSelectedIds, setCustomSelectedIds] = useState(new Set());
   const confettiRef = useRef(null);
 
-  const { singerData: dynamicData, loading: singerLoading } = useSingerData(currentSinger);
-  const baseSingerData = dynamicData || SINGERS[currentSinger]; // 降级到静态数据
+  const { singerData: localData, loading: singerLoading } = useSingerData(currentSinger);
+
+  // 动态歌手：运行时从 QQ Music 搜索并加载任意歌手
+  const {
+    searchKeyword,
+    setSearchKeyword,
+    searchResults,
+    isSearching,
+    dynamicSinger,
+    isLoadingSinger,
+    loadingProgress,
+    loadSinger: loadDynamicSinger,
+    dynamicSingerData,
+    clearDynamicSinger: clearDynamicSingerRaw,
+  } = useDynamicSinger();
+
+  // 当动态歌手加载完成时，覆盖内置歌手数据
+  const baseSingerData = dynamicSingerData || localData || SINGERS[currentSinger];
+
+  // 游戏状态用的歌手标识：动态歌手使用独立 key（避免覆盖内置歌手存档），
+  // 切换内置歌手 / 动态歌手时此值变化，触发 useGameState / useWorldCup 重置
+  const gameSingerId = dynamicSingerData
+    ? `dyn_${dynamicSinger.mid}`
+    : currentSinger; // 降级到静态数据
   const isCustom = selectedMode === 'custom';
 
   // 自选模式：从选中的 entrant 构建数据
@@ -57,7 +80,7 @@ function App() {
 
   // 当前生效的歌手数据 / 歌手 ID / 规模
   const singerData = isCustom && customSingerData ? customSingerData : baseSingerData;
-  const effectiveSingerId = isCustom ? 'custom' : currentSinger;
+  const effectiveSingerId = isCustom ? 'custom' : gameSingerId;
 
   // 经典模式可选规模（根据歌手可用歌曲数动态计算）
   const maxBracket = baseSingerData?.bracketSize || 128;
@@ -69,7 +92,7 @@ function App() {
     singerData,
     isCustom ? customBracketSize : classicSize,
   );
-  const wcState = useWorldCup(currentSinger, baseSingerData);
+  const wcState = useWorldCup(gameSingerId, baseSingerData);
   const audio = useAudioPlayer();
 
   // ---------- 是否处于冠军界面 ----------
@@ -165,6 +188,14 @@ function App() {
     [getCurrentMatchPair, audio, baseSingerData],
   );
 
+  // ---------- 试听（自选模式歌曲选择器） ----------
+  const handlePickerPreview = useCallback(
+    (entrant) => {
+      if (entrant) audio.openAudition(entrant, baseSingerData?.name);
+    },
+    [audio, baseSingerData],
+  );
+
   // ---------- chorusPct（用于 PreviewModal） ----------
   const chorusPct =
     audio.duration > 0 && audio.chorusTime != null
@@ -234,15 +265,40 @@ function App() {
   // ---------- 歌手 / 模式切换 ----------
   const handleSelectSinger = useCallback(
     (id) => {
-      if (id === currentSinger) return;
+      const wasDynamic = !!dynamicSinger;
       audio.stopAudition();
+      // 选择内置歌手时清除动态歌手
+      clearDynamicSingerRaw();
+      // 已是当前内置歌手且无动态歌手 → 纯 no-op
+      if (id === currentSinger && !wasDynamic) return;
       setCurrentSinger(id);
       setSelectedSize(null);
       setGameStarted(false);
       setCustomSelectedIds(new Set());
     },
-    [currentSinger, audio],
+    [currentSinger, audio, dynamicSinger, clearDynamicSingerRaw],
   );
+
+  // ---------- 加载动态歌手 ----------
+  const handleLoadSinger = useCallback(
+    (singer) => {
+      audio.stopAudition();
+      setSelectedSize(null);
+      setGameStarted(false);
+      setCustomSelectedIds(new Set());
+      loadDynamicSinger(singer);
+    },
+    [audio, loadDynamicSinger],
+  );
+
+  // ---------- 清除动态歌手 ----------
+  const handleClearDynamicSinger = useCallback(() => {
+    audio.stopAudition();
+    setSelectedSize(null);
+    setGameStarted(false);
+    setCustomSelectedIds(new Set());
+    clearDynamicSingerRaw();
+  }, [audio, clearDynamicSingerRaw]);
 
   const handleSelectMode = useCallback(
     (mode) => {
@@ -293,15 +349,7 @@ function App() {
             wcState.proceedFromWildcard();
             return;
           }
-          // 四选二：选满 2 首时确认晋级
-          if (wcState.wc?.phase === 'group' && !wcState.busy) {
-            const g = wcState.wc.groups[wcState.wc.curGroup];
-            if (g && g.picks.length === 2) {
-              e.preventDefault();
-              wcState.wcConfirmPicks();
-              return;
-            }
-          }
+          // 四选二已改为选满 2 首自动晋级，无需 Enter 确认
         }
         if (gameState.showTransition) {
           gameState.dismissTransition();
@@ -487,7 +535,7 @@ function App() {
           hasSavedWC={wcState.hasSavedWC()}
           onResume={handleResume}
           singers={SINGERS}
-          currentSinger={currentSinger}
+          currentSinger={dynamicSinger ? null : currentSinger}
           onSelectSinger={handleSelectSinger}
           selectedSize={selectedSize}
           onSelectSize={handleSelectSize}
@@ -495,6 +543,20 @@ function App() {
           onCustomSelectedChange={setCustomSelectedIds}
           customEntrants={baseSingerData?.entrants}
           classicMaxSize={maxBracket}
+          singerLoading={singerLoading && !dynamicSinger}
+          onPreview={handlePickerPreview}
+          playingId={audio.playingId}
+          previewLoading={audio.isLoading}
+          isPlaying={audio.isPlaying}
+          searchKeyword={searchKeyword}
+          onSearch={setSearchKeyword}
+          searchResults={searchResults}
+          isSearching={isSearching}
+          dynamicSinger={dynamicSinger}
+          isLoadingSinger={isLoadingSinger}
+          loadingProgress={loadingProgress}
+          onLoadSinger={handleLoadSinger}
+          onClearDynamicSinger={handleClearDynamicSinger}
         />
       )}
 

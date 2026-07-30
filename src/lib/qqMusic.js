@@ -1,17 +1,18 @@
-// src/lib/qqMusic.js — 前端 QQ Music API 客户端（JSONP + CORS 代理双策略）
-// 用于运行时搜索歌手并加载歌曲数据，适配静态部署（surge.sh / GitHub Pages）
+// src/lib/qqMusic.js — 前端 QQ Music API 客户端
+// 部署在 Cloudflare Pages 上时优先走后端代理（/api/qq/search, /api/qq/musicu）
+// 纯静态环境回退到 JSONP + CORS 代理
 //
 // API 端点：
 //   1. 歌手搜索: client_search_cp (t=0 歌曲搜索，从结果提取歌手信息)
-//      注意: 该端点忽略 callback 参数，固定用 callback(...) 包裹
-//      支持 format=json 返回纯 JSON
 //   2. 歌曲列表: musicu.fcg + music.web_singer_info_svr
-//      支持自定义 callback 名和 format=json
 //   3. 专辑详情: musicu.fcg + music.album.AlbumInfoServer
 //
-// 策略：
-//   1. JSONP（直连，最快）—— client_search_cp 用 window.callback（串行化避免竞态）
-//   2. CORS 代理 + fetch（fallback）—— 用 format=json 绕过 JSONP 限制
+// 策略优先级：
+//   0. 后端代理（Cloudflare Pages Functions，同域无 CORS）
+//   1. JSONP（直连，最快）
+//   2. CORS 代理 + fetch（fallback）
+
+import { checkBackend, markBackendUnavailable } from './backend.js';
 
 let jsonpCounter = 0;
 
@@ -139,6 +140,16 @@ function jsonpFixedCallback(url, opts = {}) {
  * 策略 2: CORS 代理 + fetch（format=json）
  */
 async function requestSearch(keyword, n = 20) {
+  // 策略 0: 后端代理（Cloudflare Pages Functions）
+  if (await checkBackend()) {
+    try {
+      const res = await fetch(`/api/qq/search?w=${encodeURIComponent(keyword)}&n=${n}`);
+      if (res.ok) return await res.json();
+    } catch {
+      markBackendUnavailable();
+    }
+  }
+
   const jsonpUrl = `https://c.y.qq.com/soso/fcgi-bin/client_search_cp?w=${encodeURIComponent(keyword)}&t=0&n=${n}&format=jsonp`;
 
   // 策略 1: JSONP
@@ -157,6 +168,20 @@ async function requestSearch(keyword, n = 20) {
  * 策略 2: CORS 代理 + fetch（format=json）
  */
 async function requestMusicu(dataObj) {
+  // 策略 0: 后端代理（Cloudflare Pages Functions）
+  if (await checkBackend()) {
+    try {
+      const res = await fetch('/api/qq/musicu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: dataObj }),
+      });
+      if (res.ok) return await res.json();
+    } catch {
+      markBackendUnavailable();
+    }
+  }
+
   const dataStr = JSON.stringify(dataObj);
   const jsonpUrl = `https://u.y.qq.com/cgi-bin/musicu.fcg?format=jsonp&data=${encodeURIComponent(dataStr)}`;
 

@@ -1,6 +1,9 @@
 // src/lib/api.js — 前端 API 客户端（精简版）
-// 歌曲数据已预取到本地 JSON，此处仅保留音频 URL 获取（JSONP 直连 QQ 音乐）
-// 无需后端，纯前端 JSONP 绕过 CORS
+// 歌曲数据已预取到本地 JSON，此处仅保留音频 URL 获取
+// 部署在 Cloudflare Pages 上时优先走后端代理（/api/qq/song-url/:songmid）
+// 纯静态环境回退到 JSONP 直连 QQ 音乐
+
+import { checkBackend, markBackendUnavailable } from './backend.js';
 
 let jsonpCounter = 0;
 
@@ -81,22 +84,6 @@ async function jsonpSongUrl(songmid) {
   return { url: '', quality: 'm4a' };
 }
 
-// 检测后端是否可用（如有后端代理则优先使用）
-let backendAvailable = null;
-async function checkBackend() {
-  if (backendAvailable !== null) return backendAvailable;
-  try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 3000);
-    await fetch('/api/health', { signal: ctrl.signal });
-    clearTimeout(timer);
-    backendAvailable = true;
-  } catch {
-    backendAvailable = false;
-  }
-  return backendAvailable;
-}
-
 // ---------- 对外接口 ----------
 
 export async function fetchQQSongUrl(songmid) {
@@ -105,7 +92,7 @@ export async function fetchQQSongUrl(songmid) {
       const res = await fetch(`/api/qq/song-url/${songmid}`);
       if (res.ok) return await res.json();
     } catch {
-      backendAvailable = false;
+      markBackendUnavailable();
     }
   }
   return jsonpSongUrl(songmid);

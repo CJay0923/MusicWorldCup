@@ -17,6 +17,7 @@
     "deploy:surge": "bash scripts/deploy-surge.sh",
     "deploy:surge:test": "npm run build && SURGE_TOKEN=727ead98bd78e359b0a9f9cbeebaaf87 surge ./dist https://songcup-test-2026.surge.sh",
     "deploy:vercel": "npm run build && vercel --prod --yes",
+    "deploy:cf": "npm run build && npx wrangler pages deploy dist --project-name=music-world-cup",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

@@ -1,6 +1,9 @@
 // src/utils/nidMatcher.js — 网易云 nid 懒加载匹配
 // 播放时按需调用，不阻塞歌曲列表加载
-// 注意：预取数据中已包含 nid，此模块仅在 nid 缺失时作为运行时回退
+// 部署在 Cloudflare Pages 上时优先走后端代理（/api/netease/search）
+// 纯静态环境回退到 JSONP + CORS 代理
+
+import { checkBackend, markBackendUnavailable } from '../lib/backend.js';
 
 const NID_CACHE_PREFIX = 'nid_';
 const NID_CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -14,6 +17,22 @@ function normalizeName(name) {
   s = s.replace(/[【\[].*?[\]】]/g, '');
   s = s.replace(/[（(）)]/g, '');
   return s.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * 通过后端代理调用网易云搜索 API
+ * @param {string} keyword - 搜索关键词
+ * @returns {Promise<object|null>}
+ */
+async function neteaseSearchBackend(keyword) {
+  if (!(await checkBackend())) return null;
+  try {
+    const res = await fetch(`/api/netease/search?s=${encodeURIComponent(keyword)}`);
+    if (res.ok) return await res.json();
+  } catch {
+    markBackendUnavailable();
+  }
+  return null;
 }
 
 /**
@@ -107,10 +126,15 @@ export async function matchNid(songName, artistName) {
 
   const keyword = `${artistName} ${songName}`;
 
-  // 策略1：JSONP（最可靠，无 CORS 限制）
-  let data = await neteaseSearchJSONP(keyword);
+  // 策略 0: 后端代理（Cloudflare Pages Functions）
+  let data = await neteaseSearchBackend(keyword);
 
-  // 策略2：CORS 代理降级
+  // 策略 1: JSONP（最可靠，无 CORS 限制）
+  if (!data) {
+    data = await neteaseSearchJSONP(keyword);
+  }
+
+  // 策略 2: CORS 代理降级
   if (!data) {
     data = await neteaseSearchProxy(keyword);
   }

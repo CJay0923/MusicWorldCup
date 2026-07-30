@@ -1,13 +1,13 @@
 // src/utils/netease.js — 网易云音乐音频源工具
 // 作为试听降级源：当 iTunes 无预览、QQ 音乐无流媒体时，尝试从网易云获取播放 URL
 //
-// 流程：
-//   1. 通过 matchNid(songName, artistName) 获取网易云歌曲 ID (nid)
-//   2. 通过 nid 获取播放 URL（JSONP 直连，无 CORS 限制）
+// 部署在 Cloudflare Pages 上时优先走后端代理（/api/netease/song-url）
+// 纯静态环境回退到 JSONP + CORS 代理
 //
 // 注意：周杰伦等歌手在网易云无版权，此函数会返回空 URL，自然降级到搜索页
 
 import { matchNid } from './nidMatcher.js';
+import { checkBackend, markBackendUnavailable } from '../lib/backend.js';
 
 const NETEASE_URL_CACHE_PREFIX = 'netease_url_';
 const NETEASE_URL_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -102,7 +102,7 @@ async function fetchNeteaseUrlProxy(nid) {
 
 /**
  * 获取网易云播放 URL（主调入口）
- * 先查 localStorage 缓存，再 JSONP → CORS 代理降级
+ * 先查 localStorage 缓存，再后端代理 → JSONP → CORS 代理降级
  * @param {number} nid - 网易云歌曲 ID
  * @returns {Promise<string|null>} 播放 URL 或 null
  */
@@ -121,10 +121,26 @@ export async function fetchNeteaseAudioUrl(nid) {
     }
   } catch { /* ignore */ }
 
-  // 策略1：JSONP
-  let url = await fetchNeteaseUrlJSONP(nid);
+  // 策略 0: 后端代理（Cloudflare Pages Functions）
+  let url = null;
+  if (await checkBackend()) {
+    try {
+      const res = await fetch(`/api/netease/song-url?nid=${nid}`);
+      if (res.ok) {
+        const data = await res.json();
+        url = data.url || null;
+      }
+    } catch {
+      markBackendUnavailable();
+    }
+  }
 
-  // 策略2：CORS 代理
+  // 策略 1: JSONP
+  if (!url) {
+    url = await fetchNeteaseUrlJSONP(nid);
+  }
+
+  // 策略 2: CORS 代理
   if (!url) {
     url = await fetchNeteaseUrlProxy(nid);
   }

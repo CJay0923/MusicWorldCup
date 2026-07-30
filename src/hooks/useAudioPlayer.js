@@ -3,7 +3,7 @@
 //
 // 负责:
 //   - openAudition(ent, artistName): 开始试听某首歌
-//       音频源优先级: iTunes 30s 预览 → 运行时 iTunes 搜索 → QQ 音乐流媒体 → 打开 QQ 音乐搜索页
+//       音频源优先级: iTunes 30s 预览 → 运行时 iTunes 搜索 → 网易云音乐 → QQ 音乐流媒体 → 打开 QQ 音乐搜索页
 //       loadedmetadata 时若有 chorus 且 duration>35s 则 seek 到 chorus 位置
 //       canplay 时自动播放
 //   - 播放/暂停、进度条 seek、"从头播放"、停止试听
@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { findITunesPreview } from '../utils/itunes.js';
 import { fetchQQSongUrl } from '../lib/api.js';
+import { getNeteasePreviewUrl } from '../utils/netease.js';
 
 const QQ_SEARCH = 'https://y.qq.com/n/ryqq/search?w=';
 
@@ -29,7 +30,8 @@ export function useAudioPlayer() {
 
   // 用 ref 保存监听器需要读取的最新值（监听器只绑定一次）
   const currentSongRef = useRef(null);
-  // 回退阶段: 0=初始, 1=预取URL失败后尝试运行时搜索, 2=运行时搜索失败后尝试QQ音乐, 3=全部失败
+  // 回退阶段: 0=初始, 1=iTunes预览失败→运行时搜索, 2=iTunes搜索失败→网易云,
+  //           3=网易云失败→QQ音乐, 4=全部失败→搜索页
   const fallbackStageRef = useRef(0);
   const artistRef = useRef('');
 
@@ -87,10 +89,11 @@ export function useAudioPlayer() {
 
     const onError = () => {
       // 音频源加载失败时，尝试降级回退
-      // 阶段 0/1: iTunes 预览失败 → 尝试运行时搜索或 QQ 音乐
-      // 阶段 2: 运行时搜索结果也失败 → 尝试 QQ 音乐
-      // 阶段 3+: 全部失败 → 打开搜索页
-      if (fallbackStageRef.current < 3 && fallbackFnRef.current) {
+      // 阶段 0/1: iTunes 预览失败 → 尝试运行时搜索
+      // 阶段 2: 运行时搜索也失败 → 尝试网易云
+      // 阶段 3: 网易云也失败 → 尝试 QQ 音乐
+      // 阶段 4+: 全部失败 → 打开搜索页
+      if (fallbackStageRef.current < 4 && fallbackFnRef.current) {
         fallbackStageRef.current++;
         setIsLoading(true);
         fallbackFnRef.current();
@@ -179,7 +182,7 @@ export function useAudioPlayer() {
       // ---------- 音频源：优先用预取的 iTunes 30s 预览 ----------
       // 预取数据由 fetch-itunes-previews.js 按歌手 artistId 精确匹配写入
       if (ent.itunesPreviewUrl && audio) {
-        // 设置降级回退：iTunes 预览加载失败时 → 运行时搜索 → QQ 音乐 → 搜索页
+        // 设置降级回退：iTunes 预览加载失败时 → 运行时搜索 → 网易云 → QQ 音乐 → 搜索页
         fallbackFnRef.current = async () => {
           const stage = fallbackStageRef.current;
           // 阶段 1: 运行时搜索 iTunes（成功率最高）
@@ -193,11 +196,27 @@ export function useAudioPlayer() {
                 return;
               }
             } catch { /* 搜索失败 */ }
-            // 运行时搜索也失败 → 进入阶段 2: QQ 音乐
+            // 运行时搜索也失败 → 进入阶段 2: 网易云
             fallbackStageRef.current = 2;
           }
-          // 阶段 2: QQ 音乐流媒体
-          if (fallbackStageRef.current === 2 && ent.songmid) {
+          // 阶段 2: 网易云音乐（通过 nid 获取播放 URL）
+          if (fallbackStageRef.current === 2) {
+            try {
+              const neteaseUrl = await getNeteasePreviewUrl(
+                ent.name, artistName, ent.nid,
+              );
+              if (cancelTokenRef.current !== myToken) return;
+              if (neteaseUrl && audioRef.current) {
+                audioRef.current.src = neteaseUrl;
+                audioRef.current.load();
+                return;
+              }
+            } catch { /* 网易云失败 */ }
+            // 网易云也失败（或无版权）→ 进入阶段 3: QQ 音乐
+            fallbackStageRef.current = 3;
+          }
+          // 阶段 3: QQ 音乐流媒体
+          if (fallbackStageRef.current === 3 && ent.songmid) {
             try {
               const qqResult = await fetchQQSongUrl(ent.songmid);
               if (cancelTokenRef.current !== myToken) return;
@@ -209,7 +228,7 @@ export function useAudioPlayer() {
             } catch { /* QQ 音乐失败 */ }
           }
           // 全部失败 → 打开搜索页
-          fallbackStageRef.current = 3;
+          fallbackStageRef.current = 4;
           if (cancelTokenRef.current !== myToken) return;
           const q = encodeURIComponent((ent.name || '') + ' ' + (artistName || ''));
           try { window.open(QQ_SEARCH + q, '_blank'); } catch { /* ignore */ }
@@ -227,10 +246,25 @@ export function useAudioPlayer() {
         const itunesResult = await findITunesPreview(artistName, ent.name);
         if (cancelTokenRef.current !== myToken) return; // 已被取消
         if (itunesResult && itunesResult.preview && audio) {
-          // 设置降级回退：运行时搜索的预览加载失败时 → QQ 音乐 → 搜索页
+          // 设置降级回退：运行时搜索的预览加载失败时 → 网易云 → QQ 音乐 → 搜索页
           fallbackFnRef.current = async () => {
-            // 阶段 2: QQ 音乐流媒体
+            // 阶段 1+: 网易云音乐
+            if (fallbackStageRef.current >= 1) {
+              try {
+                const neteaseUrl = await getNeteasePreviewUrl(
+                  ent.name, artistName, ent.nid,
+                );
+                if (cancelTokenRef.current !== myToken) return;
+                if (neteaseUrl && audioRef.current) {
+                  audioRef.current.src = neteaseUrl;
+                  audioRef.current.load();
+                  return;
+                }
+              } catch { /* 网易云失败 */ }
+            }
+            // 阶段 2+: QQ 音乐流媒体
             if (fallbackStageRef.current >= 1 && ent.songmid) {
+              fallbackStageRef.current = 3;
               try {
                 const qqResult = await fetchQQSongUrl(ent.songmid);
                 if (cancelTokenRef.current !== myToken) return;
@@ -242,7 +276,7 @@ export function useAudioPlayer() {
               } catch { /* QQ 音乐失败 */ }
             }
             // 全部失败 → 打开搜索页
-            fallbackStageRef.current = 3;
+            fallbackStageRef.current = 4;
             if (cancelTokenRef.current !== myToken) return;
             const q = encodeURIComponent((ent.name || '') + ' ' + (artistName || ''));
             try { window.open(QQ_SEARCH + q, '_blank'); } catch { /* ignore */ }
@@ -258,9 +292,46 @@ export function useAudioPlayer() {
         /* iTunes 搜不到 */
       }
 
-      // iTunes 搜不到 → 尝试 QQ 音乐流媒体 URL（JSONP 直连）
+      // iTunes 搜不到 → 尝试网易云音乐
+      try {
+        const neteaseUrl = await getNeteasePreviewUrl(
+          ent.name, artistName, ent.nid,
+        );
+        if (cancelTokenRef.current !== myToken) return;
+        if (neteaseUrl && audio) {
+          // 设置降级回退：网易云播放失败时 → QQ 音乐 → 搜索页
+          fallbackStageRef.current = 3;
+          fallbackFnRef.current = async () => {
+            if (fallbackStageRef.current >= 3 && ent.songmid) {
+              try {
+                const qqResult = await fetchQQSongUrl(ent.songmid);
+                if (cancelTokenRef.current !== myToken) return;
+                if (qqResult?.url && audioRef.current) {
+                  audioRef.current.src = qqResult.url;
+                  audioRef.current.load();
+                  return;
+                }
+              } catch { /* QQ 音乐失败 */ }
+            }
+            fallbackStageRef.current = 4;
+            if (cancelTokenRef.current !== myToken) return;
+            const q = encodeURIComponent((ent.name || '') + ' ' + (artistName || ''));
+            try { window.open(QQ_SEARCH + q, '_blank'); } catch { /* ignore */ }
+            setPlayingId(null);
+            setIsLoading(false);
+            setIsPlaying(false);
+          };
+          audio.src = neteaseUrl;
+          audio.load();
+          return;
+        }
+      } catch {
+        /* 网易云失败 */
+      }
+
+      // 网易云也搜不到 → 尝试 QQ 音乐流媒体 URL（JSONP 直连）
       if (ent.songmid) {
-        fallbackStageRef.current = 2; // 标记已进入 QQ 音乐阶段
+        fallbackStageRef.current = 3; // 标记已进入 QQ 音乐阶段
         try {
           const qqResult = await fetchQQSongUrl(ent.songmid);
           if (cancelTokenRef.current !== myToken) return; // 已被取消

@@ -1,14 +1,24 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { viteSingleFile } from 'vite-plugin-singlefile';
 
 export default defineConfig({
-  plugins: [react(), viteSingleFile()],
+  plugins: [react()],
   base: './',
   build: {
     assetsInlineLimit: 100000000,
     cssCodeSplit: false,
+    rollupOptions: {
+      output: {
+        // 歌手数据 JSON 拆分为独立 chunk，按需加载
+        manualChunks(id) {
+          if (id.includes('/singerData/') && id.endsWith('.json')) {
+            const match = id.match(/singerData\/([^/]+)\.json/);
+            if (match) return `singer-${match[1]}`;
+          }
+        },
+      },
+    },
   },
   server: {
     port: 5173,

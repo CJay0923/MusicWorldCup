@@ -18,36 +18,7 @@ import {
   fetchAlbumDetail,
 } from '../lib/qqMusic.js';
 import { baseKey } from '../utils/text.js';
-
-// ---------- Live/伴奏过滤（与 useSingerData.js 完全一致的 regex）----------
-const LIVE_TRACK_PATTERNS = [
-  /[([（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
-  /\blive\s+(at|from|in|on|@)\b/i,
-  /[-–—~]\s*live\b/i,
-  /\blive\s*(version|ver\.?|session|sessions|edit|recording|album)\b/i,
-  /\b(in concert|unplugged)\b/i,
-  /(现场|現場|演唱会|演唱會|音乐会|音樂會|音乐节|音樂節|live版|巡回|巡迴|巡演|不插电|不插電|演奏会|演奏會)/i,
-];
-const LIVE_ALBUM_PATTERNS = [
-  /[([（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
-  /\blive\s+(at|from|in|on|@)\b/i,
-  /^live\b/i,
-  /\blive!?$/i,
-  /\b(in concert|unplugged|world tour)\b/i,
-  /(现场|現場|演唱会|演唱會|音乐会|音樂會|巡回|巡迴|巡演|不插电|不插電)/,
-];
-const JUNK_TRACK =
-  /(\binstrumental\b|伴奏|卡拉OK|karaoke|off\s?vocal|纯音乐|純音樂|\bcommentary\b|\bvoice memo\b)/i;
-
-function isLiveTrack(name) {
-  return LIVE_TRACK_PATTERNS.some((re) => re.test(name));
-}
-function isLiveAlbum(albumName) {
-  return LIVE_ALBUM_PATTERNS.some((re) => re.test(albumName || ''));
-}
-function isJunkTrack(name) {
-  return JUNK_TRACK.test(name);
-}
+import { isLiveTrack, isLiveAlbum, isJunkTrack } from '../utils/filters.js';
 
 /**
  * 根据可用歌曲数计算经典模式最大淘汰赛规模（2 的幂，4~128）

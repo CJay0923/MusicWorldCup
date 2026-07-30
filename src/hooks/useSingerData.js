@@ -1,6 +1,7 @@
-// src/hooks/useSingerData.js — 歌手数据懒加载 hook
-// 歌曲数据从 public/singerData/{id}.json 按需 fetch，不再静态 import
-// 这样 index.html 只包含应用代码（~200KB），歌手数据（~300-600KB/个）在选中时才加载
+// src/hooks/useSingerData.js — 歌手数据加载 hook
+// 方案B：歌手数据通过 Vite import.meta.glob 预打包为 JS 模块
+// 不再从 public/ fetch JSON，而是通过 ES module import 加载
+// 优点：无独立 HTTP 请求，Vite build 自动 minify + gzip，切换歌手零延迟
 //
 // 合并静态数据中的 nid/chorus 字段，修复图片路径
 // 运行时应用 Live/伴奏过滤 + baseKey 去重（兼容旧数据）
@@ -9,38 +10,31 @@ import { useState, useEffect, useRef } from 'react';
 import { SINGER_REGISTRY } from '../data/singerRegistry.js';
 import { STATIC_SINGERS } from '../data/singers.js';
 import { baseKey } from '../utils/text.js';
+import {
+  isLiveTrack,
+  isLiveAlbum,
+  isJunkTrack,
+  MIN_FAV_WITHOUT_COVER,
+} from '../utils/filters.js';
+
+// ---------- 预打包的歌手数据（通过 import.meta.glob 懒加载）----------
+// eager: false → 每个 JSON 成为独立 chunk，按需加载（不内联到主 bundle）
+// Vite 自动处理 chunk 分割和命名，配合 manualChunks 进一步优化
+const singerDataLoaders = import.meta.glob(
+  '../data/singerData/*.json',
+  { eager: false, import: 'default' },
+);
 
 // ---------- 数据缓存（模块级，跨组件复用）----------
 const dataCache = new Map(); // singerId -> transformed data
 const fetchPromiseCache = new Map(); // singerId -> in-flight Promise
 
-// ---------- Live/伴奏过滤（照搬 music-cup api.js，运行时兜底）----------
-const LIVE_TRACK_PATTERNS = [
-  /[([（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
-  /\blive\s+(at|from|in|on|@)\b/i,
-  /[-–—~]\s*live\b/i,
-  /\blive\s*(version|ver\.?|session|sessions|edit|recording|album)\b/i,
-  /\b(in concert|unplugged)\b/i,
-  /(现场|現場|演唱会|演唱會|音乐会|音樂會|音乐节|音樂節|live版|巡回|巡迴|巡演|不插电|不插電|演奏会|演奏會)/i,
-];
-const LIVE_ALBUM_PATTERNS = [
-  /[([（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
-  /\blive\s+(at|from|in|on|@)\b/i,
-  /^live\b/i,
-  /\blive!?$/i,
-  /\b(in concert|unplugged|world tour)\b/i,
-  /(现场|現場|演唱会|演唱會|音乐会|音樂會|巡回|巡迴|巡演|不插电|不插電)/,
-];
-const JUNK_TRACK = /(\binstrumental\b|伴奏|卡拉OK|karaoke|off\s?vocal|纯音乐|純音樂|\bcommentary\b|\bvoice memo\b)/i;
-
-function isLiveTrack(name) {
-  return LIVE_TRACK_PATTERNS.some((re) => re.test(name));
-}
-function isLiveAlbum(albumName) {
-  return LIVE_ALBUM_PATTERNS.some((re) => re.test(albumName || ''));
-}
-function isJunkTrack(name) {
-  return JUNK_TRACK.test(name);
+/**
+ * 从预打包的模块中获取懒加载器
+ */
+function getSingerDataLoader(singerId) {
+  const key = `../data/singerData/${singerId}.json`;
+  return singerDataLoaders[key] || null;
 }
 
 /**
@@ -115,7 +109,6 @@ function transformToSingerData(raw, registry, singerId) {
 
   // ===== 慢速路径：未预处理的数据（向后兼容）=====
   // 运行时过滤 Live/伴奏 + baseKey 去重 + 低收藏量无封面过滤
-  const MIN_FAV_WITHOUT_COVER = 1000;
   const seenKeys = new Set();
   const filteredSongs = [];
   for (const song of raw.entrants) {
@@ -191,7 +184,9 @@ function transformToSingerData(raw, registry, singerId) {
 }
 
 /**
- * 异步加载并转换歌手数据（带缓存）
+ * 加载歌手数据（从 Vite chunk 异步加载，带缓存和去重）
+ * 数据通过 import.meta.glob 懒加载，每个歌手的数据是独立 JS chunk
+ * 相比 fetch JSON：无 CORS 问题、Vite 自动 minify、可被浏览器缓存
  * @param {string} singerId
  * @returns {Promise<object|null>}
  */
@@ -211,17 +206,21 @@ export async function loadSingerData(singerId) {
     if (!registry) return null;
 
     try {
-      // 从 public/singerData/{id}.json 按需加载
-      const res = await fetch(`./singerData/${singerId}.json`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const raw = await res.json();
-      // 让出主线程，让 loading 动画有机会渲染
-      await new Promise(r => setTimeout(r, 0));
+      const loader = getSingerDataLoader(singerId);
+      if (!loader) {
+        // 预打包数据中没有 → 降级到静态数据
+        const fallback = STATIC_SINGERS[singerId] || null;
+        if (fallback) dataCache.set(singerId, fallback);
+        return fallback;
+      }
+
+      // 动态 import 加载歌手数据 chunk
+      const raw = await loader();
       const data = transformToSingerData(raw, registry, singerId);
       dataCache.set(singerId, data);
       return data;
     } catch (err) {
-      // fetch 失败 → 降级到静态数据
+      // chunk 加载失败 → 降级到静态数据
       const fallback = STATIC_SINGERS[singerId] || null;
       if (fallback) dataCache.set(singerId, fallback);
       return fallback;
@@ -238,7 +237,7 @@ export async function loadSingerData(singerId) {
 
 /**
  * 加载歌手数据（懒加载版）
- * 首次切换到某歌手时 fetch JSON，后续从缓存读取
+ * 通过 import.meta.glob 动态 import 加载，每位歌手的数据是独立 Vite chunk
  * @param {string} singerId - 歌手 ID（stefanie/jj/jay/jolin/david/she/eason）
  * @returns {{singerData: object|null, loading: boolean, error: string|null}}
  */
@@ -262,7 +261,7 @@ export function useSingerData(singerId) {
       return;
     }
 
-    // 需要 fetch
+    // 需要 dynamic import
     let cancelled = false;
     setLoading(true);
     setError(null);

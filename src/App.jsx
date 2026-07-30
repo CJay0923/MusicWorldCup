@@ -12,6 +12,7 @@ import { useCrossSingerSearch } from './hooks/useCrossSingerSearch.js';
 import { useGameState } from './hooks/useGameState.js';
 import { useWorldCup } from './hooks/useWorldCup.js';
 import { useAudioPlayer } from './hooks/useAudioPlayer.js';
+import { useKeyboardControls } from './hooks/useKeyboardControls.js';
 import StartScreen from './components/StartScreen.jsx';
 import MatchStage from './components/MatchStage.jsx';
 import ChampionScreen from './components/ChampionScreen.jsx';
@@ -545,78 +546,16 @@ function App() {
   );
 
   // ---------- 键盘 ----------
-  useEffect(() => {
-    const handler = (e) => {
-      // Escape 停止试听
-      if (e.key === 'Escape' && audio.playingId != null) {
-        audio.stopAudition();
-        return;
-      }
-
-      // Enter 处理各类浮层 + 四选二确认
-      if (e.key === 'Enter') {
-        if (selectedMode === 'wc') {
-          if (wcState.wc?.phase === 'draw') {
-            wcState.proceedFromDraw();
-            return;
-          }
-          if (wcState.wc?.phase === 'wildcard') {
-            wcState.proceedFromWildcard();
-            return;
-          }
-          // 四选二已改为选满 2 首自动晋级，无需 Enter 确认
-        }
-        if (gameState.showTransition) {
-          gameState.dismissTransition();
-          return;
-        }
-        if (wcState.showTransition) {
-          wcState.dismissTransition();
-          return;
-        }
-      }
-
-      // 判断是否可操作
-      const isBusy = selectedMode === 'wc' ? wcState.busy : gameState.busy;
-      const overlayShown =
-        selectedMode === 'wc'
-          ? wcState.showTransition ||
-            wcState.wc?.phase === 'draw' ||
-            wcState.wc?.phase === 'wildcard'
-          : gameState.showTransition;
-      if (isBusy || overlayShown || isChampion || !gameStarted) return;
-
-      // 四选二阶段：1/2/3/4 切换选中
-      if (selectedMode === 'wc' && wcState.phase === 'group') {
-        const g = wcState.wc?.groups?.[wcState.wc.curGroup];
-        if (!g) return;
-        const num = parseInt(e.key, 10);
-        if (num >= 1 && num <= 4) {
-          e.preventDefault();
-          audio.stopAudition();
-          wcState.wcTogglePick(num - 1);
-        }
-        return;
-      }
-
-      // 判断是否在可选择的阶段
-      const canPick =
-        selectedMode === 'wc'
-          ? wcState.phase === 'knockout'
-          : true;
-      if (!canPick) return;
-
-      if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-        e.preventDefault();
-        handlePick(0);
-      } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'l') {
-        e.preventDefault();
-        handlePick(1);
-      }
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [audio, selectedMode, wcState, gameState, isChampion, gameStarted, handlePick]);
+  useKeyboardControls({
+    audio,
+    selectedMode,
+    wcState,
+    gameState,
+    isChampion,
+    gameStarted,
+    handlePick,
+    handleGroupToggle,
+  });
 
   // ---------- 进度条数据 ----------
   const progData = (() => {

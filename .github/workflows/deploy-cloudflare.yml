@@ -1,0 +1,48 @@
+# GitHub Actions: 自动部署到 Cloudflare Pages
+# 每次 push 到 main 分支时自动构建并部署到 Cloudflare Pages
+# 包含 Pages Functions（后端 API 代理）
+#
+# 设置步骤:
+#   1. 在 Cloudflare 创建 API Token:
+#      https://dash.cloudflare.com/profile/api-tokens
+#      → Create Token → "Edit Cloudflare Workers" 模板
+#      → 确保 Pages:Edit 权限
+#   2. 在 GitHub 仓库添加 Secrets:
+#      Settings → Secrets and variables → Actions → New repository secret
+#      - CLOUDFLARE_API_TOKEN: 上一步创建的 Token
+#      - CLOUDFLARE_ACCOUNT_ID: 你的 Account ID
+#        (在 Cloudflare Dashboard 首页右侧栏可以看到)
+#   3. 推送代码到 main 分支即可自动部署
+
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: # 支持手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=music-world-cup --branch=main --commit-dirty=true

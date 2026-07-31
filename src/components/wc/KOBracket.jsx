@@ -1,12 +1,22 @@
 // 渲染淘汰赛单个对阵 slot
+import { clsx } from 'clsx';
+
 function koSlot(s, w, cur) {
-  let cls = 'ko-slot';
-  if (w && s && s.id === w.id) cls += ' win';
-  if (cur) cls += ' current';
-  if (!s) cls += ' empty';
+  const isWin = w && s && s.id === w.id;
   return (
-    <span className={cls}>
-      {s && s.isSeed && <span className="ko-sd">#{s.seedRank}</span>}
+    <span
+      className={clsx(
+        'flex-1 rounded px-1.5 py-[3px] text-xs',
+        isWin ? 'bg-good/10 font-semibold text-good' : 'bg-white/4 text-[#cdd0e8]',
+        cur && 'border border-accent bg-accent/10',
+        !s && 'text-muted opacity-40',
+      )}
+    >
+      {s && s.isSeed && (
+        <span className="mr-1 rounded-[3px] bg-accent/20 px-1 py-px text-[9px] font-bold text-accent">
+          #{s.seedRank}
+        </span>
+      )}
       {s ? s.name : '待定'}
     </span>
   );
@@ -18,22 +28,22 @@ export default function KOBracket({ ko }) {
   const rounds = ko.rounds;
 
   return (
-    <div className="wc-ko-overview show">
-      <div className="wc-ko-bracket">
+    <div className="mt-3.5 block">
+      <div className="rounded-md border border-white/10 bg-white/3 px-4 py-3.5 text-xs">
         {rn.map((name, r) => {
           const matches = rounds[r].length / 2;
           return (
-            <div key={r} className="ko-round">
-              <div className="ko-round-name">{name}</div>
+            <div key={r} className="mb-2.5 last:mb-0">
+              <div className="mb-1 text-[11px] font-bold text-accent">{name}</div>
               {Array.from({ length: matches }).map((_, m) => {
                 const a = rounds[r][m * 2];
                 const b = rounds[r][m * 2 + 1];
                 const w = r < 4 ? rounds[r + 1][m] : null;
                 const cur = r === ko.curRound && m === ko.curMatch;
                 return (
-                  <div key={m} className="ko-match">
+                  <div key={m} className="flex items-center gap-1.5 py-0.5">
                     {koSlot(a, w, cur)}
-                    <span className="ko-vs">vs</span>
+                    <span className="shrink-0 text-[10px] text-muted">vs</span>
                     {koSlot(b, w, cur)}
                   </div>
                 );

@@ -58,32 +58,35 @@ export default function CrossSingerSelector({
   }, 0);
 
   // 跨歌手对战：根据歌手数和歌曲数计算可选规模
-  const sizes = mode === 'cross-wc'
-    ? []
-    : (availableSizes && availableSizes.length > 0
+  const sizes =
+    mode === 'cross-wc'
+      ? []
+      : availableSizes && availableSizes.length > 0
         ? availableSizes
-        : classicOptions(Math.min(totalSongs, 128)));
+        : classicOptions(Math.min(totalSongs, 128));
 
-  const currentSize = mode === 'cross-wc' ? 48 : (bracketSize || sizes[0] || 32);
+  const currentSize = mode === 'cross-wc' ? 48 : bracketSize || sizes[0] || 32;
   const perSinger = selectedCount > 0 ? Math.ceil(currentSize / selectedCount) : 0;
 
   // 动态歌手列表
   const dynamicList = dynamicSingers ? [...dynamicSingers.values()] : [];
 
   return (
-    <div className="cross-singer-selector">
-      <div className="cross-header">
-        <span className="cross-title">⚔️ 选择参赛歌手</span>
-        <span className="cross-count">
-          已选 <b>{selectedCount}</b> / {maxSingers} 位
+    <div className="mx-auto mb-5 max-w-[640px] rounded-2xl border border-white/10 bg-white/3 p-4 backdrop-blur-[6px]">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <span className="text-sm font-extrabold text-ink">⚔️ 选择参赛歌手</span>
+        <span className="text-[13px] text-muted">
+          已选 <b className="text-accent">{selectedCount}</b> / {maxSingers} 位
           {selectedCount < minSingers && (
-            <span className="cross-hint">（至少选 {minSingers} 位）</span>
+            <span className="ml-1 text-[11px] text-accent2">
+              （至少选 {minSingers} 位）
+            </span>
           )}
         </span>
       </div>
 
       {/* 内置歌手多选按钮 */}
-      <div className="cross-singer-grid">
+      <div className="mb-3 grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2">
         {Object.keys(SINGERS).map((id) => {
           const s = SINGERS[id];
           const icon = SINGER_ICONS[id] || '🎤';
@@ -96,14 +99,22 @@ export default function CrossSingerSelector({
           return (
             <button
               key={id}
-              className={clsx('cross-singer-btn', { active: isSelected })}
+              className={clsx(
+                'relative flex cursor-pointer flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-center transition-all duration-200',
+                isSelected
+                  ? 'border-accent/50 bg-accent/10 shadow-[0_0_10px_rgba(255,210,74,0.15)]'
+                  : 'border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8',
+                !isSelected &&
+                  selectedCount >= maxSingers &&
+                  'cursor-not-allowed opacity-40',
+              )}
               onClick={() => onToggleSinger(id)}
               type="button"
               disabled={!isSelected && selectedCount >= maxSingers}
             >
               {photo ? (
                 <img
-                  className="cs-avatar"
+                  className="h-9 w-9 rounded-full border-2 border-white/15 object-cover"
                   src={photo}
                   alt=""
                   loading="lazy"
@@ -114,14 +125,14 @@ export default function CrossSingerSelector({
                   }}
                 />
               ) : null}
-              <span className="cs-ico" style={{ display: photo ? 'none' : '' }}>
+              <span className="text-lg" style={{ display: photo ? 'none' : '' }}>
                 {icon}
               </span>
-              <span className="cs-name">{s.name}</span>
+              <span className="text-xs font-bold text-ink">{s.name}</span>
               {isSelected && (
-                <span className="cs-song-count">
+                <span className="text-[10px] text-muted">
                   {isLoadingThis ? (
-                    <i className="dsb-spin" />
+                    <i className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
                   ) : songCount > 0 ? (
                     `${songCount} 首`
                   ) : (
@@ -129,7 +140,11 @@ export default function CrossSingerSelector({
                   )}
                 </span>
               )}
-              {isSelected && <span className="cs-check">✓</span>}
+              {isSelected && (
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-black text-bg">
+                  ✓
+                </span>
+              )}
             </button>
           );
         })}
@@ -137,7 +152,7 @@ export default function CrossSingerSelector({
 
       {/* 已添加的动态歌手 */}
       {dynamicList.length > 0 && (
-        <div className="cross-singer-grid">
+        <div className="mb-3 grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2">
           {dynamicList.map((dyn) => {
             const dynId = `dyn_${dyn.mid}`;
             const isSelected = selectedSingers?.has(dynId);
@@ -146,14 +161,22 @@ export default function CrossSingerSelector({
             return (
               <button
                 key={dyn.mid}
-                className={clsx('cross-singer-btn', 'dynamic', { active: isSelected })}
+                className={clsx(
+                  'relative flex cursor-pointer flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-center transition-all duration-200',
+                  isSelected
+                    ? 'border-accent/50 bg-accent/10 shadow-[0_0_10px_rgba(255,210,74,0.15)]'
+                    : 'border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8',
+                  !isSelected &&
+                    selectedCount >= maxSingers &&
+                    'cursor-not-allowed opacity-40',
+                )}
                 onClick={() => onToggleSinger(dynId)}
                 type="button"
                 disabled={!isSelected && selectedCount >= maxSingers}
               >
                 {dyn.photo ? (
                   <img
-                    className="cs-avatar"
+                    className="h-9 w-9 rounded-full border-2 border-white/15 object-cover"
                     src={dyn.photo}
                     alt=""
                     loading="lazy"
@@ -164,14 +187,18 @@ export default function CrossSingerSelector({
                     }}
                   />
                 ) : null}
-                <span className="cs-ico" style={{ display: dyn.photo ? 'none' : '' }}>
+                <span className="text-lg" style={{ display: dyn.photo ? 'none' : '' }}>
                   🎤
                 </span>
-                <span className="cs-name">{dyn.name}</span>
+                <span className="text-xs font-bold text-ink">{dyn.name}</span>
                 {isSelected && songCount > 0 && (
-                  <span className="cs-song-count">{songCount} 首</span>
+                  <span className="text-[10px] text-muted">{songCount} 首</span>
                 )}
-                {isSelected && <span className="cs-check">✓</span>}
+                {isSelected && (
+                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-black text-bg">
+                    ✓
+                  </span>
+                )}
               </button>
             );
           })}
@@ -179,21 +206,23 @@ export default function CrossSingerSelector({
       )}
 
       {/* 搜索额外歌手 */}
-      <div className="cross-singer-search">
+      <div className="relative mb-3">
         <input
           type="text"
-          className="cross-search-input"
+          className="w-full rounded-full border border-white/10 bg-black/25 px-[18px] py-[11px] text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-muted/50 focus:border-accent/45 focus:shadow-[0_0_0_3px_rgba(255,210,74,0.1)]"
           placeholder="搜索更多歌手加入混战…"
           value={crossSearchKeyword || ''}
           onChange={(e) => onCrossSearch?.(e.target.value)}
           spellCheck={false}
         />
-        {isCrossSearching && <span className="cross-search-spinner">🔍</span>}
+        {isCrossSearching && (
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm">🔍</span>
+        )}
       </div>
 
       {/* 搜索结果 */}
       {crossSearchResults && crossSearchResults.length > 0 && (
-        <div className="cross-search-results">
+        <div className="mb-3 grid max-h-[200px] grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 overflow-y-auto">
           {crossSearchResults.slice(0, 8).map((singer) => {
             const dynId = `dyn_${singer.mid}`;
             const isAdded = dynamicSingers?.has(singer.mid);
@@ -203,10 +232,17 @@ export default function CrossSingerSelector({
             return (
               <button
                 key={singer.mid}
-                className={clsx('cross-search-item', {
-                  added: isAdded,
-                  selected: isSelected,
-                })}
+                className={clsx(
+                  'flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-left text-[13px] font-semibold transition-all duration-200',
+                  isSelected
+                    ? 'border-accent/50 bg-accent/10 text-accent'
+                    : isAdded
+                      ? 'border-good/40 bg-good/8 text-ink'
+                      : 'border-white/10 bg-white/4 text-ink hover:border-accent/40 hover:bg-accent/8',
+                  (isLoading ||
+                    (!isAdded && !isSelected && selectedCount >= maxSingers)) &&
+                    'cursor-not-allowed opacity-50',
+                )}
                 onClick={() => {
                   if (isAdded) {
                     onToggleSinger(dynId);
@@ -215,10 +251,12 @@ export default function CrossSingerSelector({
                   }
                 }}
                 type="button"
-                disabled={isLoading || (!isAdded && !isSelected && selectedCount >= maxSingers)}
+                disabled={
+                  isLoading || (!isAdded && !isSelected && selectedCount >= maxSingers)
+                }
               >
                 <img
-                  className="cross-search-avatar"
+                  className="h-7 w-7 shrink-0 rounded-full border border-white/15 object-cover"
                   src={singer.photo}
                   alt=""
                   loading="lazy"
@@ -226,11 +264,23 @@ export default function CrossSingerSelector({
                     e.currentTarget.style.display = 'none';
                   }}
                 />
-                <span className="cross-search-name">{singer.name}</span>
-                {isLoading && <i className="dsb-spin" />}
-                {isAdded && !isSelected && <span className="cross-search-hint">点击选择</span>}
-                {isSelected && <span className="cs-check">✓</span>}
-                {!isAdded && !isLoading && <span className="cross-search-hint">+ 添加</span>}
+                <span className="min-w-0 truncate">{singer.name}</span>
+                {isLoading && (
+                  <i className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
+                )}
+                {isAdded && !isSelected && (
+                  <span className="ml-auto shrink-0 text-[10px] text-muted">
+                    点击选择
+                  </span>
+                )}
+                {isSelected && (
+                  <span className="ml-auto flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-accent text-[9px] font-black text-bg">
+                    ✓
+                  </span>
+                )}
+                {!isAdded && !isLoading && (
+                  <span className="ml-auto shrink-0 text-[10px] text-accent">+ 添加</span>
+                )}
               </button>
             );
           })}
@@ -239,21 +289,31 @@ export default function CrossSingerSelector({
 
       {/* 规模选择（仅混战淘汰赛模式） */}
       {mode === 'cross-battle' && sizes.length > 0 && selectedCount >= minSingers && (
-        <div className="size-selector">
-          <span className="size-label">
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-3">
+          <span className="whitespace-nowrap text-[13px] text-muted">
             淘汰赛规模
             {perSinger > 0 && (
-              <small>
+              <small className="ml-1 text-[11px]">
                 （每位歌手约 {perSinger}
-                {crossBattleType === 'albums' ? ' 张专辑' : crossBattleType === 'singers' ? ' 位' : ' 首'}）
+                {crossBattleType === 'albums'
+                  ? ' 张专辑'
+                  : crossBattleType === 'singers'
+                    ? ' 位'
+                    : ' 首'}
+                ）
               </small>
             )}
           </span>
-          <div className="size-btns">
+          <div className="flex flex-wrap gap-2">
             {sizes.map((size) => (
               <button
                 key={size}
-                className={clsx('size-btn', { active: currentSize === size })}
+                className={clsx(
+                  'cursor-pointer rounded-[20px] border px-4 py-1.5 text-[13px] font-semibold transition-all duration-200 active:scale-[0.94]',
+                  currentSize === size
+                    ? 'border-accent bg-accent/18 text-white shadow-[0_0_12px_rgba(255,210,74,0.2)]'
+                    : 'border-white/10 bg-white/4 text-muted hover:border-accent/30 hover:bg-accent/8 hover:text-[#e8d9a0]',
+                )}
                 onClick={() => onSelectSize(size)}
                 type="button"
               >
@@ -266,8 +326,8 @@ export default function CrossSingerSelector({
 
       {/* 世界杯模式说明 */}
       {mode === 'cross-wc' && selectedCount >= minSingers && (
-        <div className="cross-wc-info">
-          <span className="size-label">
+        <div className="mb-3 text-center">
+          <span className="text-[13px] text-muted">
             赛制：12 组四选二 + 32 强淘汰赛（约 48 首参赛）
           </span>
         </div>
@@ -275,8 +335,8 @@ export default function CrossSingerSelector({
 
       {/* 加载中提示 */}
       {loading && selectedCount >= minSingers && (
-        <div className="cross-loading">
-          <i className="dsb-spin" />
+        <div className="flex items-center justify-center gap-2 text-[13px] text-muted">
+          <i className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
           正在加载歌手数据…
         </div>
       )}

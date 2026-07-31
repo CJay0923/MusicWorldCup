@@ -65,19 +65,22 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
   const totalAssigned = items.length - state.pool.length;
 
   // ---------- 封面图获取 ----------
-  const getItemArt = useCallback((item) => {
-    if (!item) return '';
-    if (category === 'album') return item.pic || item.picLocal || '';
-    if (category === 'singer') return item.photo || item.singerPhoto || '';
-    // song: 尝试所有可能的封面来源
-    const t062 = item.songmid
-      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${item.songmid}.jpg`
-      : '';
-    const t002 = item.albumMid
-      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${item.albumMid}.jpg`
-      : '';
-    return item.picLocal || item.songPic || item.pic || t062 || t002 || '';
-  }, [category]);
+  const getItemArt = useCallback(
+    (item) => {
+      if (!item) return '';
+      if (category === 'album') return item.pic || item.picLocal || '';
+      if (category === 'singer') return item.photo || item.singerPhoto || '';
+      // song: 尝试所有可能的封面来源
+      const t062 = item.songmid
+        ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${item.songmid}.jpg`
+        : '';
+      const t002 = item.albumMid
+        ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${item.albumMid}.jpg`
+        : '';
+      return item.picLocal || item.songPic || item.pic || t062 || t002 || '';
+    },
+    [category],
+  );
 
   const handleArtError = useCallback((e, item) => {
     const img = e.currentTarget;
@@ -89,11 +92,31 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${item.albumMid}.jpg`
       : '';
     // 依次尝试所有可能的封面来源
-    if (tried !== 'picLocal' && item.picLocal) { img.dataset.tried = 'picLocal'; img.src = item.picLocal; return; }
-    if (tried !== 'songPic' && item.songPic) { img.dataset.tried = 'songPic'; img.src = item.songPic; return; }
-    if (tried !== 'pic' && item.pic) { img.dataset.tried = 'pic'; img.src = item.pic; return; }
-    if (tried !== 't062' && t062) { img.dataset.tried = 't062'; img.src = t062; return; }
-    if (tried !== 't002' && t002) { img.dataset.tried = 't002'; img.src = t002; return; }
+    if (tried !== 'picLocal' && item.picLocal) {
+      img.dataset.tried = 'picLocal';
+      img.src = item.picLocal;
+      return;
+    }
+    if (tried !== 'songPic' && item.songPic) {
+      img.dataset.tried = 'songPic';
+      img.src = item.songPic;
+      return;
+    }
+    if (tried !== 'pic' && item.pic) {
+      img.dataset.tried = 'pic';
+      img.src = item.pic;
+      return;
+    }
+    if (tried !== 't062' && t062) {
+      img.dataset.tried = 't062';
+      img.src = t062;
+      return;
+    }
+    if (tried !== 't002' && t002) {
+      img.dataset.tried = 't002';
+      img.src = t002;
+      return;
+    }
     img.style.display = 'none';
   }, []);
 
@@ -241,7 +264,8 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
     });
   }, []);
 
-  const categoryLabel = category === 'song' ? '歌曲' : category === 'album' ? '专辑' : '歌手';
+  const categoryLabel =
+    category === 'song' ? '歌曲' : category === 'album' ? '专辑' : '歌手';
 
   // ---------- 导出图片 ----------
   const [exporting, setExporting] = useState(false);
@@ -259,9 +283,12 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       const FOOTER_H = 36;
       const CANVAS_W = 800;
       // 更好看的中文字体栈
-      const FONT_TITLE = 'bold 22px "PingFang SC", "Microsoft YaHei", "Heiti SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif';
-      const FONT_LABEL = 'bold 18px "PingFang SC", "Microsoft YaHei", "Heiti SC", "Noto Sans CJK SC", sans-serif';
-      const FONT_NAME = '11px "PingFang SC", "Microsoft YaHei", "Heiti SC", "Noto Sans CJK SC", sans-serif';
+      const FONT_TITLE =
+        'bold 22px "PingFang SC", "Microsoft YaHei", "Heiti SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif';
+      const FONT_LABEL =
+        'bold 18px "PingFang SC", "Microsoft YaHei", "Heiti SC", "Noto Sans CJK SC", sans-serif';
+      const FONT_NAME =
+        '11px "PingFang SC", "Microsoft YaHei", "Heiti SC", "Noto Sans CJK SC", sans-serif';
       const FONT_FOOTER = '11px "PingFang SC", "Microsoft YaHei", sans-serif';
 
       // 收集所有需要加载的图片 URL
@@ -282,7 +309,10 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       // 加载单张图片，依次尝试直接加载和多个代理
       const loadImage = (url) =>
         new Promise((resolve) => {
-          if (!url) { resolve(null); return; }
+          if (!url) {
+            resolve(null);
+            return;
+          }
           // 本地路径直接加载（无 CORS 问题）
           if (url.startsWith('./') || url.startsWith('/') || url.startsWith('data:')) {
             const img = new Image();
@@ -296,11 +326,17 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
           const urlsToTry = [url, ...CORS_PROXIES.map((p) => p(url))];
           let attempt = 0;
           const tryLoad = () => {
-            if (attempt >= urlsToTry.length) { resolve(null); return; }
+            if (attempt >= urlsToTry.length) {
+              resolve(null);
+              return;
+            }
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => resolve(img);
-            img.onerror = () => { attempt++; setTimeout(tryLoad, 200); };
+            img.onerror = () => {
+              attempt++;
+              setTimeout(tryLoad, 200);
+            };
             img.src = urlsToTry[attempt];
           };
           tryLoad();
@@ -325,7 +361,10 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
         const count = state.assignments[i].length;
         if (count === 0) return IMG_SIZE + ROW_PAD * 2;
         const rows = Math.ceil(count / cols);
-        return Math.max(IMG_SIZE + ROW_PAD * 2 + 14, rows * (IMG_SIZE + IMG_GAP + 14) + ROW_PAD);
+        return Math.max(
+          IMG_SIZE + ROW_PAD * 2 + 14,
+          rows * (IMG_SIZE + IMG_GAP + 14) + ROW_PAD,
+        );
       });
 
       const totalH = TITLE_H + rowHeights.reduce((a, b) => a + b, 0) + FOOTER_H;
@@ -406,7 +445,12 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             ctx.restore();
           } else {
             // 占位符：渐变背景 + 音符
-            const placeholderGrad = ctx.createLinearGradient(x, iy, x + IMG_SIZE, iy + IMG_SIZE);
+            const placeholderGrad = ctx.createLinearGradient(
+              x,
+              iy,
+              x + IMG_SIZE,
+              iy + IMG_SIZE,
+            );
             placeholderGrad.addColorStop(0, '#3a3a5e');
             placeholderGrad.addColorStop(1, '#2a2a4e');
             ctx.fillStyle = placeholderGrad;
@@ -456,9 +500,15 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
   // ---------- 空状态 ----------
   if (!items || items.length === 0) {
     return (
-      <div className="ranking-dd-screen">
-        <p className="ranking-dd-empty-msg">没有可排名的项目</p>
-        <button className="btn" type="button" onClick={onReset}>返回</button>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-6">
+        <p className="text-sm text-muted">没有可排名的项目</p>
+        <button
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+          type="button"
+          onClick={onReset}
+        >
+          返回
+        </button>
       </div>
     );
   }
@@ -473,17 +523,29 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
     return (
       <div
         key={itemKey(item)}
-        className={clsx('ranking-dd-item', { dragging: isDragging })}
+        className={clsx(
+          'flex w-[54px] cursor-grab select-none flex-col items-center transition-[opacity,transform] duration-150 active:cursor-grabbing active:scale-95',
+          isDragging && 'opacity-20',
+        )}
         onPointerDown={(e) => onItemPointerDown(e, item, fromType, tierIndex, itemIndex)}
       >
         {art ? (
-          <img src={art} alt="" loading="lazy" draggable={false} onError={(e) => handleArtError(e, item)} />
+          <img
+            className="h-12 w-12 rounded-md object-cover pointer-events-none"
+            src={art}
+            alt=""
+            loading="lazy"
+            draggable={false}
+            onError={(e) => handleArtError(e, item)}
+          />
         ) : (
-          <div className="ranking-dd-item-noart">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-white/6 text-xl pointer-events-none">
             {category === 'singer' ? '🎤' : '🎵'}
           </div>
         )}
-        <span className="ranking-dd-item-name">{item.name}</span>
+        <span className="mt-[3px] max-w-[54px] truncate text-center text-[10px] text-ink pointer-events-none">
+          {item.name}
+        </span>
       </div>
     );
   };
@@ -491,33 +553,59 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
   // ---------- 结果展示 ----------
   if (showResult || allAssigned) {
     return (
-      <div className="ranking-result">
-        <div className="ranking-result-header">
-          <h2>🏆 {singerName} {categoryLabel}夯到拉排名</h2>
-          <p>共 {items.length} 个{categoryLabel}已排名完成</p>
+      <div className="mx-auto max-w-[700px] p-4">
+        <div className="mb-6 text-center">
+          <h2 className="m-0 text-xl font-black text-ink">
+            🏆 {singerName} {categoryLabel}夯到拉排名
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            共 {items.length} 个{categoryLabel}已排名完成
+          </p>
         </div>
-        <div className="ranking-tiers">
+        <div className="flex flex-col gap-2">
           {tiers.map((tier, i) => (
-            <div key={i} className={clsx('ranking-tier-row', `tier-${i}`)}>
-              <div className="ranking-tier-label">
-                {tier.label}
-                <small className="ranking-tier-desc">{TIER_DESCRIPTIONS[i]}</small>
+            <div
+              key={i}
+              className={clsx(
+                'flex overflow-hidden rounded-xl border border-white/10',
+                `tier-${i}`,
+              )}
+            >
+              <div className="flex min-w-[70px] flex-col items-center justify-center bg-white/5 px-2 py-3">
+                <span className="text-sm font-black text-ink">{tier.label}</span>
+                <small className="mt-0.5 text-center text-[9px] leading-tight text-muted">
+                  {TIER_DESCRIPTIONS[i]}
+                </small>
               </div>
-              <div className="ranking-tier-items">
+              <div className="flex flex-1 flex-wrap items-center gap-2 p-3">
                 {state.assignments[i].length === 0 ? (
-                  <span className="ranking-tier-empty">（空）</span>
+                  <span className="text-xs text-muted/50">（空）</span>
                 ) : (
                   state.assignments[i].map((item, j) => (
-                    <div key={itemKey(item)} className="ranking-tier-item">
+                    <div
+                      key={itemKey(item)}
+                      className="flex w-[54px] flex-col items-center"
+                    >
                       {getItemArt(item) ? (
-                        <img src={getItemArt(item)} alt="" loading="lazy"
-                             onError={(e) => handleArtError(e, item)} />
+                        <img
+                          className="h-12 w-12 rounded-md object-cover"
+                          src={getItemArt(item)}
+                          alt=""
+                          loading="lazy"
+                          onError={(e) => handleArtError(e, item)}
+                        />
                       ) : (
-                        <div className="ranking-tier-noart">🎵</div>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-md bg-white/6 text-xl">
+                          🎵
+                        </div>
                       )}
-                      <span>{item.name}</span>
+                      <span className="mt-0.5 max-w-[54px] truncate text-center text-[10px] text-ink">
+                        {item.name}
+                      </span>
                       {item.singerName && category !== 'singer' && (
-                        <small>{item.singerName}</small>
+                        <small className="max-w-[54px] truncate text-[8px] text-muted">
+                          {item.singerName}
+                        </small>
                       )}
                     </div>
                   ))
@@ -526,19 +614,27 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             </div>
           ))}
         </div>
-        <div className="ranking-actions">
-          <button className="btn primary" type="button" onClick={() => setShowResult(false)}>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <button
+            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-105 active:scale-[0.97]"
+            type="button"
+            onClick={() => setShowResult(false)}
+          >
             ↩ 重新调整
           </button>
           <button
-            className="btn"
+            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96] disabled:cursor-default disabled:opacity-40"
             type="button"
             onClick={exportImage}
             disabled={exporting}
           >
             {exporting ? '⏳ 生成中...' : '📥 导出图片'}
           </button>
-          <button className="btn" type="button" onClick={onReset}>
+          <button
+            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+            type="button"
+            onClick={onReset}
+          >
             ↺ 重新开始
           </button>
         </div>
@@ -550,44 +646,53 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
   const progress = Math.round((totalAssigned / items.length) * 100);
 
   return (
-    <div className="ranking-dd-screen">
+    <div className="mx-auto max-w-[700px] p-4">
       {/* 头部 */}
-      <div className="ranking-dd-header">
-        <h2>📊 夯到拉排名 · {categoryLabel}</h2>
-        <div className="ranking-dd-progress">
-          <div className="ranking-dd-progress-bar">
-            <div className="ranking-dd-progress-fill" style={{ width: `${progress}%` }} />
+      <div className="mb-4 text-center">
+        <h2 className="m-0 text-lg font-black text-ink">
+          📊 夯到拉排名 · {categoryLabel}
+        </h2>
+        <div className="mx-auto mt-2 flex max-w-[300px] items-center gap-2">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-accent2 to-accent transition-[width] duration-300"
+              style={{ width: `${progress}%` }}
+            />
           </div>
-          <span className="ranking-dd-progress-text">
+          <span className="shrink-0 text-xs tabular-nums text-muted">
             {totalAssigned} / {items.length}
           </span>
         </div>
-        <p className="ranking-dd-hint">👆 长按拖拽项目到对应等级</p>
+        <p className="mt-1.5 text-xs text-muted">👆 长按拖拽项目到对应等级</p>
       </div>
 
       {/* 等级行 */}
-      <div className="ranking-dd-tiers">
+      <div className="flex flex-col gap-2">
         {tiers.map((tier, i) => {
           const isActive = dropTarget === String(i);
           return (
             <div
               key={i}
               data-drop-zone={String(i)}
-              className={clsx('ranking-dd-tier', `tier-${i}`, {
-                'drop-active': isActive,
-              })}
+              className={clsx(
+                'flex min-h-[64px] overflow-hidden rounded-xl border transition-all duration-200',
+                isActive
+                  ? 'border-accent bg-accent/8 shadow-[0_0_12px_rgba(255,210,74,0.2)]'
+                  : 'border-white/10 bg-white/3',
+                `tier-${i}`,
+              )}
             >
-              <div className="ranking-dd-tier-label-section">
-                <span className="ranking-dd-tier-label">{tier.label}</span>
-                <small className="ranking-dd-tier-desc">{TIER_DESCRIPTIONS[i]}</small>
-                <span className="ranking-dd-tier-count">
+              <div className="flex min-w-[60px] flex-col items-center justify-center bg-white/5 px-1.5 py-2">
+                <span className="text-[13px] font-black text-ink">{tier.label}</span>
+                <small className="mt-0.5 text-center text-[8px] leading-tight text-muted">
+                  {TIER_DESCRIPTIONS[i]}
+                </small>
+                <span className="mt-1 rounded-full bg-white/10 px-1.5 text-[10px] font-bold text-muted">
                   {state.assignments[i].length}
                 </span>
               </div>
-              <div className="ranking-dd-tier-items">
-                {state.assignments[i].map((item, j) =>
-                  renderItem(item, 'tier', i, j),
-                )}
+              <div className="flex flex-1 flex-wrap content-start items-start gap-1.5 p-2">
+                {state.assignments[i].map((item, j) => renderItem(item, 'tier', i, j))}
               </div>
             </div>
           );
@@ -597,15 +702,20 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       {/* 待分类池 */}
       <div
         data-drop-zone="pool"
-        className={clsx('ranking-dd-pool', { 'drop-active': dropTarget === 'pool' })}
+        className={clsx(
+          'mt-4 rounded-xl border p-3 transition-all duration-200',
+          dropTarget === 'pool'
+            ? 'border-accent bg-accent/8 shadow-[0_0_12px_rgba(255,210,74,0.2)]'
+            : 'border-white/10 bg-white/3',
+        )}
       >
-        <div className="ranking-dd-pool-header">
-          <span className="ranking-dd-pool-title">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-bold text-ink">
             📦 待分类 ({state.pool.length})
           </span>
-          <div className="ranking-dd-pool-actions">
+          <div className="flex gap-2">
             <button
-              className="btn ghost small"
+              className="cursor-pointer rounded-md border border-white/10 bg-transparent px-2.5 py-1 text-[11px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96] disabled:cursor-default disabled:opacity-40"
               type="button"
               onClick={shufflePool}
               disabled={state.pool.length < 2}
@@ -613,7 +723,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
               🔀 洗牌
             </button>
             <button
-              className="btn ghost small"
+              className="cursor-pointer rounded-md border border-white/10 bg-transparent px-2.5 py-1 text-[11px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96] disabled:cursor-default disabled:opacity-40"
               type="button"
               onClick={autoAssign}
               disabled={state.pool.length === 0}
@@ -622,26 +732,28 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             </button>
           </div>
         </div>
-        <div className="ranking-dd-pool-items">
+        <div className="flex max-h-[360px] flex-wrap content-start items-start gap-1.5 overflow-y-auto">
           {state.pool.length === 0 ? (
-            <div className="ranking-dd-pool-empty">
+            <div className="w-full py-6 text-center text-sm text-good">
               ✅ 全部分类完成！点击下方查看排名
             </div>
           ) : (
-            state.pool.map((item, j) =>
-              renderItem(item, 'pool', -1, j),
-            )
+            state.pool.map((item, j) => renderItem(item, 'pool', -1, j))
           )}
         </div>
       </div>
 
       {/* 底部操作栏 */}
-      <div className="ranking-dd-actions">
-        <button className="btn ghost" type="button" onClick={resetAll}>
+      <div className="sticky bottom-0 z-10 flex justify-center gap-3 bg-gradient-to-t from-bg via-bg/95 to-transparent pb-3 pt-4">
+        <button
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+          type="button"
+          onClick={resetAll}
+        >
           ↺ 全部重置
         </button>
         <button
-          className="btn primary"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-105 active:scale-[0.97] disabled:cursor-default disabled:opacity-40 disabled:brightness-100"
           type="button"
           onClick={() => setShowResult(true)}
           disabled={totalAssigned === 0}
@@ -653,7 +765,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       {/* 拖拽 ghost */}
       {dragVisual && (
         <div
-          className="ranking-dd-ghost"
+          className="pointer-events-none fixed z-[--z-loading] flex flex-col items-center opacity-[0.88] scale-[1.12] drop-shadow-[0_6px_16px_rgba(0,0,0,0.5)]"
           style={{
             left: dragVisual.x - dragVisual.offsetX,
             top: dragVisual.y - dragVisual.offsetY,
@@ -661,13 +773,20 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
           }}
         >
           {getItemArt(dragVisual.item) ? (
-            <img src={getItemArt(dragVisual.item)} alt="" draggable={false} />
+            <img
+              className="h-12 w-12 rounded-md object-cover"
+              src={getItemArt(dragVisual.item)}
+              alt=""
+              draggable={false}
+            />
           ) : (
-            <div className="ranking-dd-item-noart">
+            <div className="flex h-12 w-12 items-center justify-center rounded-md bg-white/6 text-xl">
               {category === 'singer' ? '🎤' : '🎵'}
             </div>
           )}
-          <span>{dragVisual.item.name}</span>
+          <span className="mt-[3px] max-w-[90px] truncate text-[10px] text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">
+            {dragVisual.item.name}
+          </span>
         </div>
       )}
     </div>

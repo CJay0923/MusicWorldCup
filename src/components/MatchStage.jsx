@@ -24,7 +24,7 @@ export default function MatchStage({
 }) {
   return (
     <>
-      <div className="match">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-[18px] max-md:grid-cols-1 max-md:gap-3">
         <MatchCard
           entrant={leftEntrant}
           side="left"
@@ -33,9 +33,14 @@ export default function MatchStage({
           onPick={() => onPick?.(0)}
           onPreview={() => onPreview?.(0)}
         />
-        <div className="vs">
-          <div className="vs-badge">VS</div>
-          <div className="vs-line">ROUND</div>
+        {/* VS 徽章 */}
+        <div className="flex min-w-[64px] flex-col items-center justify-center gap-2 max-md:flex-row max-md:min-w-0">
+          <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-gradient-to-br from-accent2 to-[#ff3d6e] font-display text-xl font-black tracking-wider text-white shadow-[0_10px_26px_rgba(255,92,138,0.45),inset_0_1px_1px_rgba(255,255,255,0.25)] animate-[pulse_2.4s_ease-in-out_infinite]">
+            VS
+          </div>
+          <div className="font-display text-[11px] uppercase tracking-[2px] text-muted max-md:hidden">
+            ROUND
+          </div>
         </div>
         <MatchCard
           entrant={rightEntrant}

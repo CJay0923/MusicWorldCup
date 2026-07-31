@@ -3,7 +3,15 @@
 // 根据当前歌手、模式和游戏阶段渲染对应的界面。
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { SINGERS, buildCustomSingerData, buildCrossSingerData, buildCrossSingerAlbumData, buildCrossSingerSingerData, classicOptions, getAlbumGroups } from './data/singers.js';
+import {
+  SINGERS,
+  buildCustomSingerData,
+  buildCrossSingerData,
+  buildCrossSingerAlbumData,
+  buildCrossSingerSingerData,
+  classicOptions,
+  getAlbumGroups,
+} from './data/singers.js';
 import { SINGER_REGISTRY } from './data/singerRegistry.js';
 import { useSingerData } from './hooks/useSingerData.js';
 import { useDynamicSinger } from './hooks/useDynamicSinger.js';
@@ -72,7 +80,8 @@ function App() {
     () => [...(crossSelectedSingers || [])].filter((id) => !id.startsWith('dyn_')),
     [crossSelectedSingers],
   );
-  const { dataMap: crossSingerDataMap, loading: crossLoading } = useMultiSingerData(crossStaticIds);
+  const { dataMap: crossSingerDataMap, loading: crossLoading } =
+    useMultiSingerData(crossStaticIds);
 
   // 跨歌手混战：搜索额外歌手
   const {
@@ -90,7 +99,12 @@ function App() {
 
   // 跨歌手混战/排名：收集所有选中歌手的数据
   const crossSingerDataList = useMemo(() => {
-    if ((selectedMode !== 'cross-battle' && !(selectedMode === 'ranking' && rankingScope === 'cross')) || !crossSelectedSingers?.size) return [];
+    if (
+      (selectedMode !== 'cross-battle' &&
+        !(selectedMode === 'ranking' && rankingScope === 'cross')) ||
+      !crossSelectedSingers?.size
+    )
+      return [];
     const list = [];
     for (const id of crossSelectedSingers) {
       if (id.startsWith('dyn_')) {
@@ -103,7 +117,13 @@ function App() {
       }
     }
     return list;
-  }, [selectedMode, rankingScope, crossSelectedSingers, crossSingerDataMap, crossDynamicSingers]);
+  }, [
+    selectedMode,
+    rankingScope,
+    crossSelectedSingers,
+    crossSingerDataMap,
+    crossDynamicSingers,
+  ]);
 
   // 夯到拉排名模式：判断是否可开始
   const rankingCanStart = (() => {
@@ -127,7 +147,7 @@ function App() {
     if (crossBattleType === 'albums') {
       return crossSingerDataList.reduce((sum, sd) => {
         const groups = getAlbumGroups(sd?.entrants || []);
-        return sum + groups.filter(g => !g.isMisc).length;
+        return sum + groups.filter((g) => !g.isMisc).length;
       }, 0);
     }
     return crossSingerDataList.reduce((sum, sd) => sum + (sd?.entrants?.length || 0), 0);
@@ -155,9 +175,7 @@ function App() {
 
   // 游戏状态用的歌手标识：动态歌手使用独立 key（避免覆盖内置歌手存档），
   // 切换内置歌手 / 动态歌手时此值变化，触发 useGameState / useWorldCup 重置
-  const gameSingerId = dynamicSingerData
-    ? `dyn_${dynamicSinger.mid}`
-    : currentSinger; // 降级到静态数据
+  const gameSingerId = dynamicSingerData ? `dyn_${dynamicSinger.mid}` : currentSinger; // 降级到静态数据
   const isCustom = selectedMode === 'custom';
   const isCrossBattle = selectedMode === 'cross-battle';
   const isRanking = selectedMode === 'ranking';
@@ -182,9 +200,22 @@ function App() {
 
   // 当前生效的歌手数据 / 歌手 ID / 规模
   const singerData = isCrossBattle
-    ? (crossSingerData || { name: '跨歌手', nameEn: 'CROSS', bracketSize: 4, entrants: [], seeds: [], seedRank: {} })
-    : isCustom && customSingerData ? customSingerData : baseSingerData;
-  const effectiveSingerId = isCrossBattle ? 'cross_battle' : isCustom ? 'custom' : gameSingerId;
+    ? crossSingerData || {
+        name: '跨歌手',
+        nameEn: 'CROSS',
+        bracketSize: 4,
+        entrants: [],
+        seeds: [],
+        seedRank: {},
+      }
+    : isCustom && customSingerData
+      ? customSingerData
+      : baseSingerData;
+  const effectiveSingerId = isCrossBattle
+    ? 'cross_battle'
+    : isCustom
+      ? 'custom'
+      : gameSingerId;
 
   // 经典模式可选规模（根据歌手可用歌曲数动态计算）
   const maxBracket = baseSingerData?.bracketSize || 128;
@@ -202,7 +233,9 @@ function App() {
   // ---------- 是否处于冠军界面 ----------
   const isChampion = isRanking
     ? false
-    : selectedMode === 'wc' ? wcState.phase === 'champion' : !!gameState.champion;
+    : selectedMode === 'wc'
+      ? wcState.phase === 'champion'
+      : !!gameState.champion;
 
   // ---------- 获取当前对局 ----------
   const getCurrentMatchPair = useCallback(() => {
@@ -322,7 +355,7 @@ function App() {
           // 歌手间歌曲排序：合并所有歌手的歌曲
           items = [];
           for (const sd of singerDataList) {
-            for (const e of (sd?.entrants || [])) {
+            for (const e of sd?.entrants || []) {
               items.push({ ...e, singerName: sd.name, singerPhoto: sd.singerPhoto });
             }
           }
@@ -337,7 +370,11 @@ function App() {
               items.push({
                 type: 'album',
                 name: g.name,
-                pic: g.pic || (albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg` : ''),
+                pic:
+                  g.pic ||
+                  (albumMid
+                    ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg`
+                    : ''),
                 picLocal: albumMid ? `./covers/album_${albumMid}.jpg` : '',
                 albumMid,
                 date: g.date,
@@ -369,7 +406,9 @@ function App() {
           items = filtered.map((e) => ({ ...e }));
         } else if (rankingSubMode === 'top-x') {
           // 收藏量前 X 首
-          const sorted = [...entrants].sort((a, b) => (b.favCount || 0) - (a.favCount || 0));
+          const sorted = [...entrants].sort(
+            (a, b) => (b.favCount || 0) - (a.favCount || 0),
+          );
           items = sorted.slice(0, rankingTopX).map((e) => ({ ...e }));
         } else if (rankingSubMode === 'all-albums') {
           // 所有专辑排序
@@ -379,7 +418,11 @@ function App() {
             .map((g) => ({
               type: 'album',
               name: g.name,
-              pic: g.pic || (g.albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${g.albumMid}.jpg` : ''),
+              pic:
+                g.pic ||
+                (g.albumMid
+                  ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${g.albumMid}.jpg`
+                  : ''),
               picLocal: g.albumMid ? `./covers/album_${g.albumMid}.jpg` : '',
               albumMid: g.albumMid || '',
               date: g.date,
@@ -400,9 +443,16 @@ function App() {
     if (selectedMode === 'wc') wcState.startWorldCup(false);
     else gameState.startGame(false);
   }, [
-    selectedMode, wcState, gameState, audio,
-    rankingScope, rankingSubMode, rankingAlbumMid, rankingTopX,
-    baseSingerData, crossSingerDataList,
+    selectedMode,
+    wcState,
+    gameState,
+    audio,
+    rankingScope,
+    rankingSubMode,
+    rankingAlbumMid,
+    rankingTopX,
+    baseSingerData,
+    crossSingerDataList,
   ]);
 
   const handleResume = useCallback(() => {
@@ -528,10 +578,13 @@ function App() {
     [crossAddDynamicSinger],
   );
 
-  const handleSelectSize = useCallback((size) => {
-    audio.stopAudition();
-    setSelectedSize(size);
-  }, [audio]);
+  const handleSelectSize = useCallback(
+    (size) => {
+      audio.stopAudition();
+      setSelectedSize(size);
+    },
+    [audio],
+  );
 
   // ---------- 进度条 seek ----------
   const seekHandler = useCallback(
@@ -662,27 +715,36 @@ function App() {
 
   // ==================== 渲染 ====================
   return (
-    <div className="wrap">
+    <div className="mx-auto max-w-[1080px] px-5 pb-20 pt-7">
       {/* Loading Overlay */}
       <LoadingOverlay
         visible={!!(singerLoading || crossLoading || isLoadingSinger)}
         text={
-          isLoadingSinger ? (loadingProgress || '正在加载歌曲数据…')
-          : crossLoading ? '正在加载多歌手数据…'
-          : '正在加载歌曲数据…'
+          isLoadingSinger
+            ? loadingProgress || '正在加载歌曲数据…'
+            : crossLoading
+              ? '正在加载多歌手数据…'
+              : '正在加载歌曲数据…'
         }
       />
       {/* 顶栏 */}
-      <div className="topbar">
-        <div className="brand">
-          <span className="cup">🏆</span>
+      <div className="mb-[18px] flex flex-wrap items-center gap-3.5">
+        <div className="flex items-center gap-2.5 font-display font-extrabold tracking-wide">
+          <span className="text-[22px]">🏆</span>
           <span>
-            {singerData.name}歌曲世界杯<small>&nbsp;{singerData.nameEn}&nbsp;CUP</small>
+            {singerData.name}歌曲世界杯
+            <small className="text-xs font-semibold tracking-wider text-muted">
+              &nbsp;{singerData.nameEn}&nbsp;CUP
+            </small>
           </span>
         </div>
-        <div className="spacer" />
+        <div className="flex-1" />
         {gameStarted && !isChampion && !isRanking && (
-          <button className="btn ghost" onClick={handleReset} type="button">
+          <button
+            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-transparent px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+            onClick={handleReset}
+            type="button"
+          >
             ↺ 重新开始
           </button>
         )}
@@ -779,10 +841,14 @@ function App() {
 
       {/* 比赛舞台 */}
       {showStage && (
-        <section className="stage active">
+        <section className="mt-1.5">
           {canUndo && (
-            <div className="undo-bar">
-              <button className="btn undo-btn" onClick={handleUndo} type="button">
+            <div className="mb-2.5 flex justify-center">
+              <button
+                className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/15 bg-white/6 px-[18px] py-[7px] text-[13px] font-semibold text-muted transition-all duration-200 hover:border-accent2/40 hover:bg-accent2/15 hover:text-[#ff8aaa] active:scale-[0.96]"
+                onClick={handleUndo}
+                type="button"
+              >
                 ↶ 回退上一场
               </button>
             </div>
@@ -816,8 +882,14 @@ function App() {
       {gameStarted && isRanking && rankingItems.length > 0 && (
         <RankingScreen
           items={rankingItems}
-          category={rankingSubMode === 'all-albums' || rankingSubMode === 'albums' ? 'album' : rankingSubMode === 'singers' ? 'singer' : 'song'}
-          singerName={rankingScope === 'cross' ? '多歌手' : (baseSingerData?.name || '')}
+          category={
+            rankingSubMode === 'all-albums' || rankingSubMode === 'albums'
+              ? 'album'
+              : rankingSubMode === 'singers'
+                ? 'singer'
+                : 'song'
+          }
+          singerName={rankingScope === 'cross' ? '多歌手' : baseSingerData?.name || ''}
           onReset={handleReset}
         />
       )}
@@ -836,8 +908,7 @@ function App() {
                       // 四选二：让冠军所在小组的条目以冠军为 winner
                       const champId = wcState.champion?.id;
                       const pair = h.picks || [h.winner, h.loser];
-                      const champInGroup =
-                        pair.find((e) => e?.id === champId) || null;
+                      const champInGroup = pair.find((e) => e?.id === champId) || null;
                       return {
                         roundName: `${h.group}组`,
                         winner: champInGroup || h.winner,
@@ -865,8 +936,7 @@ function App() {
                     if (h.phase === 'group') {
                       const champId = wcState.champion?.id;
                       const pair = h.picks || [h.winner, h.loser];
-                      const champInGroup =
-                        pair.find((e) => e?.id === champId) || null;
+                      const champInGroup = pair.find((e) => e?.id === champId) || null;
                       return {
                         roundName: `${h.group}组`,
                         winner: champInGroup || h.winner,

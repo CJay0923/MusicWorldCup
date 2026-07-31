@@ -10,10 +10,10 @@ export default function LoadingOverlay({ visible, text }) {
   if (!visible) return null;
 
   return (
-    <div className="loading-overlay">
-      <div className="loading-spinner-wrap">
-        <div className="loading-spinner" />
-        {text && <div className="loading-text">{text}</div>}
+    <div className="fixed inset-0 z-[--z-loading] flex items-center justify-center bg-[rgba(10,10,20,0.75)] backdrop-blur-[4px]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/15 border-t-accent" />
+        {text && <div className="text-sm tracking-wide text-white/70">{text}</div>}
       </div>
     </div>
   );

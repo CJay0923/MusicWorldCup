@@ -30,9 +30,23 @@ export default function MiniPlayer({
 }) {
   const active = isActive ?? (isPlaying || isLoading);
   return (
-    <div className={clsx('mini-player', variant, { active })}>
+    <div
+      className={clsx(
+        'absolute bottom-0 left-0 right-0 z-[2] flex items-center gap-1.5 rounded-b-lg-[--radius] px-2.5 pb-[5px] pt-1',
+        variant === 'gp' && 'gap-1 px-2 pb-1 pt-[3px]',
+        active
+          ? 'bg-gradient-to-t from-black/50 via-black/15 to-transparent'
+          : 'justify-center bg-transparent p-1',
+      )}
+    >
       <button
-        className={clsx('mp-play', { loading: isLoading })}
+        className={clsx(
+          'flex shrink-0 cursor-pointer items-center justify-center rounded-full border-none text-[11px]',
+          variant === 'gp' ? 'h-5 w-5 text-[9px]' : 'h-6 w-6',
+          isLoading
+            ? 'cursor-default bg-bg3 text-muted shadow-none'
+            : 'bg-gradient-to-br from-accent to-[#ffb13d] text-[#1a0d00] shadow-[0_2px_8px_rgba(255,177,61,0.35)] hover:scale-[1.08] active:scale-[0.94]',
+        )}
         type="button"
         aria-label={isPlaying ? '暂停' : '播放'}
         onClick={(e) => {
@@ -40,25 +54,50 @@ export default function MiniPlayer({
           onTogglePlay?.();
         }}
       >
-        {isLoading ? <span className="spin" /> : isPlaying ? '⏸' : '▶'}
+        {isLoading ? (
+          <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/15 border-t-accent" />
+        ) : isPlaying ? (
+          '⏸'
+        ) : (
+          '▶'
+        )}
       </button>
       {active && (
         <>
-          <div className="mp-body">
-            <div className="mp-bar" onClick={onSeek} onTouchMove={onSeek}>
-              <div className="mp-fill" style={{ width: `${progress}%` }} />
+          <div className="min-w-0 flex-1">
+            <div
+              className="relative h-2 cursor-pointer rounded-full bg-white/28 transition-[height] duration-150 hover:h-2.5"
+              onClick={onSeek}
+              onTouchMove={onSeek}
+            >
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-accent2 to-accent"
+                style={{ width: `${progress}%` }}
+              />
               {chorusTime != null && chorusPct > 0 && (
-                <div className="mp-chorus" style={{ left: `${chorusPct}%` }} title="高潮片段" />
+                <div
+                  className="absolute top-1/2 h-2 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-accent2 shadow-[0_0_4px_rgba(255,92,138,0.7)]"
+                  style={{ left: `${chorusPct}%` }}
+                  title="高潮片段"
+                />
               )}
-              <div className="mp-thumb" style={{ left: `${progress}%` }} />
+              <div
+                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full bg-accent shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-transform duration-150 [.mp-bar:hover_&]:scale-100"
+                style={{ left: `${progress}%` }}
+              />
             </div>
-            <div className="mp-time">
+            <div
+              className={clsx(
+                'mt-0.5 flex justify-between text-white/50 tabular-nums',
+                variant === 'gp' ? 'text-[8px]' : 'text-[9px]',
+              )}
+            >
               <span>{fmtTime(currentTime)}</span>
               <span>{fmtTime(duration)}</span>
             </div>
           </div>
           <button
-            className="mp-stop"
+            className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[10px] text-white/40 transition-colors duration-200 hover:text-accent2"
             type="button"
             aria-label="停止试听"
             onClick={(e) => {

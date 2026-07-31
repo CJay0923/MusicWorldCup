@@ -32,43 +32,69 @@ export default function WildcardScreen({
     wildcardPicks.some((w) => w && entrant && w.id === entrant.id);
 
   return (
-    <div className={clsx('wc-screen', { show })}>
-      <div className="wc-panel">
-        <h2>🎣 捞回 8 个</h2>
-        <p className="wc-sub">从 12 个小组第三中，自选 8 首获得外卡复活</p>
-        <div className="wc-wc-grid">
+    <div
+      className={clsx(
+        'fixed inset-0 z-[--z-wc-screen] items-center justify-center overflow-y-auto bg-[rgba(8,10,26,0.85)] p-[30px_20px] backdrop-blur-[10px]',
+        show ? 'flex animate-[fade_0.3s_ease]' : 'hidden',
+      )}
+    >
+      <div className="w-[min(860px,95vw)] max-h-[88vh] overflow-y-auto rounded-[22px] border border-white/10 bg-bg2 p-[30px] text-center shadow-[--shadow] animate-[pop_0.4s_cubic-bezier(0.22,1.3,0.36,1)]">
+        <h2 className="m-0 mb-1.5 text-2xl font-black">🎣 捞回 8 个</h2>
+        <p className="mb-5 mt-0 text-sm text-muted">
+          从 12 个小组第三中，自选 8 首获得外卡复活
+        </p>
+        <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-2.5">
           {pool.map((r, idx) => {
             const isSelected = isPicked(r.entrant);
             const disabled = !isSelected && pickedCount >= maxPicks;
             return (
               <div
                 key={idx}
-                className={clsx('wc-wc-card', {
-                  selected: isSelected,
-                  disabled,
-                })}
+                className={clsx(
+                  'cursor-pointer rounded-[10px] border border-white/10 bg-white/4 p-2.5 text-center transition-all duration-300',
+                  isSelected && 'scale-105 border-good bg-good/10',
+                  disabled && 'cursor-not-allowed opacity-40',
+                )}
                 onClick={() => !disabled && onToggle?.(r.entrant.id)}
               >
-                <div className="wc-rk">#{r.seedRank}</div>
+                <div
+                  className={clsx(
+                    'text-[10px] font-bold',
+                    isSelected ? 'text-good' : 'text-accent',
+                  )}
+                >
+                  #{r.seedRank}
+                </div>
                 {r.entrant?.pic && (
-                  <div className="wc-wc-cover">
-                    <img src={r.entrant.pic} alt="封面" loading="lazy" />
+                  <div className="mx-1 my-1 h-[60px] w-[60px] overflow-hidden rounded-lg">
+                    <img
+                      className="h-full w-full object-cover"
+                      src={r.entrant.pic}
+                      alt="封面"
+                      loading="lazy"
+                    />
                   </div>
                 )}
-                <div className="wc-song">{r.entrant?.name || '—'}</div>
-                <div className="wc-grp">
+                <div className="my-0.5 text-[13px] font-bold text-ink">
+                  {r.entrant?.name || '—'}
+                </div>
+                <div className="text-[10px] text-muted">
                   {isSelected ? '✓ 已选' : disabled ? '已满' : '点击选择'}
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="wc-wc-foot">
-          <span className="wc-wc-count">
-            已选 <b>{pickedCount}</b> / {maxPicks}
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <span className="text-sm text-muted">
+            已选 <b className="text-lg font-black text-accent">{pickedCount}</b> /{' '}
+            {maxPicks}
           </span>
           <button
-            className="btn primary"
+            className={clsx(
+              'inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-105 active:scale-[0.97]',
+              !canConfirm && 'cursor-default opacity-50',
+            )}
             onClick={onConfirm}
             disabled={!canConfirm}
           >

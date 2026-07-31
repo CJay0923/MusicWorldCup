@@ -38,9 +38,9 @@ export default function SingerSelector({
   const hasSearch = typeof onSearch === 'function';
 
   return (
-    <div className="singer-select-wrap">
+    <div className="mb-5">
       {/* 内置歌手按钮 */}
-      <div className="singer-select">
+      <div className="flex flex-wrap justify-center gap-3">
         {Object.keys(singers).map((id) => {
           const s = singers[id];
           const icon = SINGER_ICONS[id] || '🎤';
@@ -48,13 +48,27 @@ export default function SingerSelector({
           return (
             <button
               key={id}
-              className={clsx('singer-btn', { active: id === current })}
+              className={clsx(
+                'inline-flex cursor-pointer items-center gap-[9px] rounded-full border px-6 py-[11px]',
+                'text-sm font-bold backdrop-blur-[4px] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                'shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]',
+                'hover:-translate-y-0.5 hover:bg-white/10 hover:border-white/25 hover:text-ink hover:shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)]',
+                'active:scale-[0.96]',
+                id === current
+                  ? 'border-accent/50 bg-gradient-to-br from-accent/20 to-accent2/14 text-accent shadow-[0_6px_24px_rgba(255,210,74,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]'
+                  : 'border-white/10 bg-white/4 text-muted',
+              )}
               onClick={() => onSelect(id)}
               type="button"
             >
               {photo ? (
                 <img
-                  className="sg-avatar"
+                  className={clsx(
+                    'h-[30px] w-[30px] shrink-0 rounded-full border-2 object-cover transition-all duration-300',
+                    id === current
+                      ? 'border-accent shadow-[0_0_12px_rgba(255,210,74,0.5)]'
+                      : 'border-white/15',
+                  )}
                   src={photo}
                   alt=""
                   loading="lazy"
@@ -65,7 +79,7 @@ export default function SingerSelector({
                   }}
                 />
               ) : null}
-              <span className="sg-ico" style={{ display: photo ? 'none' : '' }}>
+              <span className="text-lg" style={{ display: photo ? 'none' : '' }}>
                 {icon}
               </span>
               {s.name}
@@ -77,29 +91,33 @@ export default function SingerSelector({
       {/* 动态歌手搜索 / 已选动态歌手 */}
       {hasSearch &&
         (dynamicSinger ? (
-          <div className="dynamic-singer-badge">
+          <div className="mx-auto mt-3.5 flex max-w-[480px] items-center gap-3 rounded-md border border-accent/45 bg-gradient-to-br from-accent/14 to-accent2/10 px-3.5 py-2.5 shadow-[0_8px_24px_rgba(255,177,61,0.18)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]">
             <img
-              className="dsb-avatar"
+              className="h-10 w-10 shrink-0 rounded-full border-2 border-accent object-cover"
               src={dynamicSinger.photo}
               alt=""
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <div className="dsb-info">
-              <span className="dsb-name">{dynamicSinger.name}</span>
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="truncate text-[15px] font-extrabold text-ink">
+                {dynamicSinger.name}
+              </span>
               {isLoadingSinger ? (
-                <span className="dsb-progress">
-                  <i className="dsb-spin" />
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted">
+                  <i className="inline-block h-[13px] w-[13px] shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
                   {loadingProgress || '加载中…'}
                 </span>
               ) : (
-                <span className="dsb-tag">已加载 · 点击 × 切换</span>
+                <span className="text-[11px] font-semibold text-accent">
+                  已加载 · 点击 × 切换
+                </span>
               )}
             </div>
             {!isLoadingSinger && (
               <button
-                className="dsb-clear"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/6 text-base leading-none text-muted transition-all duration-200 hover:border-accent2/40 hover:bg-accent2/18 hover:text-accent2"
                 type="button"
                 aria-label="清除动态歌手"
                 onClick={onClearDynamicSinger}
@@ -109,42 +127,42 @@ export default function SingerSelector({
             )}
           </div>
         ) : singerLoading ? (
-          <div className="dynamic-singer-badge">
-            <div className="dsb-info">
-              <span className="dsb-name">加载歌曲数据中…</span>
-              <span className="dsb-progress">
-                <i className="dsb-spin" />
+          <div className="mx-auto mt-3.5 flex max-w-[480px] items-center gap-3 rounded-md border border-accent/45 bg-gradient-to-br from-accent/14 to-accent2/10 px-3.5 py-2.5 shadow-[0_8px_24px_rgba(255,177,61,0.18)]">
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[15px] font-extrabold text-ink">加载歌曲数据中…</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted">
+                <i className="inline-block h-[13px] w-[13px] shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
                 正在获取歌曲列表
               </span>
             </div>
           </div>
         ) : (
-          <div className="singer-search">
+          <div className="relative mx-auto mt-3.5 max-w-[480px]">
             <input
-              className="singer-search-input"
+              className="w-full rounded-full border border-white/10 bg-[rgba(0,0,0,0.25)] px-[18px] py-[11px] text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-muted/50 focus:border-accent/45 focus:shadow-[0_0_0_3px_rgba(255,210,74,0.1)]"
               type="text"
               value={searchKeyword}
               placeholder="搜索任意歌手（如：王菲、五月天、邓紫棋）"
               onChange={(e) => onSearch(e.target.value)}
             />
             {isSearching && (
-              <span className="singer-search-loading">
-                <i className="dsb-spin" />
+              <span className="pointer-events-none absolute right-4 top-1/2 inline-flex -translate-y-1/2 items-center gap-1.5 text-xs text-muted">
+                <i className="inline-block h-[13px] w-[13px] shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
                 搜索中…
               </span>
             )}
             {!isSearching && searchResults.length > 0 && (
-              <div className="singer-search-results">
+              <div className="mt-2.5 grid max-h-[280px] grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2 overflow-y-auto p-0.5">
                 {searchResults.map((r) => (
                   <button
                     key={r.mid}
-                    className="singer-search-item"
+                    className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-left text-[13px] font-semibold text-ink transition-all duration-200 animate-[cardIn_0.3s_cubic-bezier(0.2,0.8,0.2,1)_both] hover:-translate-y-0.5 hover:border-accent/45 hover:bg-accent/8 active:scale-[0.97]"
                     type="button"
                     onClick={() => onLoadSinger && onLoadSinger(r)}
                   >
                     {r.photo ? (
                       <img
-                        className="ssi-avatar"
+                        className="h-8 w-8 shrink-0 rounded-full border-[1.5px] border-white/15 object-cover"
                         src={r.photo}
                         alt=""
                         loading="lazy"
@@ -156,21 +174,19 @@ export default function SingerSelector({
                       />
                     ) : null}
                     <span
-                      className="ssi-ico"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/8 text-base"
                       style={{ display: r.photo ? 'none' : '' }}
                     >
                       🎤
                     </span>
-                    <span className="ssi-name">{r.name}</span>
+                    <span className="min-w-0 truncate">{r.name}</span>
                   </button>
                 ))}
               </div>
             )}
-            {!isSearching &&
-              searchKeyword.trim() &&
-              searchResults.length === 0 && (
-                <div className="singer-search-empty">未找到匹配的歌手</div>
-              )}
+            {!isSearching && searchKeyword.trim() && searchResults.length === 0 && (
+              <div className="mt-2 text-center text-xs text-muted">未找到匹配的歌手</div>
+            )}
           </div>
         ))}
     </div>

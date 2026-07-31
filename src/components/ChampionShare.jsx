@@ -164,7 +164,9 @@ function loadImage(url, timeout = IMG_TIMEOUT) {
       img.onload = () => finish({ img, tainted: false });
       img.onerror = () => finish(null);
       img.src = url;
-      setTimeout(() => { if (!img.complete) finish(null); }, timeout);
+      setTimeout(() => {
+        if (!img.complete) finish(null);
+      }, timeout);
       return;
     }
 
@@ -177,10 +179,14 @@ function loadImage(url, timeout = IMG_TIMEOUT) {
       img2.onload = () => finish({ img: img2, tainted: true });
       img2.onerror = () => finish(null);
       img2.src = proxiedUrl;
-      setTimeout(() => { if (!img2.complete) finish(null); }, timeout);
+      setTimeout(() => {
+        if (!img2.complete) finish(null);
+      }, timeout);
     };
     img.src = proxiedUrl;
-    setTimeout(() => { if (!img.complete) finish(null); }, timeout);
+    setTimeout(() => {
+      if (!img.complete) finish(null);
+    }, timeout);
   });
 }
 
@@ -190,9 +196,7 @@ function loadEntrantCover(entrant, timeout = IMG_TIMEOUT, size = 300) {
   if (urls.length === 0) return Promise.resolve(null);
 
   return (async () => {
-    const results = await Promise.allSettled(
-      urls.map((url) => loadImage(url, timeout)),
-    );
+    const results = await Promise.allSettled(urls.map((url) => loadImage(url, timeout)));
 
     let taintedResult = null;
     for (const r of results) {
@@ -902,9 +906,9 @@ export default function ChampionShare({
 
   return (
     <>
-      <div className="share-btn-wrap">
+      <div className="mt-5 flex justify-center">
         <button
-          className="btn share-trigger"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-accent/45 bg-gradient-to-br from-accent/18 to-accent2/14 px-6 py-[11px] text-sm font-semibold text-accent transition-all duration-200 hover:border-accent/70 hover:from-accent/28 hover:to-accent2/20 hover:brightness-105 active:scale-[0.97] disabled:cursor-default disabled:opacity-55 disabled:brightness-100"
           type="button"
           onClick={handleShare}
           disabled={!canShare || state === 'loading'}
@@ -914,36 +918,62 @@ export default function ChampionShare({
       </div>
 
       {state !== 'idle' && (
-        <div className="share-modal" onClick={handleClose}>
-          <div className="share-modal-inner" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-[--z-share] flex items-center justify-center overflow-y-auto bg-[rgba(6,8,20,0.85)] p-6 backdrop-blur-[10px] animate-[fade_0.3s_ease]"
+          onClick={handleClose}
+        >
+          <div
+            className="flex max-h-[92vh] max-w-[min(1080px,96vw)] flex-col items-center gap-4 animate-[pop_0.35s_cubic-bezier(0.22,1.3,0.36,1)]"
+            onClick={(e) => e.stopPropagation()}
+          >
             {state === 'loading' && (
-              <div className="share-loading">
-                <span className="spin" />
+              <div className="flex items-center gap-3 text-sm text-muted">
+                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white/15 border-t-accent" />
                 正在绘制冠军晋级之路…
               </div>
             )}
             {state === 'ready' && previewUrl && (
               <>
-                <img className="share-preview" src={previewUrl} alt="冠军晋级之路" />
-                <div className="share-actions">
-                  <button className="btn primary" type="button" onClick={handleDownload}>
+                <img
+                  className="max-h-[74vh] max-w-[min(1040px,94vw)] rounded-md border border-white/10 bg-bg2 object-contain shadow-[--shadow]"
+                  src={previewUrl}
+                  alt="冠军晋级之路"
+                />
+                <div className="flex gap-3">
+                  <button
+                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-105 active:scale-[0.97]"
+                    type="button"
+                    onClick={handleDownload}
+                  >
                     ⬇ 下载图片
                   </button>
-                  <button className="btn" type="button" onClick={handleClose}>
+                  <button
+                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+                    type="button"
+                    onClick={handleClose}
+                  >
                     关闭
                   </button>
                 </div>
-                <div className="share-hint">长按图片或点击"下载图片"保存</div>
+                <div className="text-xs text-muted">长按图片或点击“下载图片”保存</div>
               </>
             )}
             {state === 'error' && (
               <>
-                <div className="share-loading">生成失败，请重试</div>
-                <div className="share-actions">
-                  <button className="btn" type="button" onClick={handleShare}>
+                <div className="text-sm text-muted">生成失败，请重试</div>
+                <div className="flex gap-3">
+                  <button
+                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+                    type="button"
+                    onClick={handleShare}
+                  >
                     重试
                   </button>
-                  <button className="btn" type="button" onClick={handleClose}>
+                  <button
+                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+                    type="button"
+                    onClick={handleClose}
+                  >
                     关闭
                   </button>
                 </div>

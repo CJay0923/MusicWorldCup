@@ -195,14 +195,20 @@ export default function StartScreen({
 
       {/* Classic rules */}
       <div
-        className={clsx('rules', { collapsed: rulesCollapsed.classic })}
+        className={clsx(
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          rulesCollapsed.classic ? 'p-[14px_22px]' : 'p-[20px_22px]',
+        )}
         style={{ display: isClassic ? 'block' : 'none' }}
       >
-        <h3 className="rules-toggle" onClick={() => toggleRules('classic')}>
+        <h3
+          className="flex cursor-pointer items-center justify-between select-none mb-3 text-[15px] tracking-[0.5px] text-accent transition-colors duration-200 hover:text-ink"
+          onClick={() => toggleRules('classic')}
+        >
           <span>赛制说明 · 经典{bracketSize}强</span>
-          <span className="rules-arrow">{rulesCollapsed.classic ? '▶' : '▼'}</span>
+          <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.classic ? '▶' : '▼'}</span>
         </h3>
-        <ul>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.classic && 'hidden')}>
           <li>
             选曲原则：取 QQ 音乐收藏量前 {bracketSize}{' '}
             位，剔除所有英文歌曲及《北京欢迎你》《站起来》等多人合唱。
@@ -252,16 +258,20 @@ export default function StartScreen({
 
       {/* WC rules */}
       <div
-        className={clsx('rules', 'wc-rules', {
-          collapsed: rulesCollapsed.wc,
-        })}
+        className={clsx(
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          rulesCollapsed.wc ? 'p-[14px_22px]' : 'p-[20px_22px]',
+        )}
         style={{ display: selectedMode === 'wc' ? 'block' : 'none' }}
       >
-        <h3 className="rules-toggle" onClick={() => toggleRules('wc')}>
+        <h3
+          className="flex cursor-pointer items-center justify-between select-none mb-3 text-[15px] tracking-[0.5px] text-accent transition-colors duration-200 hover:text-ink"
+          onClick={() => toggleRules('wc')}
+        >
           <span>赛制说明 · 世界杯模式</span>
-          <span className="rules-arrow">{rulesCollapsed.wc ? '▶' : '▼'}</span>
+          <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.wc ? '▶' : '▼'}</span>
         </h3>
-        <ul>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.wc && 'hidden')}>
           <li>
             <b>小组赛</b>：取 QQ 音乐收藏量前 <b>48 首</b>，按收藏量分 4 档抽签，分入{' '}
             <b>12 个小组</b>（A–L），每组 4 首，每组 1 个种子选手。
@@ -287,14 +297,20 @@ export default function StartScreen({
 
       {/* Custom rules */}
       <div
-        className={clsx('rules', { collapsed: rulesCollapsed.custom })}
+        className={clsx(
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          rulesCollapsed.custom ? 'p-[14px_22px]' : 'p-[20px_22px]',
+        )}
         style={{ display: isCustom ? 'block' : 'none' }}
       >
-        <h3 className="rules-toggle" onClick={() => toggleRules('custom')}>
+        <h3
+          className="flex cursor-pointer items-center justify-between select-none mb-3 text-[15px] tracking-[0.5px] text-accent transition-colors duration-200 hover:text-ink"
+          onClick={() => toggleRules('custom')}
+        >
           <span>赛制说明 · 自选模式</span>
-          <span className="rules-arrow">{rulesCollapsed.custom ? '▶' : '▼'}</span>
+          <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.custom ? '▶' : '▼'}</span>
         </h3>
-        <ul>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.custom && 'hidden')}>
           <li>
             先选择<b>淘汰赛规模</b>（4/8/16/32/64/128 强），再从下方歌曲列表中
             <b>自由勾选</b>参赛歌曲。
@@ -320,14 +336,20 @@ export default function StartScreen({
 
       {/* Cross-battle rules */}
       <div
-        className={clsx('rules', { collapsed: rulesCollapsed.cross })}
+        className={clsx(
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          rulesCollapsed.cross ? 'p-[14px_22px]' : 'p-[20px_22px]',
+        )}
         style={{ display: isCrossBattle ? 'block' : 'none' }}
       >
-        <h3 className="rules-toggle" onClick={() => toggleRules('cross')}>
+        <h3
+          className="flex cursor-pointer items-center justify-between select-none mb-3 text-[15px] tracking-[0.5px] text-accent transition-colors duration-200 hover:text-ink"
+          onClick={() => toggleRules('cross')}
+        >
           <span>赛制说明 · 多歌手混战</span>
-          <span className="rules-arrow">{rulesCollapsed.cross ? '▶' : '▼'}</span>
+          <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.cross ? '▶' : '▼'}</span>
         </h3>
-        <ul>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.cross && 'hidden')}>
           <li>
             选择 <b>2-8 位歌手</b> 参战，可从内置歌手中选择，也可搜索添加更多歌手。
           </li>
@@ -347,14 +369,20 @@ export default function StartScreen({
 
       {/* Ranking rules */}
       <div
-        className={clsx('rules', { collapsed: rulesCollapsed.ranking })}
+        className={clsx(
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          rulesCollapsed.ranking ? 'p-[14px_22px]' : 'p-[20px_22px]',
+        )}
         style={{ display: isRanking ? 'block' : 'none' }}
       >
-        <h3 className="rules-toggle" onClick={() => toggleRules('ranking')}>
+        <h3
+          className="flex cursor-pointer items-center justify-between select-none mb-3 text-[15px] tracking-[0.5px] text-accent transition-colors duration-200 hover:text-ink"
+          onClick={() => toggleRules('ranking')}
+        >
           <span>赛制说明 · 夯到拉排名</span>
-          <span className="rules-arrow">{rulesCollapsed.ranking ? '▶' : '▼'}</span>
+          <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.ranking ? '▶' : '▼'}</span>
         </h3>
-        <ul>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.ranking && 'hidden')}>
           <li>
             选择排名对象：<b>歌曲</b>、<b>专辑</b> 或 <b>歌手</b>。
           </li>
@@ -403,7 +431,7 @@ export default function StartScreen({
       {isCrossBattle && (
         <>
           {/* 对决类型选择器 */}
-          <div className="cross-battle-type-selector">
+          <div className="mb-3 flex flex-wrap justify-center gap-2">
             {[
               { value: 'songs', label: '🎵 歌曲' },
               { value: 'albums', label: '💿 专辑' },
@@ -411,9 +439,11 @@ export default function StartScreen({
             ].map((opt) => (
               <button
                 key={opt.value}
-                className={clsx('cross-battle-type-btn', {
-                  active: crossBattleType === opt.value,
-                })}
+                className={clsx(
+                  'flex cursor-pointer items-center gap-1.5 rounded-full border-2 border-transparent bg-white/5 px-5 py-2 text-sm text-white/60 transition-all duration-200 hover:bg-white/10 hover:text-white/85',
+                  crossBattleType === opt.value &&
+                    'border-accent bg-accent/12 text-accent shadow-[0_0_12px_rgba(255,210,74,0.25)]',
+                )}
                 onClick={() => onCrossBattleTypeChange?.(opt.value)}
                 type="button"
               >
@@ -445,7 +475,7 @@ export default function StartScreen({
 
       {/* 夯到拉排名：排名范围 + 子模式选择 */}
       {isRanking && (
-        <div className="ranking-setup">
+        <div className="mb-4 flex flex-col gap-3">
           {/* 排名范围：单歌手 / 多歌手 */}
           <div className="size-selector">
             <span className="size-label">排名范围</span>
@@ -502,19 +532,21 @@ export default function StartScreen({
 
               {/* 专辑内歌曲：选择专辑（卡片式） */}
               {rankingSubMode === 'album-songs' && baseSingerData?.entrants && (
-                <div className="ranking-album-picker">
+                <div className="mb-3 flex flex-col gap-2">
                   <span className="size-label">选择专辑</span>
-                  <div className="ranking-album-grid">
+                  <div className="grid max-h-[280px] gap-2 overflow-y-auto rounded-[10px] bg-black/15 p-1 [grid-template-columns:repeat(auto-fill,minmax(80px,1fr))]">
                     <div
-                      className={clsx('ranking-album-card', {
-                        selected: !rankingAlbumMid,
-                      })}
+                      className={clsx(
+                        'flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-transparent bg-white/3 p-1.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/8',
+                        !rankingAlbumMid &&
+                          'border-accent bg-accent/10 shadow-[0_0_12px_rgba(255,210,74,0.3)]',
+                      )}
                       onClick={() => onRankingAlbumMidChange?.('')}
                     >
-                      <div className="ranking-album-card-art all-songs">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[#4a3a1e] to-[#2a2a4e] text-[28px]">
                         <span>🎵</span>
                       </div>
-                      <span className="ranking-album-card-name">全部歌曲</span>
+                      <span className="line-clamp-2 text-[11px] leading-[1.3] text-ink [word-break:break-all]">全部歌曲</span>
                     </div>
                     {(() => {
                       const albumMap = new Map();
@@ -542,17 +574,20 @@ export default function StartScreen({
                         .map(([key, info]) => (
                           <div
                             key={key}
-                            className={clsx('ranking-album-card', {
-                              selected: rankingAlbumMid === key,
-                            })}
+                            className={clsx(
+                              'flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-transparent bg-white/3 p-1.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/8',
+                              rankingAlbumMid === key &&
+                                'border-accent bg-accent/10 shadow-[0_0_12px_rgba(255,210,74,0.3)]',
+                            )}
                             onClick={() => onRankingAlbumMidChange?.(key)}
                           >
-                            <div className="ranking-album-card-art">
+                            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[#2a2a4e] to-[#1a1a2e] text-[28px]">
                               {info.pic ? (
                                 <img
                                   src={info.pic}
                                   alt=""
                                   loading="lazy"
+                                  className="h-full w-full object-cover"
                                   onError={(e) => {
                                     const img = e.currentTarget;
                                     const t002 = `https://y.gtimg.cn/music/photo_new/T002R300x300M000${key}.jpg`;
@@ -567,8 +602,8 @@ export default function StartScreen({
                                 <span>💿</span>
                               )}
                             </div>
-                            <span className="ranking-album-card-name">{info.name}</span>
-                            <span className="ranking-album-card-meta">
+                            <span className="line-clamp-2 text-[11px] leading-[1.3] text-ink [word-break:break-all]">{info.name}</span>
+                            <span className="text-[10px] text-white/40">
                               {info.count}首
                             </span>
                           </div>

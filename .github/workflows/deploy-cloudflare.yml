@@ -7,11 +7,9 @@
 #      https://dash.cloudflare.com/profile/api-tokens
 #      → Create Token → "Edit Cloudflare Workers" 模板
 #      → 确保 Pages:Edit 权限
-#   2. 在 GitHub 仓库添加 Secrets:
+#   2. 在 GitHub 仓库添加 Secret:
 #      Settings → Secrets and variables → Actions → New repository secret
 #      - CLOUDFLARE_API_TOKEN: 上一步创建的 Token
-#      - CLOUDFLARE_ACCOUNT_ID: 你的 Account ID
-#        (在 Cloudflare Dashboard 首页右侧栏可以看到)
 #   3. 推送代码到 main 分支即可自动部署
 
 name: Deploy to Cloudflare Pages
@@ -44,5 +42,4 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=music-world-cup --branch=main --commit-dirty=true

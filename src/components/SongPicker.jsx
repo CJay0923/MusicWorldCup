@@ -399,7 +399,7 @@ export default function SongPicker({
                           {onPreview && (
                             <button
                               className={clsx(
-                                'absolute bottom-[7px] right-[7px] z-[3] grid h-[30px] w-[30px] place-items-center rounded-full border-none bg-black/60 text-xs text-white backdrop-blur-[4px] transition-all duration-200',
+                                'absolute bottom-[7px] right-[7px] z-[3] grid h-[30px] w-[30px] place-items-center rounded-full border-none bg-black/60 text-xs text-paper backdrop-blur-[4px] transition-all duration-200',
                                 'opacity-0 scale-[0.8] group-hover:opacity-100 group-hover:scale-100',
                                 isThisPlaying &&
                                   'opacity-100 scale-100 bg-gradient-to-br from-accent to-accent2 text-[#1a1a2e]',

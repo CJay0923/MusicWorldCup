@@ -57,7 +57,7 @@ export default function GroupResultScreen({ show, group, allDone, onContinue }) 
           </div>
         </div>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-106 active:scale-97 active:brightness-98"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-2xl border-[3px] border-ink bg-accent px-4 py-[9px] text-[13px] font-semibold text-paper shadow-[3px_3px_0_#1a1a1a] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#1a1a1a] active:translate-y-0.5 active:shadow-[1px_1px_0_#1a1a1a]"
           onClick={onContinue}
         >
           {allDone ? '捞回 8 个 →' : '继续下一组 →'}

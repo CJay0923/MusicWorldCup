@@ -88,7 +88,7 @@ export default function MiniPlayer({
             </div>
             <div
               className={clsx(
-                'mt-0.5 flex justify-between text-white/50 tabular-nums',
+                'mt-0.5 flex justify-between text-ink/50 tabular-nums',
                 variant === 'gp' ? 'text-[8px]' : 'text-[9px]',
               )}
             >
@@ -97,7 +97,7 @@ export default function MiniPlayer({
             </div>
           </div>
           <button
-            className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[10px] text-white/40 transition-colors duration-200 hover:text-accent2"
+            className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[10px] text-ink/40 transition-colors duration-200 hover:text-accent2"
             type="button"
             aria-label="停止试听"
             onClick={(e) => {

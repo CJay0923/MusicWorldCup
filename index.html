@@ -9,11 +9,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap"
       rel="stylesheet"
     />
     <style>
-      /* 内联首屏加载样式 — 不依赖打包后的 CSS，确保 HTML 下载即可显示 */
+      /* 内联首屏加载样式 — 漫画涂鸦风 */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -23,28 +23,28 @@
         align-items: center;
         justify-content: center;
         gap: 18px;
-        background: linear-gradient(160deg, #0b0f24 0%, #161b3a 60%, #1f2550 100%);
-        color: #f3f4fb;
+        background: #f4ede0;
+        color: #1a1a1a;
         font-family:
           'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', system-ui, sans-serif;
       }
       #initial-loader .il-trophy {
         font-size: 56px;
-        filter: drop-shadow(0 4px 20px rgba(255, 210, 74, 0.4));
+        filter: drop-shadow(3px 3px 0 #1a1a1a);
         animation: il-bounce 1.6s ease-in-out infinite;
       }
       #initial-loader .il-spinner {
         width: 36px;
         height: 36px;
-        border: 3px solid rgba(255, 255, 255, 0.12);
-        border-top-color: #ffd24a;
+        border: 3px solid rgba(26, 26, 26, 0.15);
+        border-top-color: #e63946;
         border-radius: 50%;
         animation: il-spin 0.7s linear infinite;
       }
       #initial-loader .il-text {
         font-size: 15px;
         letter-spacing: 1px;
-        color: rgba(255, 255, 255, 0.6);
+        color: #6b6560;
       }
       @keyframes il-spin {
         to {

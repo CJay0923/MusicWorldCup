@@ -17,13 +17,13 @@ export default function ChampionScreen({ champion, singerName, history, onAgain 
   const champNameStyle =
     champion?.side === 'L'
       ? {
-          background: 'linear-gradient(120deg,#fff,#ffd24a)',
+          background: 'linear-gradient(120deg,#1a1a1a,#e63946)',
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
           color: 'transparent',
         }
       : {
-          background: 'linear-gradient(120deg,#fff,#ff8a3d)',
+          background: 'linear-gradient(120deg,#1a1a1a,#ffb627)',
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
           color: 'transparent',
@@ -89,16 +89,16 @@ export default function ChampionScreen({ champion, singerName, history, onAgain 
       {getCover(champion) && (
         <div className="relative mx-auto mb-1.5 mt-4 h-[150px] w-[150px]">
           <img
-            className="h-full w-full rounded-lg border-[3px] border-accent/40 object-cover shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
+            className="h-full w-full rounded-lg border-[3px] border-ink object-cover shadow-[3px_3px_0_#1a1a1a]"
             src={getCover(champion)}
             alt="冠军专辑封面"
             onError={(e) => handleImgError(e, champion)}
           />
-          <div className="absolute -inset-2 animate-spin rounded-full bg-[conic-gradient(from_0deg,transparent,rgba(255,210,74,0.3),transparent_35%,rgba(255,92,138,0.25),transparent_70%)] opacity-60 [animation-duration:4s]" />
+          <div className="absolute -inset-2 animate-spin rounded-full bg-[conic-gradient(from_0deg,transparent,rgba(230,57,70,0.2),transparent_35%,rgba(255,182,39,0.2),transparent_70%)] opacity-60 [animation-duration:4s]" />
         </div>
       )}
 
-      <div className="mt-3.5 inline-block rounded-full border border-accent/40 bg-accent/12 px-4 py-1.5 text-xs font-extrabold tracking-[3px] text-accent">
+      <div className="mt-3.5 inline-block rounded-full border-[2px] border-ink bg-accent/12 px-4 py-1.5 text-xs font-extrabold tracking-[3px] text-accent">
         CHAMPION
       </div>
 

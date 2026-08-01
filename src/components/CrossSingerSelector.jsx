@@ -311,7 +311,7 @@ export default function CrossSingerSelector({
                 className={clsx(
                   'cursor-pointer rounded-[20px] border px-4 py-1.5 text-[13px] font-semibold transition-all duration-200 active:scale-[0.94]',
                   currentSize === size
-                    ? 'border-accent bg-accent/18 text-white shadow-[0_0_12px_rgba(255,210,74,0.2)]'
+                    ? 'border-accent bg-accent/18 text-paper shadow-[0_0_12px_rgba(255,210,74,0.2)]'
                     : 'border-white/10 bg-white/4 text-muted hover:border-accent/30 hover:bg-accent/8 hover:text-[#e8d9a0]',
                 )}
                 onClick={() => onSelectSize(size)}

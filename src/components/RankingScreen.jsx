@@ -784,7 +784,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
               {category === 'singer' ? '🎤' : '🎵'}
             </div>
           )}
-          <span className="mt-[3px] max-w-[90px] truncate text-[10px] text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">
+          <span className="mt-[3px] max-w-[90px] truncate text-[10px] text-paper [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">
             {dragVisual.item.name}
           </span>
         </div>

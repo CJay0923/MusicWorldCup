@@ -35,7 +35,7 @@ export default function MatchStage({
         />
         {/* VS 徽章 */}
         <div className="flex min-w-[64px] flex-col items-center justify-center gap-2 max-md:flex-row max-md:min-w-0">
-          <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-gradient-to-br from-accent2 to-[#ff3d6e] font-display text-xl font-black tracking-wider text-white shadow-[0_10px_26px_rgba(255,92,138,0.45),inset_0_1px_1px_rgba(255,255,255,0.25)] animate-[pulse_2.4s_ease-in-out_infinite]">
+          <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-[3px] border-ink bg-accent font-display text-xl font-black tracking-wider text-paper shadow-[3px_3px_0_#1a1a1a] animate-[pulse_2.4s_ease-in-out_infinite]">
             VS
           </div>
           <div className="font-display text-[11px] uppercase tracking-[2px] text-muted max-md:hidden">

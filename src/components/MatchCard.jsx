@@ -176,16 +176,16 @@ export default function MatchCard({
       </div>
       {/* 专辑/歌手元信息 */}
       {isAlbum && entrant?.songCount && (
-        <span className="mt-1 inline-block rounded bg-white/10 px-2 py-0.5 text-[11px] text-white/60">
+        <span className="mt-1 inline-block rounded bg-white/10 px-2 py-0.5 text-[11px] text-ink/60">
           {entrant.songCount} 首歌
         </span>
       )}
       {isSinger && (
         <>
           {entrant?.topSong && (
-            <div className="mt-0.5 text-xs text-white/45">代表作：{entrant.topSong}</div>
+            <div className="mt-0.5 text-xs text-ink/45">代表作：{entrant.topSong}</div>
           )}
-          <span className="mt-1 inline-block rounded bg-white/10 px-2 py-0.5 text-[11px] text-white/60">
+          <span className="mt-1 inline-block rounded bg-white/10 px-2 py-0.5 text-[11px] text-ink/60">
             {entrant.songCount || 0} 首 · {entrant.albumCount || 0} 张专辑
           </span>
         </>

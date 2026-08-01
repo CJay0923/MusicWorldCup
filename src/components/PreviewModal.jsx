@@ -19,15 +19,15 @@ export default function PreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-[--z-preview] flex items-center justify-center bg-[rgba(6,8,20,0.88)] p-6 backdrop-blur-[12px] animate-[fade_0.25s_ease]"
+      className="fixed inset-0 z-[--z-preview] flex items-center justify-center bg-[rgba(244,237,224,0.92)] p-6 backdrop-blur-[12px] animate-[fade_0.25s_ease]"
       onClick={onClose}
     >
       <div
-        className="relative flex w-full max-w-[380px] flex-col items-center gap-4 rounded-[20px] border border-white/10 bg-gradient-to-br from-[#16162e] to-[#0e0e1a] px-7 pb-7 pt-8 shadow-[0_12px_48px_rgba(0,0,0,0.5)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]"
+        className="relative flex w-full max-w-[380px] flex-col items-center gap-4 rounded-2xl border-[3px] border-ink bg-bg2 px-7 pb-7 pt-8 shadow-[3px_3px_0_#1a1a1a] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/6 text-base text-muted transition-all duration-200 hover:bg-white/12 hover:text-ink"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-bg3 text-base text-muted transition-all duration-200 hover:bg-ink/8 hover:text-ink"
           type="button"
           onClick={onClose}
           aria-label="关闭"
@@ -38,9 +38,9 @@ export default function PreviewModal({
         {/* 封面 */}
         <div
           className={clsx(
-            'h-[140px] w-[140px] overflow-hidden rounded-md border-2 border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]',
+            'h-[140px] w-[140px] overflow-hidden rounded-md border-2 border-ink/20 shadow-[3px_3px_0_#1a1a1a]',
             !song.pic &&
-              'flex items-center justify-center bg-gradient-to-br from-[#2a2a48] to-[#141422]',
+              'flex items-center justify-center bg-bg3',
           )}
         >
           {song.pic ? (
@@ -103,7 +103,7 @@ export default function PreviewModal({
                 style={{ left: `${progress}%` }}
               />
             </div>
-            <div className="mt-1 flex justify-between text-[10px] text-white/50">
+            <div className="mt-1 flex justify-between text-[10px] text-ink/50">
               <span>{fmtTime(currentTime)}</span>
               <span>{fmtTime(duration)}</span>
             </div>

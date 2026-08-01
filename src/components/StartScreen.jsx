@@ -160,9 +160,9 @@ export default function StartScreen({
   return (
     <section className="relative px-2.5 pb-2.5 pt-14 text-center">
       {/* 英雄区背景光圈 */}
-      <div className="pointer-events-none absolute -top-[60px] left-1/2 h-[380px] w-[480px] -translate-x-1/2 animate-[heroGlow_6s_ease-in-out_infinite_alternate] bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,rgba(255,210,74,0.14),transparent_70%),radial-gradient(ellipse_40%_40%_at_30%_60%,rgba(255,92,138,0.08),transparent_60%)]" />
+      <div className="pointer-events-none absolute -top-[60px] left-1/2 h-[380px] w-[480px] -translate-x-1/2 animate-[heroGlow_6s_ease-in-out_infinite_alternate] bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,rgba(230,57,70,0.08),transparent_70%),radial-gradient(ellipse_40%_40%_at_30%_60%,rgba(59,130,246,0.06),transparent_60%)]" />
       <TrophySvg size={120} />
-      <h1 className="mx-0 mb-1.5 mt-[18px] bg-gradient-to-r from-white via-accent to-accent2 bg-clip-text font-display text-[clamp(30px,6vw,52px)] font-black leading-[1.15] tracking-tight text-transparent text-balance">
+      <h1 className="mx-0 mb-1.5 mt-[18px] bg-gradient-to-r from-accent via-[#FFB627] to-accent2 bg-clip-text font-display text-[clamp(30px,6vw,52px)] font-black leading-[1.15] tracking-tight text-transparent text-balance" style={{textShadow:'2px 2px 0 rgba(26,26,26,0.08)'}}>
         {isCustom
           ? '自选歌曲世界杯'
           : isCrossBattle
@@ -440,7 +440,7 @@ export default function StartScreen({
               <button
                 key={opt.value}
                 className={clsx(
-                  'flex cursor-pointer items-center gap-1.5 rounded-full border-2 border-transparent bg-white/5 px-5 py-2 text-sm text-white/60 transition-all duration-200 hover:bg-white/10 hover:text-white/85',
+                  'flex cursor-pointer items-center gap-1.5 rounded-full border-2 border-transparent bg-white/5 px-5 py-2 text-sm text-ink/60 transition-all duration-200 hover:bg-white/10 hover:text-ink/85',
                   crossBattleType === opt.value &&
                     'border-accent bg-accent/12 text-accent shadow-[0_0_12px_rgba(255,210,74,0.25)]',
                 )}
@@ -603,7 +603,7 @@ export default function StartScreen({
                               )}
                             </div>
                             <span className="line-clamp-2 text-[11px] leading-[1.3] text-ink [word-break:break-all]">{info.name}</span>
-                            <span className="text-[10px] text-white/40">
+                            <span className="text-[10px] text-ink/40">
                               {info.count}首
                             </span>
                           </div>
@@ -694,7 +694,7 @@ export default function StartScreen({
                 className={clsx(
                   'cursor-pointer rounded-[20px] border px-4 py-1.5 text-[13px] font-semibold transition-all duration-200 active:scale-[0.94]',
                   customBracketSize === size
-                    ? 'border-accent bg-accent/18 text-white shadow-[0_0_12px_rgba(255,210,74,0.2)]'
+                    ? 'border-accent bg-accent/18 text-paper shadow-[0_0_12px_rgba(255,210,74,0.2)]'
                     : 'border-white/10 bg-white/4 text-muted hover:border-accent/30 hover:bg-accent/8 hover:text-[#e8d9a0]',
                 )}
                 onClick={() => onSelectSize(size)}
@@ -733,7 +733,7 @@ export default function StartScreen({
                 className={clsx(
                   'cursor-pointer rounded-[20px] border px-4 py-1.5 text-[13px] font-semibold transition-all duration-200 active:scale-[0.94]',
                   bracketSize === size
-                    ? 'border-accent bg-accent/18 text-white shadow-[0_0_12px_rgba(255,210,74,0.2)]'
+                    ? 'border-accent bg-accent/18 text-paper shadow-[0_0_12px_rgba(255,210,74,0.2)]'
                     : 'border-white/10 bg-white/4 text-muted hover:border-accent/30 hover:bg-accent/8 hover:text-[#e8d9a0]',
                 )}
                 onClick={() => onSelectSize(size)}
@@ -747,7 +747,7 @@ export default function StartScreen({
       )}
 
       <button
-        className="relative inline-flex cursor-pointer items-center gap-[7px] overflow-hidden rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-12 py-4 font-display text-lg font-semibold text-[#2a1d00] transition-all duration-200 hover:brightness-105 active:scale-[0.97] disabled:cursor-default disabled:opacity-50 disabled:brightness-100 animate-[ctaPulse_3s_ease-in-out_infinite]"
+        className="relative inline-flex cursor-pointer items-center gap-[7px] overflow-hidden rounded-2xl border-[3px] border-ink bg-accent px-12 py-4 font-display text-lg font-semibold text-paper shadow-[3px_3px_0_#1a1a1a] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#1a1a1a] active:translate-y-0.5 active:shadow-[1px_1px_0_#1a1a1a] disabled:cursor-default disabled:opacity-50 disabled:shadow-[3px_3px_0_#1a1a1a] animate-[ctaPulse_3s_ease-in-out_infinite]"
         onClick={onStart}
         type="button"
         disabled={(isCustom && !canStartCustom) || (isCrossBattle && !canStartCross)}

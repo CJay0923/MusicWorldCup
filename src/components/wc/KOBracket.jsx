@@ -7,7 +7,7 @@ function koSlot(s, w, cur) {
     <span
       className={clsx(
         'flex-1 rounded px-1.5 py-[3px] text-xs',
-        isWin ? 'bg-good/10 font-semibold text-good' : 'bg-white/4 text-[#cdd0e8]',
+        isWin ? 'bg-good/10 font-semibold text-good' : 'bg-white/[0.03] text-white/45',
         cur && 'border border-accent bg-accent/10',
         !s && 'text-muted opacity-40',
       )}
@@ -29,7 +29,7 @@ export default function KOBracket({ ko }) {
 
   return (
     <div className="mt-3.5 block">
-      <div className="rounded-md border border-white/10 bg-white/3 px-4 py-3.5 text-xs">
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3.5 text-xs shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
         {rn.map((name, r) => {
           const matches = rounds[r].length / 2;
           return (

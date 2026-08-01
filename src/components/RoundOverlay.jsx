@@ -2,7 +2,7 @@ import React from 'react';
 import { clsx } from 'clsx';
 
 /**
- * Round transition overlay.
+ * Round transition overlay. Dark theme.
  * @param {boolean} show - whether the overlay is visible
  * @param {string} icon - emoji icon shown large
  * @param {string} title - overlay heading
@@ -14,16 +14,16 @@ export default function RoundOverlay({ show, icon, title, sub, onContinue }) {
     <div
       className={clsx(
         'fixed inset-0 z-[--z-overlay] items-center justify-center backdrop-blur-[8px]',
-        'bg-[rgba(244,237,224,0.88)]',
+        'bg-[rgba(10,11,16,0.92)]',
         show ? 'flex animate-[fade_0.3s_ease]' : 'hidden',
       )}
     >
-      <div className="max-w-[420px] rounded-2xl border-[3px] border-ink bg-bg2 px-[50px] py-10 text-center shadow-[3px_3px_0_#1a1a1a] animate-[pop_0.4s_cubic-bezier(0.22,1.3,0.36,1)]">
+      <div className="max-w-[420px] rounded-2xl border border-white/[0.08] bg-bg2 px-[50px] py-10 text-center shadow-[0_24px_64px_rgba(0,0,0,0.6)] animate-[pop_0.4s_cubic-bezier(0.22,1.3,0.36,1)]">
         <div className="text-[64px]">{icon}</div>
-        <h2 className="mb-1.5 mt-2 text-[26px] font-black">{title}</h2>
-        <p className="mb-[22px] mt-0 text-sm text-muted">{sub}</p>
+        <h2 className="mb-1.5 mt-2 text-[26px] font-black text-white">{title}</h2>
+        <p className="mb-[22px] mt-0 text-sm text-white/45">{sub}</p>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-2xl border-[3px] border-ink bg-accent px-4 py-[9px] text-[13px] font-semibold text-paper shadow-[3px_3px_0_#1a1a1a] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#1a1a1a] active:translate-y-0.5 active:shadow-[1px_1px_0_#1a1a1a]"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-6 py-[11px] text-[14px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
           onClick={onContinue}
           type="button"
         >

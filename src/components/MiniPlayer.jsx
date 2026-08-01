@@ -44,8 +44,8 @@ export default function MiniPlayer({
           'flex shrink-0 cursor-pointer items-center justify-center rounded-full border-none text-[11px]',
           variant === 'gp' ? 'h-5 w-5 text-[9px]' : 'h-6 w-6',
           isLoading
-            ? 'cursor-default bg-bg3 text-muted shadow-none'
-            : 'bg-gradient-to-br from-accent to-[#ffb13d] text-[#1a0d00] shadow-[0_2px_8px_rgba(255,177,61,0.35)] hover:scale-[1.08] active:scale-[0.94]',
+            ? 'cursor-default bg-bg3 text-white/40 shadow-none'
+            : 'bg-gradient-to-br from-accent to-[#cc2238] text-white shadow-[0_2px_8px_rgba(230,57,70,0.4)] hover:scale-[1.08] active:scale-[0.94]',
         )}
         type="button"
         aria-label={isPlaying ? '暂停' : '播放'}
@@ -66,7 +66,7 @@ export default function MiniPlayer({
         <>
           <div className="min-w-0 flex-1">
             <div
-              className="relative h-2 cursor-pointer rounded-full bg-white/28 transition-[height] duration-150 hover:h-2.5"
+              className="relative h-2 cursor-pointer rounded-full bg-white/15 transition-[height] duration-150 hover:h-2.5"
               onClick={onSeek}
               onTouchMove={onSeek}
             >
@@ -88,7 +88,7 @@ export default function MiniPlayer({
             </div>
             <div
               className={clsx(
-                'mt-0.5 flex justify-between text-ink/50 tabular-nums',
+                'mt-0.5 flex justify-between text-white/35 tabular-nums',
                 variant === 'gp' ? 'text-[8px]' : 'text-[9px]',
               )}
             >
@@ -97,7 +97,7 @@ export default function MiniPlayer({
             </div>
           </div>
           <button
-            className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[10px] text-ink/40 transition-colors duration-200 hover:text-accent2"
+            className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[10px] text-white/30 transition-colors duration-200 hover:text-accent2"
             type="button"
             aria-label="停止试听"
             onClick={(e) => {

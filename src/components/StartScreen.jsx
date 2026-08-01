@@ -157,19 +157,34 @@ export default function StartScreen({
     return '继续';
   })();
 
-  return (
-    <section className="relative px-2.5 pb-2.5 pt-14 text-center">
-      {/* 英雄区背景光圈 */}
-      <div className="pointer-events-none absolute -top-[60px] left-1/2 h-[380px] w-[480px] -translate-x-1/2 animate-[heroGlow_6s_ease-in-out_infinite_alternate] bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,rgba(230,57,70,0.08),transparent_70%),radial-gradient(ellipse_40%_40%_at_30%_60%,rgba(59,130,246,0.06),transparent_60%)]" />
+return (
+  <section className="relative px-2.5 pb-2.5 pt-14 text-center">
+    {/* 主题切换按钮 - 右上角 */}
+    <button
+      className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/20 bg-white/10 text-sm transition-all hover:scale-110 hover:bg-white/20"
+      type="button"
+      onClick={() => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+      }}
+      title="切换主题"
+    >
+      {document.documentElement.getAttribute('data-theme') === 'light' ? '🌙' : '☀️'}
+    </button>
+
+    {/* 英雄区背景光圈 — 暗黑增强 */}
+      <div className="pointer-events-none absolute -top-[60px] left-1/2 h-[480px] w-[600px] -translate-x-1/2 animate-[heroGlow_6s_ease-in-out_infinite_alternate] bg-[radial-gradient(ellipse_70%_55%_at_50%_40%,rgba(230,57,70,0.12),transparent_70%),radial-gradient(ellipse_50%_45%_at_30%_65%,rgba(59,130,246,0.08),transparent_60%)]" />
       <TrophySvg size={120} />
       <h1 className="mx-0 mb-1.5 mt-[18px] bg-gradient-to-r from-accent via-[#FFB627] to-accent2 bg-clip-text font-display text-[clamp(30px,6vw,52px)] font-black leading-[1.15] tracking-tight text-transparent text-balance" style={{textShadow:'2px 2px 0 rgba(26,26,26,0.08)'}}>
-        {isCustom
+        <span className="bg-gradient-to-r from-accent via-[#FFB627] to-accent2 bg-clip-text">{isCustom
           ? '自选歌曲世界杯'
           : isCrossBattle
             ? '多歌手混战世界杯'
             : isRanking
               ? '夯到拉排名'
-              : `${singer?.name}歌曲世界杯`}
+              : `${singer?.name}歌曲世界杯`}</span>
       </h1>
       <p className="mb-[30px] text-[15px] tracking-wide text-muted">
         {isCustom ? (
@@ -196,7 +211,7 @@ export default function StartScreen({
       {/* Classic rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
           rulesCollapsed.classic ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: isClassic ? 'block' : 'none' }}
@@ -208,7 +223,7 @@ export default function StartScreen({
           <span>赛制说明 · 经典{bracketSize}强</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.classic ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.classic && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.classic && 'hidden')}>
           <li>
             选曲原则：取 QQ 音乐收藏量前 {bracketSize}{' '}
             位，剔除所有英文歌曲及《北京欢迎你》《站起来》等多人合唱。
@@ -259,7 +274,7 @@ export default function StartScreen({
       {/* WC rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
           rulesCollapsed.wc ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: selectedMode === 'wc' ? 'block' : 'none' }}
@@ -271,7 +286,7 @@ export default function StartScreen({
           <span>赛制说明 · 世界杯模式</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.wc ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.wc && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.wc && 'hidden')}>
           <li>
             <b>小组赛</b>：取 QQ 音乐收藏量前 <b>48 首</b>，按收藏量分 4 档抽签，分入{' '}
             <b>12 个小组</b>（A–L），每组 4 首，每组 1 个种子选手。
@@ -298,7 +313,7 @@ export default function StartScreen({
       {/* Custom rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
           rulesCollapsed.custom ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: isCustom ? 'block' : 'none' }}
@@ -310,7 +325,7 @@ export default function StartScreen({
           <span>赛制说明 · 自选模式</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.custom ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.custom && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.custom && 'hidden')}>
           <li>
             先选择<b>淘汰赛规模</b>（4/8/16/32/64/128 强），再从下方歌曲列表中
             <b>自由勾选</b>参赛歌曲。
@@ -337,7 +352,7 @@ export default function StartScreen({
       {/* Cross-battle rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
           rulesCollapsed.cross ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: isCrossBattle ? 'block' : 'none' }}
@@ -349,7 +364,7 @@ export default function StartScreen({
           <span>赛制说明 · 多歌手混战</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.cross ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.cross && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.cross && 'hidden')}>
           <li>
             选择 <b>2-8 位歌手</b> 参战，可从内置歌手中选择，也可搜索添加更多歌手。
           </li>
@@ -370,7 +385,7 @@ export default function StartScreen({
       {/* Ranking rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
           rulesCollapsed.ranking ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: isRanking ? 'block' : 'none' }}
@@ -382,7 +397,7 @@ export default function StartScreen({
           <span>赛制说明 · 夯到拉排名</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.ranking ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-[#cdd0e8] [&_li]:[text-wrap:pretty]', rulesCollapsed.ranking && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.ranking && 'hidden')}>
           <li>
             选择排名对象：<b>歌曲</b>、<b>专辑</b> 或 <b>歌手</b>。
           </li>
@@ -408,8 +423,8 @@ export default function StartScreen({
         </ul>
       </div>
 
-      {/* 歌手选择（经典/世界杯/自选/单歌手排名模式显示，混战和多歌手排名使用自己的多选器） */}
-      {!isCrossBattle && !(isRanking && rankingScope === 'cross') && (
+      {/* 歌手选择（仅经典/世界杯/自选模式显示，排名和混战完全隐藏） */}
+      {!isCrossBattle && !isRanking && (
         <SingerSelector
           singers={singers}
           current={currentSinger}
@@ -430,8 +445,8 @@ export default function StartScreen({
       {/* 跨歌手混战：多选歌手选择器 */}
       {isCrossBattle && (
         <>
-          {/* 对决类型选择器 */}
-          <div className="mb-3 flex flex-wrap justify-center gap-2">
+          {/* 对决类型选择器 - 使用优化后的 Tab 样式 */}
+          <div className="mb-4 cross-battle-tabs">
             {[
               { value: 'songs', label: '🎵 歌曲' },
               { value: 'albums', label: '💿 专辑' },
@@ -440,9 +455,8 @@ export default function StartScreen({
               <button
                 key={opt.value}
                 className={clsx(
-                  'flex cursor-pointer items-center gap-1.5 rounded-full border-2 border-transparent bg-white/5 px-5 py-2 text-sm text-ink/60 transition-all duration-200 hover:bg-white/10 hover:text-ink/85',
-                  crossBattleType === opt.value &&
-                    'border-accent bg-accent/12 text-accent shadow-[0_0_12px_rgba(255,210,74,0.25)]',
+                  'cross-battle-tab',
+                  crossBattleType === opt.value && 'active',
                 )}
                 onClick={() => onCrossBattleTypeChange?.(opt.value)}
                 type="button"
@@ -683,27 +697,25 @@ export default function StartScreen({
         bracketSize={bracketSize}
       />
 
-      {/* 自选模式：先选规模 */}
+      {/* 自选模式：先选规模 - 使用优化后的按钮样式 */}
       {isCustom && customAllSizes.length > 1 && (
-        <div className="mb-5 flex flex-wrap items-center justify-center gap-3">
-          <span className="whitespace-nowrap text-[13px] text-muted">淘汰赛规模</span>
-          <div className="flex flex-wrap gap-2">
-            {customAllSizes.map((size) => (
-              <button
-                key={size}
-                className={clsx(
-                  'cursor-pointer rounded-[20px] border px-4 py-1.5 text-[13px] font-semibold transition-all duration-200 active:scale-[0.94]',
-                  customBracketSize === size
-                    ? 'border-accent bg-accent/18 text-paper shadow-[0_0_12px_rgba(255,210,74,0.2)]'
-                    : 'border-white/10 bg-white/4 text-muted hover:border-accent/30 hover:bg-accent/8 hover:text-[#e8d9a0]',
-                )}
-                onClick={() => onSelectSize(size)}
-                type="button"
-              >
-                {size}强
-              </button>
-            ))}
-          </div>
+        <div className="mb-5 bracket-sizes">
+          <span className="mb-2 block w-full text-center text-[13px] font-semibold text-muted">
+            淘汰赛规模
+          </span>
+          {customAllSizes.map((size) => (
+            <button
+              key={size}
+              className={clsx(
+                'bracket-size-btn',
+                customBracketSize === size && 'active',
+              )}
+              onClick={() => onSelectSize(size)}
+              type="button"
+            >
+              {size}强
+            </button>
+          ))}
         </div>
       )}
 
@@ -722,32 +734,30 @@ export default function StartScreen({
         />
       )}
 
-      {/* 经典模式：规模选择器（仅当有多种规模可选时显示） */}
+      {/* 经典模式：规模选择器（仅当有多种规模可选时显示） - 使用优化后的按钮样式 */}
       {isClassic && availableSizes.length > 1 && (
-        <div className="mb-5 flex flex-wrap items-center justify-center gap-3">
-          <span className="whitespace-nowrap text-[13px] text-muted">淘汰赛规模</span>
-          <div className="flex flex-wrap gap-2">
-            {availableSizes.map((size) => (
-              <button
-                key={size}
-                className={clsx(
-                  'cursor-pointer rounded-[20px] border px-4 py-1.5 text-[13px] font-semibold transition-all duration-200 active:scale-[0.94]',
-                  bracketSize === size
-                    ? 'border-accent bg-accent/18 text-paper shadow-[0_0_12px_rgba(255,210,74,0.2)]'
-                    : 'border-white/10 bg-white/4 text-muted hover:border-accent/30 hover:bg-accent/8 hover:text-[#e8d9a0]',
-                )}
-                onClick={() => onSelectSize(size)}
-                type="button"
-              >
-                {size}强
-              </button>
-            ))}
-          </div>
+        <div className="mb-5 bracket-sizes">
+          <span className="mb-2 block w-full text-center text-[13px] font-semibold text-muted">
+            淘汰赛规模
+          </span>
+          {availableSizes.map((size) => (
+            <button
+              key={size}
+              className={clsx(
+                'bracket-size-btn',
+                bracketSize === size && 'active',
+              )}
+              onClick={() => onSelectSize(size)}
+              type="button"
+            >
+              {size}强
+            </button>
+          ))}
         </div>
       )}
 
       <button
-        className="relative inline-flex cursor-pointer items-center gap-[7px] overflow-hidden rounded-2xl border-[3px] border-ink bg-accent px-12 py-4 font-display text-lg font-semibold text-paper shadow-[3px_3px_0_#1a1a1a] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#1a1a1a] active:translate-y-0.5 active:shadow-[1px_1px_0_#1a1a1a] disabled:cursor-default disabled:opacity-50 disabled:shadow-[3px_3px_0_#1a1a1a] animate-[ctaPulse_3s_ease-in-out_infinite]"
+        className="relative inline-flex cursor-pointer items-center gap-[7px] overflow-hidden rounded-2xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-12 py-4 font-display text-lg font-semibold text-white shadow-[0_0_30px_rgba(230,57,70,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_45px_rgba(230,57,70,0.45)] active:translate-y-0.5 active:shadow-[0_0_20px_rgba(230,57,70,0.25)] disabled:cursor-default disabled:opacity-50 disabled:shadow-[0_0_20px_rgba(230,57,70,0.15)] animate-[ctaPulse_3s_ease-in-out_infinite]"
         onClick={onStart}
         type="button"
         disabled={(isCustom && !canStartCustom) || (isCrossBattle && !canStartCross)}
@@ -765,7 +775,7 @@ export default function StartScreen({
 
       {showResume && !isCustom && !isCrossBattle && !isRanking && (
         <button
-          className="ml-2.5 inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+          className="ml-2.5 inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-[9px] text-[13px] font-semibold text-white/60 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.96]"
           onClick={onResume}
           type="button"
         >
@@ -773,7 +783,7 @@ export default function StartScreen({
         </button>
       )}
 
-      <div className="mt-3.5 text-xs text-muted">
+      <div className="mt-3.5 text-xs text-white/35">
         {isCustom
           ? '提示：点击歌曲勾选/取消 · 可按专辑全选 · 每次开始对阵随机生成'
           : isCrossBattle

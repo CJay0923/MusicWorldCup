@@ -301,21 +301,25 @@ export function useWorldCup(singerId, singerData) {
     [loadSavedWC, singerData],
   );
 
-  const resetWC = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    try {
-      localStorage.removeItem(storageKey(singerId));
-    } catch {
-      /* ignore */
-    }
-    setWc(makeDraw(singerData));
-    setBusy(false);
-    setShowTransition(false);
-    setLastPick(null);
-  }, [singerId, singerData]);
+const resetWC = useCallback(() => {
+  if (timerRef.current) {
+    clearTimeout(timerRef.current);
+    timerRef.current = null;
+  }
+  try {
+    localStorage.removeItem(storageKey(singerId));
+  } catch {
+    /* ignore */
+  }
+  // 重新开始：生成新的抽签结果，但直接跳到小组赛阶段（不显示抽签界面）
+  const newDraw = makeDraw(singerData);
+  const skippedToGroup = { ...newDraw, phase: 'group', curGroup: 0 };
+  setWc(skippedToGroup);
+  saveWC(skippedToGroup); // 保存跳过抽签的状态
+  setBusy(false);
+  setShowTransition(false);
+  setLastPick(null);
+}, [singerId, singerData, saveWC]);
 
   // 从抽签结果进入小组赛
   const proceedFromDraw = useCallback(() => {

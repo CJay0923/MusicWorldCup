@@ -3,6 +3,8 @@ import { clsx } from 'clsx';
 
 /**
  * A single battle card (supports songs, albums, and singers).
+ * GOAT-style: full-bleed cover image as background, name overlaid at bottom.
+ *
  * @param {object|null} entrant - entrant object with optional `type` field ('album' | 'singer' | undefined=song)
  * @param {'left'|'right'} side - which side the card is on
  * @param {'default'|'win'|'lose'|'locked'} state - card visual state
@@ -23,112 +25,149 @@ export default function MatchCard({
   const isSinger = entrantType === 'singer';
   const isSong = !isAlbum && !isSinger;
 
-  // 图片 onError fallback
-  const t062Url = entrant?.songmid
-    ? `https://y.gtimg.cn/music/photo_new/T062R150x150M000${entrant.songmid}.jpg`
-    : '';
-  const t002Url = entrant?.albumMid
-    ? `https://y.gtimg.cn/music/photo_new/T002R150x150M000${entrant.albumMid}.jpg`
-    : '';
-  const coverSrc =
-    entrant?.picLocal || entrant?.pic || entrant?.songPic || t062Url || t002Url || '';
+// 图片加载优化：优先使用最可靠的来源，避免闪烁
+const t062Url = entrant?.songmid
+  ? `https://y.gtimg.cn/music/photo_new/T062R400x400M000${entrant.songmid}.jpg`
+  : '';
+const t002Url = entrant?.albumMid
+  ? `https://y.gtimg.cn/music/photo_new/T002R400x400M000${entrant.albumMid}.jpg`
+  : '';
 
-  const handleImgError = (e) => {
-    const img = e.currentTarget;
-    const tried = img.dataset.tried || '';
-    if (tried !== 'picLocal' && entrant?.picLocal) {
-      img.dataset.tried = 'picLocal';
-      img.src = entrant.picLocal;
-      return;
-    }
-    if (tried !== 'pic' && entrant?.pic) {
-      img.dataset.tried = 'pic';
-      img.src = entrant.pic;
-      return;
-    }
-    if (tried !== 'songPic' && entrant?.songPic) {
-      img.dataset.tried = 'songPic';
-      img.src = entrant.songPic;
-      return;
-    }
-    if (tried !== 't062' && t062Url) {
-      img.dataset.tried = 't062';
-      img.src = t062Url;
-      return;
-    }
-    if (tried !== 't002' && t002Url) {
-      img.dataset.tried = 't002';
-      img.src = t002Url;
-      return;
-    }
+// 确定最佳图片源（优先级：本地 > CDN专辑 > CDN歌曲 > pic字段）
+const getBestCoverSrc = () => {
+  // 有本地封面优先
+  if (entrant?.picLocal) return entrant.picLocal;
+  // 有专辑CDN优先
+  if (t002Url) return t002Url;
+  // 其次歌曲CDN
+  if (t062Url) return t062Url;
+  // 最后使用pic字段
+  if (entrant?.pic) return entrant.pic;
+  // songPic作为最后备选
+  if (entrant?.songPic) return entrant.songPic;
+  return '';
+};
+
+const coverSrc = getBestCoverSrc();
+
+// 简化的错误处理：只尝试一次fallback
+const handleImgError = (e) => {
+  const img = e.currentTarget;
+  const tried = img.dataset.tried;
+  
+  // 如果已经尝试过，直接隐藏
+  if (tried) {
     img.style.display = 'none';
-  };
+    return;
+  }
+  
+  // 标记已尝试
+  img.dataset.tried = '1';
+  
+  // 尝试唯一的备选方案
+  if (coverSrc !== t062Url && t062Url) {
+    img.src = t062Url;
+  } else if (coverSrc !== t002Url && t002Url) {
+    img.src = t002Url;
+  } else if (entrant?.pic && coverSrc !== entrant.pic) {
+    img.src = entrant.pic;
+  } else {
+    img.style.display = 'none';
+  }
+};
 
   const albumLinkUrl =
     isAlbum && entrant?.albumMid
       ? `https://y.qq.com/n/ryqq/albumDetail/${entrant.albumMid}`
       : '';
 
+  // GOAT-style: border glow based on side and state
   const cardCls = clsx(
-    // 基础布局
-    'group relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center',
-    'overflow-hidden rounded-lg px-[22px] py-[30px] text-center',
-    'border backdrop-blur-[12px]',
-    'transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-    // 玻璃拟态背景
-    'border-white/12 bg-gradient-to-br from-white/6 to-bg2/80',
-    'shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_32px_rgba(0,0,0,0.3)]',
+    // 基础：全高卡片，封面铺满
+    'group relative flex min-h-[380px] cursor-pointer flex-col items-end justify-end overflow-hidden',
+    'rounded-2xl text-left',
+    'border-2 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+    // 默认状态：暗色边框 + 微光
+    'border-white/10 bg-bg3 shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
     // 悬浮效果
-    'hover:-translate-y-1.5',
+    'hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)]',
     side === 'left' &&
-      'hover:border-accent/50 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_22px_50px_rgba(255,210,74,0.25),0_0_0_1px_rgba(255,210,74,0.15)]',
+      'hover:border-accent/50 hover:shadow-[0_16px_48px_rgba(230,57,70,0.15)]',
     side === 'right' &&
-      'hover:border-right/55 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_22px_50px_rgba(255,138,61,0.25),0_0_0_1px_rgba(255,138,61,0.15)]',
-    // 状态
+      'hover:border-right/55 hover:shadow-[0_16px_48px_rgba(255,182,39,0.15)]',
+    // 胜出状态：发光边框
     state === 'win' &&
       side === 'left' &&
-      'border-accent shadow-[0_0_0_2px_var(--left),0_22px_60px_rgba(255,210,74,0.35)]',
+      'border-accent shadow-[0_0_30px_rgba(230,57,70,0.35),0_0_60px_rgba(230,57,70,0.12)]',
     state === 'win' &&
       side === 'right' &&
-      'border-right shadow-[0_0_0_2px_var(--right),0_22px_60px_rgba(255,138,61,0.35)]',
-    state === 'lose' && 'scale-[0.97] opacity-30 saturate-[0.4]',
+      'border-right shadow-[0_0_30px_rgba(255,182,39,0.35),0_0_60px_rgba(255,182,39,0.12)]',
+    // 失败状态：灰暗 + 缩小
+    state === 'lose' && 'scale-[0.97] opacity-40 grayscale',
     state === 'locked' && 'pointer-events-none',
     // 种子卡片
-    entrant?.isSeed && 'border-accent/45 bg-gradient-to-br from-bg2 to-accent/6',
+    entrant?.isSeed && 'border-accent/40 bg-bg2',
   );
+
+  // 底部渐变遮罩（让文字在封面上清晰可读）
+  const overlayGradient =
+    'linear-gradient(to top, rgba(10,11,16,0.95) 0%, rgba(10,11,16,0.7) 35%, rgba(10,11,16,0.2) 65%, transparent 100%)';
 
   return (
     <div className={cardCls} onClick={onPick}>
+      {/* ===== 全屏封面背景 ===== */}
+      <div className="absolute inset-0 bg-bg3">
+        {coverSrc ? (
+          <img
+            className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+            src={coverSrc}
+            alt={isAlbum ? '专辑封面' : isSinger ? '歌手头像' : '专辑封面'}
+            loading="lazy"
+            onError={handleImgError}
+          />
+        ) : (
+          /* 无封面时的占位图案 */
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-bg2 to-bg3">
+            <span className="text-6xl text-white/5">♪</span>
+          </div>
+        )}
+      </div>
+
+      {/* 底部渐变遮罩 */}
+      <div className="absolute inset-0" style={{ background: overlayGradient }} />
+
       {/* 半区标签 */}
       {showSideTag && (
         <span
           className={clsx(
-            'absolute left-3.5 top-3.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold tracking-wider',
+            'absolute left-3.5 top-3.5 z-10 rounded-full px-2.5 py-1 text-[11px] font-extrabold tracking-wider backdrop-blur-md',
             side === 'left'
-              ? 'border border-accent/35 bg-accent/16 text-accent'
-              : 'border border-right/40 bg-right/16 text-right',
+              ? 'border border-accent/40 bg-accent/20 text-accent'
+              : 'border border-right/40 bg-right/20 text-right',
           )}
         >
           {side === 'left' ? '左半区' : '右半区'}
         </span>
       )}
+
       {/* 种子排名 */}
       <span
         className={clsx(
-          'absolute right-4 top-3.5 font-display text-[11px] font-bold tabular-nums',
+          'absolute right-4 top-3.5 z-10 font-display text-[11px] font-bold tabular-nums backdrop-blur-sm',
           entrant?.isSeed
-            ? 'rounded-full border border-accent/30 bg-accent/12 px-2 py-0.5 text-accent'
-            : 'text-muted',
+            ? 'rounded-full border border-accent/30 bg-accent/15 px-2 py-0.5 text-accent'
+            : 'rounded-full bg-black/40 px-2 py-0.5 text-white/60',
         )}
       >
         {entrant?.isSeed ? `种子#${entrant.seedRank}` : `#${entrant?.seed}`}
       </span>
+
       {/* 跨歌手模式：歌手头像+名称 */}
       {entrant?.singerName && !isSinger && (
-        <div className="mb-1 flex items-center gap-1.5">
+        <div className="absolute left-3.5 top-12 z-10 flex items-center gap-1.5 backdrop-blur-sm">
           {entrant.singerPhoto && (
             <img
-              className="h-5 w-5 rounded-full object-cover"
+              className="h-5 w-5 rounded-full border border-white/20 object-cover"
               src={entrant.singerPhoto}
               alt=""
               loading="lazy"
@@ -137,122 +176,114 @@ export default function MatchCard({
               }}
             />
           )}
-          <span className="text-xs text-muted">{entrant.singerName}</span>
+          <span className="text-xs font-medium text-white/70">{entrant.singerName}</span>
         </div>
       )}
-      {/* 封面 */}
-      {coverSrc && (
-        <div className="relative mb-2.5 h-[118px] w-[118px] shrink-0">
-          <img
-            className={clsx(
-              'h-full w-full rounded-sm border-2 border-white/16 object-cover',
-              'bg-bg3 shadow-[0_10px_28px_rgba(0,0,0,0.45)]',
-              'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-              'group-hover:scale-[1.06] group-hover:-rotate-1',
-              state === 'win' && 'scale-110',
-              state === 'lose' && 'brightness-[0.6] saturate-[0.3]',
-            )}
-            src={coverSrc}
-            alt={isAlbum ? '专辑封面' : isSinger ? '歌手头像' : '专辑封面'}
-            loading="lazy"
-            onError={handleImgError}
-          />
-          {/* 种子徽章 */}
-          {entrant?.isSeed && (
-            <span className="absolute -right-2 -top-2 z-[2] rounded-full bg-gradient-to-br from-accent to-[#ffb13d] px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#2a1d00] shadow-[0_4px_12px_rgba(255,177,61,0.4)]">
-              种子
-            </span>
+
+      {/* ===== 底部内容区 ===== */}
+      <div className="relative z-10 w-full p-5 pb-5">
+        {/* 歌曲名 — 大字突出 */}
+        <div
+          className={clsx(
+            'mb-1 font-display font-black leading-tight tracking-tight break-words text-balance',
+            isAlbum || isSinger ? 'text-[17px]' : 'text-[clamp(28px,5.5vw,44px)]',
           )}
+        >
+          {entrant?.name || '—'}
         </div>
-      )}
-      {/* 歌曲名 */}
-      <div
-        className={clsx(
-          'mx-0 my-2 font-display font-black leading-tight tracking-tight break-words text-balance',
-          isAlbum || isSinger ? 'text-[15px]' : 'text-[clamp(26px,5vw,40px)]',
-        )}
-      >
-        {entrant?.name || '—'}
-      </div>
-      {/* 专辑/歌手元信息 */}
-      {isAlbum && entrant?.songCount && (
-        <span className="mt-1 inline-block rounded bg-white/10 px-2 py-0.5 text-[11px] text-ink/60">
-          {entrant.songCount} 首歌
-        </span>
-      )}
-      {isSinger && (
-        <>
-          {entrant?.topSong && (
-            <div className="mt-0.5 text-xs text-ink/45">代表作：{entrant.topSong}</div>
-          )}
-          <span className="mt-1 inline-block rounded bg-white/10 px-2 py-0.5 text-[11px] text-ink/60">
-            {entrant.songCount || 0} 首 · {entrant.albumCount || 0} 张专辑
+
+        {/* 专辑/歌手元信息 */}
+        {isAlbum && entrant?.songCount && (
+          <span className="inline-block rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white/60">
+            {entrant.songCount} 首歌
           </span>
-        </>
-      )}
-      {/* 提示文字 */}
-      <div className="text-[12.5px] font-semibold tracking-wide text-muted">
-        点击选择晋级
+        )}
+        {isSinger && (
+          <>
+            {entrant?.topSong && (
+              <div className="text-xs text-white/45">代表作：{entrant.topSong}</div>
+            )}
+            <span className="mt-1 inline-block rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white/60">
+              {entrant.songCount || 0} 首 · {entrant.albumCount || 0} 张专辑
+            </span>
+          </>
+        )}
+
+        {/* 提示文字 & 操作按钮行 */}
+        <div className="mt-3 flex items-center justify-between">
+          <div className="text-[12.5px] font-semibold tracking-wide text-white/40">
+            点击选择晋级
+          </div>
+          <div className="flex items-center gap-2">
+            {/* 试听按钮 */}
+            {isSong && entrant && onPreview && (
+              <button
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/70 backdrop-blur-sm transition-all duration-200 hover:border-white/30 hover:bg-white/20 hover:text-white"
+                type="button"
+                aria-label="试听"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPreview();
+                }}
+              >
+                ▶ 试听
+              </button>
+            )}
+            {/* 听原曲 */}
+            {isSong && (entrant?.itunesTrackUrl || entrant?.songmid) && (
+              <a
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-good/25 bg-good/10 px-2.5 py-1 text-[11px] font-semibold text-good no-underline backdrop-blur-sm transition-all duration-200 hover:border-good/45 hover:bg-good/20"
+                href={
+                  entrant?.itunesTrackUrl ||
+                  `https://y.qq.com/n/ryqq/songDetail/${entrant.songmid}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="听原曲"
+                onClick={(e) => e.stopPropagation()}
+              >
+                ♪ 听原曲
+              </a>
+            )}
+            {isAlbum && albumLinkUrl && (
+              <a
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-good/25 bg-good/10 px-2.5 py-1 text-[11px] font-semibold text-good no-underline backdrop-blur-sm transition-all duration-200 hover:border-good/45 hover:bg-good/20"
+                href={albumLinkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="查看专辑"
+                onClick={(e) => e.stopPropagation()}
+              >
+                ♪ 查看专辑
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* 悬浮提示箭头 */}
+        <div
+          className={clsx(
+            'mt-2 text-xs font-bold text-white/0 transition-all duration-300',
+            'group-hover:text-white/50 group-hover:translate-x-1',
+            side === 'right' && 'group-hover:-translate-x-1 group-hover:text-right',
+          )}
+        >
+          {side === 'left' ? '← 我选这个' : '我选这个 →'}
+        </div>
       </div>
+
+      {/* 胜出勾选 — 大号覆盖层 */}
       <div
         className={clsx(
-          'mt-4 text-xs text-muted opacity-0 translate-y-1.5 transition-all duration-250',
-          'group-hover:opacity-100 group-hover:translate-y-0',
+          'pointer-events-none absolute inset-0 z-20 flex items-center justify-center',
+          'bg-accent/20 backdrop-blur-[2px]',
+          'transition-all duration-400 ease-[cubic-bezier(0.22,1.4,0.36,1)]',
+          state === 'win' ? 'opacity-100' : 'opacity-0',
         )}
       >
-        {side === 'left' ? '← 我选这个' : '我选这个 →'}
-      </div>
-      {/* 试听按钮 */}
-      {isSong && entrant && onPreview && (
-        <button
-          className="mt-1 inline-flex items-center gap-1 rounded-[20px] border border-accent/25 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent transition-all duration-200 hover:border-accent/50 hover:bg-accent/20"
-          type="button"
-          aria-label="试听"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPreview();
-          }}
-        >
-          ▶ 试听
-        </button>
-      )}
-      {/* 听原曲 */}
-      {isSong && (entrant?.itunesTrackUrl || entrant?.songmid) && (
-        <a
-          className="mt-1 inline-flex items-center gap-1 rounded-[20px] border border-[#5fd4a8]/25 bg-[#5fd4a8]/10 px-2.5 py-1 text-[11px] font-semibold text-[#5fd4a8] no-underline transition-all duration-200 hover:border-[#5fd4a8]/50 hover:bg-[#5fd4a8]/20"
-          href={
-            entrant?.itunesTrackUrl ||
-            `https://y.qq.com/n/ryqq/songDetail/${entrant.songmid}`
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="听原曲"
-          onClick={(e) => e.stopPropagation()}
-        >
-          ♪ 听原曲
-        </a>
-      )}
-      {isAlbum && albumLinkUrl && (
-        <a
-          className="mt-1 inline-flex items-center gap-1 rounded-[20px] border border-[#5fd4a8]/25 bg-[#5fd4a8]/10 px-2.5 py-1 text-[11px] font-semibold text-[#5fd4a8] no-underline transition-all duration-200 hover:border-[#5fd4a8]/50 hover:bg-[#5fd4a8]/20"
-          href={albumLinkUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="查看专辑"
-          onClick={(e) => e.stopPropagation()}
-        >
-          ♪ 查看专辑
-        </a>
-      )}
-      {/* 胜出勾选 */}
-      <div
-        className={clsx(
-          'pointer-events-none absolute inset-0 flex items-center justify-center text-[64px]',
-          'transition-all duration-350 ease-[cubic-bezier(0.22,1.4,0.36,1)]',
-          state === 'win' ? 'scale-100 opacity-100' : 'scale-[0.4] opacity-0',
-        )}
-      >
-        ✓
+        <div className="flex h-20 w-20 items-center justify-center rounded-full border-3 border-accent bg-accent/90 text-4xl font-black text-white shadow-[0_0_40px_rgba(230,57,70,0.5)]">
+          ✓
+        </div>
       </div>
     </div>
   );

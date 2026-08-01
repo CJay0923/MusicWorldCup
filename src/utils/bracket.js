@@ -100,9 +100,17 @@ export function generateRoundNames(bracketSize) {
 }
 
 export function freshRounds(bracketSize, entrants, seeds) {
-  const numRounds = Math.log2(bracketSize);
+  const bracket = generateSeededBracket(entrants, seeds, bracketSize);
+  // bracket 可能因 entrants 不足而少于 bracketSize，
+  // 将实际有效数向下对齐到 2 的幂，避免 new Array(非整数) 抛 RangeError
+  const validCount = bracket.length;
+  let actualSize = 1;
+  while (actualSize * 2 <= validCount) actualSize *= 2;
+
+  const numRounds = Math.log2(actualSize);
   const rounds = [];
-  rounds[0] = generateSeededBracket(entrants, seeds, bracketSize);
+  // 取前 actualSize 首（已按种子排好序）
+  rounds[0] = bracket.slice(0, actualSize);
   for (let i = 1; i <= numRounds; i++) {
     rounds[i] = new Array(rounds[i - 1].length / 2).fill(null);
   }

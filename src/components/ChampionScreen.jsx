@@ -89,7 +89,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain 
       {getCover(champion) && (
         <div className="relative mx-auto mb-1.5 mt-4 h-[150px] w-[150px]">
           <img
-            className="h-full w-full rounded-lg border-[3px] border-ink object-cover shadow-[3px_3px_0_#1a1a1a]"
+            className="h-full w-full rounded-xl border-2 border-white/10 object-cover shadow-[0_8px_28px_rgba(0,0,0,0.5)]"
             src={getCover(champion)}
             alt="冠军专辑封面"
             onError={(e) => handleImgError(e, champion)}
@@ -98,7 +98,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain 
         </div>
       )}
 
-      <div className="mt-3.5 inline-block rounded-full border-[2px] border-ink bg-accent/12 px-4 py-1.5 text-xs font-extrabold tracking-[3px] text-accent">
+      <div className="mt-3.5 inline-block rounded-full border border-accent/40 bg-accent/[0.12] px-4 py-1.5 text-xs font-extrabold tracking-[3px] text-accent">
         CHAMPION
       </div>
 
@@ -109,20 +109,20 @@ export default function ChampionScreen({ champion, singerName, history, onAgain 
         {champion?.name || '—'}
       </h1>
 
-      <div className="mb-[26px] text-sm text-muted">
-        本届 <b className="text-ink">{singerName}歌曲世界杯</b> 终极冠军
+      <div className="mb-[26px] text-sm text-white/50">
+        本届 <b className="text-white">{singerName}歌曲世界杯</b> 终极冠军
       </div>
 
       <div className="flex flex-wrap justify-center gap-3">
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-105 active:scale-[0.97]"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
           onClick={onAgain}
           type="button"
         >
           🔄 再战一届
         </button>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-[9px] text-[13px] font-semibold text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.96]"
           onClick={toggleRecap}
           type="button"
         >
@@ -139,7 +139,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain 
             {steps.map((s, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/4 px-3.5 py-2.5 text-[13.5px]"
+                className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-[13.5px]"
               >
                 <span className="min-w-[46px] text-[11px] font-extrabold text-accent">
                   {s.roundName}
@@ -188,11 +188,11 @@ export default function ChampionScreen({ champion, singerName, history, onAgain 
                   </div>
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-sm text-ink">
+                  <span className="truncate text-sm text-white">
                     <b>{s.winner.name}</b>
                   </span>
                   <span className="text-xs text-muted">
-                    击败 <s className="text-[#5a5f80]">{s.loser?.name}</s>
+                    击败 <s className="text-white/30">{s.loser?.name}</s>
                   </span>
                 </div>
               </div>

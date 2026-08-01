@@ -38,7 +38,7 @@ export default function WildcardScreen({
         show ? 'flex animate-[fade_0.3s_ease]' : 'hidden',
       )}
     >
-      <div className="w-[min(860px,95vw)] max-h-[88vh] overflow-y-auto rounded-[22px] border border-white/10 bg-bg2 p-[30px] text-center shadow-[--shadow] animate-[pop_0.4s_cubic-bezier(0.22,1.3,0.36,1)]">
+      <div className="w-[min(860px,95vw)] max-h-[88vh] overflow-y-auto rounded-2xl border border-white/[0.08] bg-bg2 p-[30px] text-center shadow-[0_16px_56px_rgba(0,0,0,0.6)] animate-[pop_0.4s_cubic-bezier(0.22,1.3,0.36,1)]">
         <h2 className="m-0 mb-1.5 text-2xl font-black">🎣 捞回 8 个</h2>
         <p className="mb-5 mt-0 text-sm text-muted">
           从 12 个小组第三中，自选 8 首获得外卡复活
@@ -51,7 +51,7 @@ export default function WildcardScreen({
               <div
                 key={idx}
                 className={clsx(
-                  'cursor-pointer rounded-[10px] border border-white/10 bg-white/4 p-2.5 text-center transition-all duration-300',
+                  'cursor-pointer rounded-lg border border-white/[0.08] bg-white/[0.03] p-2.5 text-center transition-all duration-300',
                   isSelected && 'scale-105 border-good bg-good/10',
                   disabled && 'cursor-not-allowed opacity-40',
                 )}
@@ -75,7 +75,7 @@ export default function WildcardScreen({
                     />
                   </div>
                 )}
-                <div className="my-0.5 text-[13px] font-bold text-ink">
+                <div className="my-0.5 text-[13px] font-bold text-white">
                   {r.entrant?.name || '—'}
                 </div>
                 <div className="text-[10px] text-muted">
@@ -92,7 +92,7 @@ export default function WildcardScreen({
           </span>
           <button
             className={clsx(
-              'inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-105 active:scale-[0.97]',
+              'inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]',
               !canConfirm && 'cursor-default opacity-50',
             )}
             onClick={onConfirm}

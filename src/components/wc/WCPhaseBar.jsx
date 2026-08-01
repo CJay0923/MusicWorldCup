@@ -21,7 +21,7 @@ export default function WCPhaseBar({
 
   return (
     <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
-      <span className="whitespace-nowrap rounded-full border border-good/30 bg-gradient-to-br from-good/18 to-accent/12 px-3.5 py-1.5 text-xs font-extrabold tracking-wider text-good">
+      <span className="whitespace-nowrap rounded-full border border-good/30 bg-good/[0.1] px-3.5 py-1.5 text-xs font-extrabold tracking-wider text-good shadow-[0_0_12px_rgba(6,167,125,0.1)]">
         {phase}
       </span>
       <div className="flex flex-1 flex-wrap gap-[3px]">
@@ -32,10 +32,10 @@ export default function WCPhaseBar({
                 className={clsx(
                   'flex h-[26px] items-center justify-center rounded-[7px] border px-2 text-[11px] font-bold transition-all duration-200',
                   p.current
-                    ? 'border-none bg-gradient-to-br from-accent to-[#ffb13d] text-[#2a1d00] shadow-[0_4px_12px_rgba(255,177,61,0.35)]'
+                    ? 'border-none bg-gradient-to-br from-accent to-[#ffb13d] text-white shadow-[0_4px_12px_rgba(255,177,61,0.3)]'
                     : p.done
-                      ? 'border-good/30 bg-good/12 text-good'
-                      : 'border-white/10 bg-white/4 text-muted hover:bg-white/10 hover:text-ink',
+                      ? 'border-good/30 bg-good/[0.08] text-good'
+                      : 'border-white/[0.08] bg-white/[0.03] text-white/40 hover:bg-white/[0.06] hover:text-white/60',
                 )}
               >
                 {p.n}
@@ -47,10 +47,10 @@ export default function WCPhaseBar({
                 className={clsx(
                   'flex h-[26px] w-[26px] cursor-pointer items-center justify-center rounded-[7px] border text-[11px] font-bold transition-all duration-200',
                   i === curGroup
-                    ? 'border-none bg-gradient-to-br from-accent to-[#ffb13d] text-[#2a1d00] shadow-[0_4px_12px_rgba(255,177,61,0.35)]'
+                    ? 'border-none bg-gradient-to-br from-accent to-[#ffb13d] text-white shadow-[0_4px_12px_rgba(255,177,61,0.3)]'
                     : g.done
-                      ? 'border-good/30 bg-good/12 text-good'
-                      : 'border-white/10 bg-white/4 text-muted hover:bg-white/10 hover:text-ink',
+                      ? 'border-good/30 bg-good/[0.08] text-good'
+                      : 'border-white/[0.08] bg-white/[0.03] text-white/40 hover:bg-white/[0.06] hover:text-white/60',
                 )}
                 onClick={() => onGroupClick(i)}
               >

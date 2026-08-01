@@ -28,6 +28,15 @@ const TIER_DESCRIPTIONS = [
   '垫底，体验极差',
 ];
 
+// 每个等级的颜色（用于标签背景和边框高亮）
+const TIER_COLORS = [
+  { bg: '#E74C3C', labelBg: 'rgba(231,76,60,0.12)', text: '#FF6B6B' },   // 夯 - 红
+  { bg: '#F39C12', labelBg: 'rgba(243,156,18,0.12)', text: '#F5AB35' },    // 顶级 - 橙
+  { bg: '#F1C40F', labelBg: 'rgba(241,196,15,0.12)', text: '#F4D03F' },    // 人上人 - 黄
+  { bg: '#95A5A6', labelBg: 'rgba(149,165,166,0.10)', text: '#BDC3C7' },   // NPC - 灰
+  { bg: '#7F8C8D', labelBg: 'rgba(127,140,141,0.10)', text: '#95A5A6' },   // 拉完了 - 深灰
+];
+
 // 获取项目唯一标识用于 key
 function itemKey(item) {
   return item.songmid || item.id || item.name + (item.singerName || '');
@@ -567,13 +576,18 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             <div
               key={i}
               className={clsx(
-                'flex overflow-hidden rounded-xl border border-white/10',
+                'flex overflow-hidden rounded-xl border',
                 `tier-${i}`,
               )}
+              style={{ borderColor: `${TIER_COLORS[i].bg}35`, backgroundColor: TIER_COLORS[i].labelBg }}
             >
-              <div className="flex min-w-[70px] flex-col items-center justify-center bg-white/5 px-2 py-3">
-                <span className="text-sm font-black text-ink">{tier.label}</span>
-                <small className="mt-0.5 text-center text-[9px] leading-tight text-muted">
+              {/* 统一宽度的等级标签 */}
+              <div
+                className="flex w-[80px] shrink-0 flex-col items-center justify-center px-2 py-3"
+                style={{ backgroundColor: `${TIER_COLORS[i].bg}22`, borderRight: `2px solid ${TIER_COLORS[i].bg}45` }}
+              >
+                <span className="text-sm font-black" style={{ color: TIER_COLORS[i].text }}>{tier.label}</span>
+                <small className="mt-0.5 text-center text-[9px] leading-tight text-white/35">
                   {TIER_DESCRIPTIONS[i]}
                 </small>
               </div>
@@ -616,7 +630,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
-            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-105 active:scale-[0.97]"
+            className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
             type="button"
             onClick={() => setShowResult(false)}
           >
@@ -676,18 +690,24 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
               data-drop-zone={String(i)}
               className={clsx(
                 'flex min-h-[64px] overflow-hidden rounded-xl border transition-all duration-200',
-                isActive
-                  ? 'border-accent bg-accent/8 shadow-[0_0_12px_rgba(255,210,74,0.2)]'
-                  : 'border-white/10 bg-white/3',
+                isActive && `shadow-[0_0_12px_rgba(255,210,74,0.2)]`,
                 `tier-${i}`,
               )}
+              style={{
+                borderColor: isActive ? undefined : `${TIER_COLORS[i].bg}30`,
+                backgroundColor: isActive ? undefined : TIER_COLORS[i].labelBg,
+              }}
             >
-              <div className="flex min-w-[60px] flex-col items-center justify-center bg-white/5 px-1.5 py-2">
-                <span className="text-[13px] font-black text-ink">{tier.label}</span>
-                <small className="mt-0.5 text-center text-[8px] leading-tight text-muted">
+              {/* 统一宽度的等级标签 */}
+              <div
+                className="flex w-[72px] shrink-0 flex-col items-center justify-center px-2 py-2"
+                style={{ backgroundColor: `${TIER_COLORS[i].bg}18`, borderRight: `2px solid ${TIER_COLORS[i].bg}35` }}
+              >
+                <span className="text-[13px] font-black" style={{ color: TIER_COLORS[i].text }}>{tier.label}</span>
+                <small className="mt-0.5 text-center text-[8px] leading-tight text-white/35">
                   {TIER_DESCRIPTIONS[i]}
                 </small>
-                <span className="mt-1 rounded-full bg-white/10 px-1.5 text-[10px] font-bold text-muted">
+                <span className="mt-1 rounded-full px-1.5 text-[10px] font-bold text-white/50" style={{ backgroundColor: `${TIER_COLORS[i].bg}25` }}>
                   {state.assignments[i].length}
                 </span>
               </div>
@@ -753,7 +773,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
           ↺ 全部重置
         </button>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-105 active:scale-[0.97] disabled:cursor-default disabled:opacity-40 disabled:brightness-100"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97] disabled:cursor-default disabled:opacity-40"
           type="button"
           onClick={() => setShowResult(true)}
           disabled={totalAssigned === 0}

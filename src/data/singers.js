@@ -122,7 +122,12 @@ export function buildCrossSingerData(singerDataList, bracketSize) {
     collected.push({
       singerName: sd.name,
       singerPhoto: sd.singerPhoto || null,
-      songs: topN,
+      songs: topN.map((song) => ({
+        ...song,
+        // 强制覆盖确保 singerName 不会从上游继承错误值
+        __singerName: sd.name,
+        __singerPhoto: sd.singerPhoto || null,
+      })),
     });
   }
 
@@ -131,10 +136,11 @@ export function buildCrossSingerData(singerDataList, bracketSize) {
   for (let rank = 0; rank < actualPerSinger; rank++) {
     for (const c of collected) {
       if (rank < c.songs.length) {
+        const s = c.songs[rank];
         merged.push({
-          ...c.songs[rank],
-          singerName: c.singerName,
-          singerPhoto: c.singerPhoto,
+          ...s,
+          singerName: c.singerName || s.__singerName,
+          singerPhoto: c.singerPhoto || s.__singerPhoto,
         });
       }
     }

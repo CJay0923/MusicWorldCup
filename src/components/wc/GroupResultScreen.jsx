@@ -46,7 +46,7 @@ export default function GroupResultScreen({ show, group, allDone, onContinue }) 
             >
               🥈 小组第二 · 出线
             </div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#cdd0e8' }}>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: '#e8eaed' }}>
               {group.runnerUp.name}
             </div>
             {group.runnerUp.isSeed && (
@@ -57,7 +57,7 @@ export default function GroupResultScreen({ show, group, allDone, onContinue }) 
           </div>
         </div>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-2xl border-[3px] border-ink bg-accent px-4 py-[9px] text-[13px] font-semibold text-paper shadow-[3px_3px_0_#1a1a1a] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#1a1a1a] active:translate-y-0.5 active:shadow-[1px_1px_0_#1a1a1a]"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
           onClick={onContinue}
         >
           {allDone ? '捞回 8 个 →' : '继续下一组 →'}

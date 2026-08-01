@@ -14,7 +14,7 @@ import {
   isLiveTrack,
   isLiveAlbum,
   isJunkTrack,
-  MIN_FAV_WITHOUT_COVER,
+  MIN_FAV_WITH_COVER,
 } from '../utils/filters.js';
 
 // ---------- 预打包的歌手数据（通过 import.meta.glob 懒加载）----------
@@ -54,10 +54,20 @@ function transformToSingerData(raw, registry, singerId) {
   const albumDescs = raw.albumDescs || {};
 
   // ===== 快速路径：已预处理的数据 =====
+  // 即使数据标记为预处理，仍需强制过滤无封面和低收藏量歌曲（防止数据文件未完全过滤）
   if (raw.preprocessed === true) {
-    const half = raw.entrants.length / 2;
-    const seedThreshold = Math.min(32, raw.entrants.length);
-    const allEntrants = raw.entrants.map((song, i) => {
+    // 强制应用过滤：无封面 + 收藏量 < 5万
+    const prefilteredEntrants = raw.entrants.filter((song) => {
+      const hasCover = !!(song.albumMid || song.pic);
+      if (!hasCover) return false;
+      const fav = song.favCount || 0;
+      if (fav < MIN_FAV_WITH_COVER) return false;
+      return true;
+    });
+
+    const half = prefilteredEntrants.length / 2;
+    const seedThreshold = Math.min(32, prefilteredEntrants.length);
+    const allEntrants = prefilteredEntrants.map((song, i) => {
       const albumMid = song.albumMid || '';
       const sr = song.seedRank || i + 1;
 
@@ -90,6 +100,7 @@ function transformToSingerData(raw, registry, singerId) {
         isSeed: sr <= seedThreshold,
         itunesPreviewUrl: song.itunesPreviewUrl || '',
         itunesTrackUrl: song.itunesTrackUrl || '',
+        favCount: song.favCount || 0,  // 保留收藏量字段
       };
     });
 
@@ -117,9 +128,11 @@ function transformToSingerData(raw, registry, singerId) {
     if (isJunkTrack(name)) continue;
     if (isLiveTrack(name)) continue;
     if (isLiveAlbum(song.albumName)) continue;
+    // 无封面的直接过滤掉；有封面但收藏量低于 1w 的也过滤
     const hasCover = !!(song.albumMid || song.pic);
+    if (!hasCover) continue;
     const fav = song.favCount || 0;
-    if (!hasCover && fav < MIN_FAV_WITHOUT_COVER) continue;
+    if (fav < MIN_FAV_WITH_COVER) continue;
     const key = baseKey(name);
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);
@@ -168,6 +181,7 @@ function transformToSingerData(raw, registry, singerId) {
       isSeed: sr <= seedThreshold2,
       itunesPreviewUrl: song.itunesPreviewUrl || '',
       itunesTrackUrl: song.itunesTrackUrl || '',
+      favCount: song.favCount || 0,  // 保留收藏量字段
     };
   });
 

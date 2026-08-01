@@ -3,6 +3,8 @@ import MatchCard from './MatchCard.jsx';
 
 /**
  * Battle stage: two cards + VS marker.
+ * Dark theme with glowing VS badge.
+ *
  * @param {object|null} leftEntrant - left song object
  * @param {object|null} rightEntrant - right song object
  * @param {'default'|'win'|'lose'|'locked'} leftState - left card state
@@ -24,7 +26,7 @@ export default function MatchStage({
 }) {
   return (
     <>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-[18px] max-md:grid-cols-1 max-md:gap-3">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-[20px] max-md:grid-cols-1 max-md:gap-4">
         <MatchCard
           entrant={leftEntrant}
           side="left"
@@ -33,13 +35,13 @@ export default function MatchStage({
           onPick={() => onPick?.(0)}
           onPreview={() => onPreview?.(0)}
         />
-        {/* VS 徽章 */}
-        <div className="flex min-w-[64px] flex-col items-center justify-center gap-2 max-md:flex-row max-md:min-w-0">
-          <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-[3px] border-ink bg-accent font-display text-xl font-black tracking-wider text-paper shadow-[3px_3px_0_#1a1a1a] animate-[pulse_2.4s_ease-in-out_infinite]">
+        {/* VS 徽章 — 居中发光 */}
+        <div className="flex min-w-[70px] flex-col items-center justify-center gap-2.5 max-md:flex-row max-md:min-w-0 max-md:py-4">
+          <div className="flex h-[64px] w-[64px] items-center justify-center rounded-full border-2 border-accent/60 bg-bg2 font-display text-xl font-black tracking-wider text-accent shadow-[0_0_30px_rgba(230,57,70,0.25),inset_0_1px_0_rgba(255,255,255,0.05)] animate-[pulse_2.4s_ease-in-out_infinite]">
             VS
           </div>
-          <div className="font-display text-[11px] uppercase tracking-[2px] text-muted max-md:hidden">
-            ROUND
+          <div className="font-display text-[11px] uppercase tracking-[3px] text-white/25 max-md:hidden">
+            VERSUS
           </div>
         </div>
         <MatchCard

@@ -39,7 +39,7 @@ class ErrorBoundary extends React.Component {
       const { error, errorInfo } = this.state;
       return (
         <div className="flex min-h-dvh items-center justify-center p-6">
-          <div className="max-w-[420px] rounded-lg border border-white/10 bg-bg2 px-8 py-10 text-center shadow-[--shadow]">
+          <div className="max-w-[420px] rounded-xl border border-white/[0.08] bg-bg2 px-8 py-10 text-center shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
             <div className="mb-3 text-5xl">😵</div>
             <h2 className="mb-2 mt-0 text-[22px] font-black">出错了</h2>
             <p className="mb-6 mt-0 text-sm text-muted">
@@ -55,7 +55,7 @@ class ErrorBoundary extends React.Component {
               </details>
             )}
             <button
-              className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-accent px-6 py-[10px] text-[13px] font-bold text-bg transition-all duration-200 hover:brightness-105 active:scale-[0.97]"
+              className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-6 py-[10px] text-[13px] font-bold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
               type="button"
               onClick={this.handleReset}
             >

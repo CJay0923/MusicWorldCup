@@ -17,6 +17,8 @@ dist/
 .vscode/
 .idea/
 .trae/
+.workbuddy/
+.qoder/
 
 # Python cache
 __pycache__/

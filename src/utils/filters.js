@@ -61,6 +61,7 @@ export function isJunkTrack(name) {
 }
 
 /**
- * 无封面且低收藏量的曲目过滤阈值
+ * 无封面的曲目直接过滤掉（不显示）
+ * 有封面的曲目，收藏量低于此阈值也过滤掉
  */
-export const MIN_FAV_WITHOUT_COVER = 1000;
+export const MIN_FAV_WITH_COVER = 50000;

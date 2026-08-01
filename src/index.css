@@ -1,44 +1,48 @@
 @import 'tailwindcss';
 
-/* ===== 漫画涂鸦主题 ===== */
+/* ===== 暗黑大图主题 (GOAT-inspired) - 默认 ===== */
 @theme {
-  --color-bg: #f4ede0;
-  --color-bg2: #ede5d3;
-  --color-bg3: #e2d8c4;
-  --color-ink: #1a1a1a;
-  --color-muted: #6b6560;
+  --color-bg: #0a0b10;
+  --color-bg2: #11131a;
+  --color-bg3: #181b24;
+  --color-ink: #e8eaed;
+  --color-muted: #8b8f9a;
   --color-accent: #e63946;
   --color-accent2: #3b82f6;
   --color-left: #e63946;
   --color-right: #ffb627;
   --color-good: #06a77d;
-  --color-paper: #f4ede0;
-  --color-white: #1a1a1a;
-  --font-display: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --color-paper: #0a0b10;
+  --color-white: #e8eaed;
+  /* Display: 粗犷有力的标题字体 */
+  --font-display: 'DIN Alternate', 'Bebas Neue', 'Arial Black', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
 }
 
-/* ===== 全局设计令牌 ===== */
+/* ===== 全局设计令牌 - 暗色主题（默认）===== */
 :root {
-  --bg: #f4ede0;
-  --bg2: #ede5d3;
-  --bg3: #e2d8c4;
-  --ink: #1a1a1a;
-  --muted: #6b6560;
-  --rule: rgba(26, 26, 26, 0.12);
+  --bg: #0a0b10;
+  --bg2: #11131a;
+  --bg3: #181b24;
+  --ink: #e8eaed;
+  --muted: #8b8f9a;
+  --rule: rgba(255, 255, 255, 0.08);
   --accent: #e63946;
   --accent2: #3b82f6;
   --left: #e63946;
   --right: #ffb627;
   --good: #06a77d;
-  --paper: #f4ede0;
-  --shadow: 3px 3px 0 #1a1a1a;
+  --paper: #0a0b10;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.03);
   --radius: 16px;
   --radius-sm: 8px;
   --radius-md: 12px;
-  --font-display: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  /* Display: 粗犷有力的标题字体 */
+  --font-display: 'DIN Alternate', 'Bebas Neue', 'Arial Black', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --z-base: 1;
   --z-player: 2;
   --z-overlay: 50;
@@ -47,6 +51,77 @@
   --z-share: 80;
   --z-preview: 90;
   --z-loading: 200;
+}
+
+/* ===== 亮色新粗野风格主题 (Neo-Brutalism) ===== */
+[data-theme="light"] {
+  --bg: #FFE66D; /* 亮黄色背景 */
+  --bg2: #FFD93D;
+  --bg3: #FFC300;
+  --ink: #1a1a1a; /* 深黑色文字 */
+  --muted: #4a4a4a;
+  --rule: rgba(0, 0, 0, 0.15);
+  --accent: #FF6B6B; /* 珊瑚红 */
+  --accent2: #4ECDC4; /* 青绿色 */
+  --left: #FF6B6B;
+  --right: #FF8E53;
+  --good: #06D6A0;
+  --paper: #FFFFFF;
+  --shadow: 4px 4px 0px #1a1a1a; /* 硬阴影，无模糊 */
+  --border-color: #1a1a1a; /* 纯黑边框 */
+  --card-bg: #FFFFFF;
+  --radius: 12px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --font-display: 'Arial Black', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+[data-theme="light"] * {
+  /* 去除所有渐变和柔和效果 */
+  border-radius: var(--radius-sm) !important;
+}
+
+[data-theme="light"] body {
+  background: var(--bg) !important;
+  color: var(--ink) !important;
+}
+
+[data-theme="light"] .trophy-svg {
+  filter: drop-shadow(3px 3px 0 #1a1a1a);
+}
+
+/* 新粗野风格专用：硬边按钮 */
+[data-theme="light"] button,
+[data-theme="light"] .bracket-size-btn,
+[data-theme="light"] .size-btn,
+[data-theme="light"] .cross-battle-tab,
+[data-theme="light"] .ranking-tab {
+  border: 2.5px solid #1a1a1a !important;
+  box-shadow: 3px 3px 0 #1a1a1a !important;
+  font-weight: 800 !important;
+  transition: all 0.1s ease !important;
+}
+
+[data-theme="light"] button:hover,
+[data-theme="light"] button.active,
+[data-theme="light"] .bracket-size-btn.active,
+[data-theme="light"] .size-btn.active,
+[data-theme="light"] .cross-battle-tab.active,
+[data-theme="light"] .ranking-tab.active {
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 5px 5px 0 #1a1a1a !important;
+}
+
+[data-theme="light"] button:active {
+  transform: translate(0, 0) !important;
+  box-shadow: 1px 1px 0 #1a1a1a !important;
+}
+
+/* 新粗野风格：卡片 */
+[data-theme="light"] .mode-card,
+[data-theme="light"] [class*="rounded"] {
+  border: 3px solid #1a1a1a !important;
+  box-shadow: 6px 6px 0 #1a1a1a !important;
 }
 
 * {
@@ -62,39 +137,41 @@ body {
 
 body {
   font-family:
+    'Inter', 'DM Sans', 'SF Pro Display', '-apple-system',
     'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC',
-    'Hiragino Sans GB', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    'Hiragino Sans GB', system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--ink);
   background: var(--bg);
   min-height: 100dvh;
   overflow-x: hidden;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* 纸张底色 + 漫画墨渍 */
+/* 暗色背景 + 微妙光晕 */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(3px 3px at 12% 25%, rgba(26, 26, 26, 0.03), transparent 50%),
-    radial-gradient(2px 2px at 68% 55%, rgba(26, 26, 26, 0.025), transparent 50%),
-    radial-gradient(4px 4px at 35% 78%, rgba(26, 26, 26, 0.02), transparent 50%),
-    radial-gradient(2px 2px at 85% 15%, rgba(230, 57, 70, 0.03), transparent 50%),
-    linear-gradient(180deg, #f4ede0 0%, #ede5d3 100%);
+    radial-gradient(600px 400px at 15% 20%, rgba(230, 57, 70, 0.04), transparent 50%),
+    radial-gradient(500px 350px at 75% 65%, rgba(59, 130, 246, 0.03), transparent 50%),
+    radial-gradient(400px 300px at 50% 90%, rgba(255, 182, 39, 0.02), transparent 50%),
+    linear-gradient(180deg, #0a0b10 0%, #0d0f16 50%, #0a0b10 100%);
 }
 
-/* 半调网点纹理 */
+/* 细微噪点纹理 */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
-  opacity: 0.35;
+  opacity: 0.03;
   pointer-events: none;
-  background-image: radial-gradient(rgba(26, 26, 26, 0.05) 1px, transparent 1px);
-  background-size: 16px 16px;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
 }
 
 :focus-visible {
@@ -105,8 +182,8 @@ body::after {
 
 /* ===== 全局动画关键帧 ===== */
 @keyframes heroGlow {
-  from { opacity: 0.5; transform: translateX(-50%) scale(1); }
-  to   { opacity: 0.8; transform: translateX(-50%) scale(1.06); }
+  from { opacity: 0.4; transform: translateX(-50%) scale(1); }
+  to   { opacity: 0.7; transform: translateX(-50%) scale(1.08); }
 }
 
 @keyframes float {
@@ -119,23 +196,23 @@ body::after {
   margin: 0 auto;
   width: 120px;
   height: 120px;
-  filter: drop-shadow(3px 3px 0 #1a1a1a);
+  filter: drop-shadow(0 4px 20px rgba(255, 210, 74, 0.3));
   animation: float 4s ease-in-out infinite;
   position: relative;
 }
 
 @keyframes ctaPulse {
-  0%, 100% { box-shadow: 3px 3px 0 #1a1a1a; }
-  50%      { box-shadow: 5px 5px 0 #1a1a1a; }
+  0%, 100% { box-shadow: 0 0 20px rgba(230, 57, 70, 0.3), 0 0 60px rgba(230, 57, 70, 0.1); }
+  50%      { box-shadow: 0 0 30px rgba(230, 57, 70, 0.45), 0 0 80px rgba(230, 57, 70, 0.15); }
 }
 
 @keyframes cardIn {
-  from { opacity: 0; transform: translateY(10px) rotate(-1deg); }
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
 }
 
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.06); }
+  50%      { transform: scale(1.05); }
 }
 
 @keyframes fade {
@@ -150,4 +227,176 @@ body::after {
   height: 100vh;
   pointer-events: none;
   z-index: var(--z-confetti);
+}
+
+/* ===== 通用选择器样式（规模/模式/Tabs） ===== */
+.size-selector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.size-label {
+  width: 100%;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.size-btns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* 基础按钮样式 */
+.size-btn {
+  cursor: pointer;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.size-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 210, 74, 0.3);
+  color: rgba(255, 255, 255, 0.75);
+  transform: translateY(-1px);
+}
+
+/* 选中状态：清晰可见 */
+.size-btn.active {
+  color: #fff;
+  background: rgba(230, 57, 70, 0.15);
+  border-color: #e63946;
+  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+}
+
+.size-btn:active {
+  transform: scale(0.97) !important;
+}
+
+/* 跨歌手混战 Tab 样式优化 */
+.cross-battle-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.cross-battle-tab {
+  cursor: pointer;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.cross-battle-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cross-battle-tab.active {
+  color: #fff;
+  background: rgba(230, 57, 70, 0.2);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.15);
+}
+
+/* 夯到拉排名 Tab 样式 */
+.ranking-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.ranking-tab {
+  cursor: pointer;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.ranking-tab:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+  transform: translateY(-1px);
+}
+
+.ranking-tab.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.15));
+  border-color: #3b82f6;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+}
+
+/* 淘汰赛规模按钮组 */
+.bracket-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.bracket-size-btn {
+  cursor: pointer;
+  min-width: 64px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.bracket-size-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 210, 74, 0.25);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.bracket-size-btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(230, 57, 70, 0.18), rgba(255, 140, 0, 0.12));
+  border-color: #e63946;
+  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.25);
+  font-weight: 800;
+}
+
+.bracket-size-btn:active {
+  transform: scale(0.95) !important;
 }

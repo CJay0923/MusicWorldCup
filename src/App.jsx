@@ -21,6 +21,7 @@ import { useGameState } from './hooks/useGameState.js';
 import { useWorldCup } from './hooks/useWorldCup.js';
 import { useAudioPlayer } from './hooks/useAudioPlayer.js';
 import { useKeyboardControls } from './hooks/useKeyboardControls.js';
+import { MIN_FAV_WITH_COVER } from './utils/filters.js';
 import StartScreen from './components/StartScreen.jsx';
 import MatchStage from './components/MatchStage.jsx';
 import ChampionScreen from './components/ChampionScreen.jsx';
@@ -41,7 +42,7 @@ const KO_ROUND_NAMES = ['32强', '16强', '8强', '4强', '决赛'];
 const KO_ROUND_ICONS = ['🔥', '⚡', '💪', '💪', '🏆'];
 
 function App() {
-  const [currentSinger, setCurrentSinger] = useState('stefanie');
+  const [currentSinger, setCurrentSinger] = useState('jay');
   const [selectedMode, setSelectedMode] = useState('classic');
   const [selectedSize, setSelectedSize] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
@@ -156,10 +157,14 @@ function App() {
     () => classicOptions(Math.min(crossTotalItems, 128)),
     [crossTotalItems],
   );
-  const crossBracketSize = useMemo(() => {
-    const sizes = crossAvailableSizes;
-    return selectedSize && sizes.includes(selectedSize) ? selectedSize : sizes[0] || 32;
-  }, [crossAvailableSizes, selectedSize]);
+const crossBracketSize = useMemo(() => {
+  const sizes = crossAvailableSizes;
+  // 歌手比较模式：优先选 16 位（如果可用）
+  if (crossBattleType === 'singers' && sizes.includes(16)) {
+    return selectedSize && sizes.includes(selectedSize) ? selectedSize : 16;
+  }
+  return selectedSize && sizes.includes(selectedSize) ? selectedSize : sizes[0] || 32;
+}, [crossAvailableSizes, selectedSize, crossBattleType]);
 
   // 跨歌手混战：构建合并数据（根据对决类型选择构建函数）
   const crossSingerData = useMemo(() => {
@@ -180,11 +185,20 @@ function App() {
   const isCrossBattle = selectedMode === 'cross-battle';
   const isRanking = selectedMode === 'ranking';
 
-  // 自选模式：从选中的 entrant 构建数据
-  const customEntrants = useMemo(() => {
-    if (!isCustom || !baseSingerData) return [];
-    return baseSingerData.entrants.filter((e) => customSelectedIds.has(e.id));
-  }, [isCustom, baseSingerData, customSelectedIds]);
+// 自选模式：从选中的 entrant 构建数据（应用过滤：无封面 + 低收藏量）
+const customEntrants = useMemo(() => {
+  if (!isCustom || !baseSingerData) return [];
+  return baseSingerData.entrants.filter((e) => {
+    if (!customSelectedIds.has(e.id)) return false;
+    // 强制过滤无封面歌曲
+    const hasCover = !!(e.albumMid || e.pic);
+    if (!hasCover) return false;
+    // 过滤低收藏量歌曲
+    const fav = e.favCount || 0;
+    if (fav < MIN_FAV_WITH_COVER) return false;
+    return true;
+  });
+}, [isCustom, baseSingerData, customSelectedIds]);
 
   const customValidCount = customEntrants.length;
   const customAvailableSizes = classicOptions(customValidCount);
@@ -316,23 +330,30 @@ function App() {
     [audio, wcState],
   );
 
-  // ---------- 试听（1v1 对局） ----------
-  const handlePreview = useCallback(
-    (slot) => {
-      const pair = getCurrentMatchPair();
-      const ent = slot === 0 ? pair[0] : pair[1];
-      if (ent) audio.openAudition(ent, baseSingerData.name);
-    },
-    [getCurrentMatchPair, audio, baseSingerData],
-  );
+// ---------- 试听（1v1 对局） ----------
+const handlePreview = useCallback(
+  (slot) => {
+    const pair = getCurrentMatchPair();
+    const ent = slot === 0 ? pair[0] : pair[1];
+    if (ent) {
+      // 跨歌手模式使用歌曲所属的歌手名称，否则使用当前歌手
+      const artistName = ent.__singerName || ent.singerName || baseSingerData?.name || '未知歌手';
+      audio.openAudition(ent, artistName);
+    }
+  },
+  [getCurrentMatchPair, audio, baseSingerData],
+);
 
-  // ---------- 试听（自选模式歌曲选择器） ----------
-  const handlePickerPreview = useCallback(
-    (entrant) => {
-      if (entrant) audio.openAudition(entrant, baseSingerData?.name);
-    },
-    [audio, baseSingerData],
-  );
+// ---------- 试听（自选模式歌曲选择器） ----------
+const handlePickerPreview = useCallback(
+  (entrant) => {
+    if (entrant) {
+      const artistName = entrant.__singerName || entrant.singerName || baseSingerData?.name || '未知歌手';
+      audio.openAudition(entrant, artistName);
+    }
+  },
+  [audio, baseSingerData],
+);
 
   // ---------- chorusPct（用于 PreviewModal） ----------
   const chorusPct =
@@ -767,7 +788,15 @@ function App() {
           onSelectSize={handleSelectSize}
           customSelectedIds={customSelectedIds}
           onCustomSelectedChange={setCustomSelectedIds}
-          customEntrants={baseSingerData?.entrants}
+          customEntrants={baseSingerData?.entrants?.filter((e) => {
+  // 强制过滤无封面歌曲
+  const hasCover = !!(e.albumMid || e.pic);
+  if (!hasCover) return false;
+  // 过滤低收藏量歌曲
+  const fav = e.favCount || 0;
+  if (fav < MIN_FAV_WITH_COVER) return false;
+  return true;
+})}
           classicMaxSize={maxBracket}
           singerLoading={singerLoading && !dynamicSinger}
           onPreview={handlePickerPreview}

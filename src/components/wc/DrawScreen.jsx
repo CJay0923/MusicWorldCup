@@ -9,7 +9,7 @@ export default function DrawScreen({ show, groups, entrants, seedRank, onContinu
         show ? 'flex animate-[fade_0.3s_ease]' : 'hidden',
       )}
     >
-      <div className="w-[min(860px,95vw)] max-h-[88vh] overflow-y-auto rounded-[22px] border border-white/10 bg-bg2 p-[30px] text-center shadow-[--shadow] animate-[pop_0.4s_cubic-bezier(0.22,1.3,0.36,1)]">
+      <div className="w-[min(860px,95vw)] max-h-[88vh] overflow-y-auto rounded-2xl border border-white/[0.08] bg-bg2 p-[30px] text-center shadow-[0_16px_56px_rgba(0,0,0,0.6)] animate-[pop_0.4s_cubic-bezier(0.22,1.3,0.36,1)]">
         <h2 className="m-0 mb-1.5 text-2xl font-black">⚽ 抽签结果</h2>
         <p className="mb-5 mt-0 text-sm text-muted">
           48 首歌已按收藏量分 4 档抽入 12 个小组，每组 1 个种子
@@ -18,7 +18,7 @@ export default function DrawScreen({ show, groups, entrants, seedRank, onContinu
           {groups.map((g) => (
             <div
               key={g.name}
-              className="rounded-[10px] border border-white/10 bg-white/3 px-3 py-2.5 text-left"
+              className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-left"
             >
               <div className="mb-1.5 flex items-center gap-1.5 text-sm font-black text-accent">
                 <span>{g.name}</span>
@@ -30,7 +30,7 @@ export default function DrawScreen({ show, groups, entrants, seedRank, onContinu
                 return (
                   <div
                     key={mi}
-                    className="flex items-center gap-1.5 py-0.5 text-xs text-[#cdd0e8]"
+                    className="flex items-center gap-1.5 py-0.5 text-xs text-white/55"
                   >
                     <span
                       className="min-w-[20px] rounded-[3px] bg-accent/15 px-1 py-px text-center text-[9px] font-bold text-accent"
@@ -47,7 +47,7 @@ export default function DrawScreen({ show, groups, entrants, seedRank, onContinu
           ))}
         </div>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border-none bg-gradient-to-br from-accent to-[#ffb13d] px-4 py-[9px] text-[13px] font-semibold text-[#2a1d00] shadow-[0_10px_30px_rgba(255,177,61,0.35)] transition-all duration-200 hover:brightness-105 active:scale-[0.97]"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
           onClick={onContinue}
         >
           开始小组赛 →

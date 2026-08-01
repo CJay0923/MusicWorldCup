@@ -55,8 +55,8 @@ export default function SingerSelector({
                 'hover:-translate-y-0.5 hover:bg-white/10 hover:border-white/25 hover:text-ink hover:shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)]',
                 'active:scale-[0.96]',
                 id === current
-                  ? 'border-accent/50 bg-gradient-to-br from-accent/20 to-accent2/14 text-accent shadow-[0_6px_24px_rgba(255,210,74,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]'
-                  : 'border-white/10 bg-white/4 text-muted',
+                  ? 'border-accent/60 bg-accent/[0.12] text-white shadow-[0_0_20px_rgba(230,57,70,0.2),inset_0_1px_0_rgba(255,255,255,0.05)]'
+                  : 'border-white/[0.08] bg-white/[0.03] text-white/50',
               )}
               onClick={() => onSelect(id)}
               type="button"
@@ -91,7 +91,7 @@ export default function SingerSelector({
       {/* 动态歌手搜索 / 已选动态歌手 */}
       {hasSearch &&
         (dynamicSinger ? (
-          <div className="mx-auto mt-3.5 flex max-w-[480px] items-center gap-3 rounded-md border border-accent/45 bg-gradient-to-br from-accent/14 to-accent2/10 px-3.5 py-2.5 shadow-[0_8px_24px_rgba(255,177,61,0.18)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]">
+            <div className="mx-auto mt-3.5 flex max-w-[480px] items-center gap-3 rounded-xl border border-accent/40 bg-accent/[0.1] px-3.5 py-2.5 shadow-[0_8px_24px_rgba(230,57,70,0.15)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]">
             <img
               className="h-10 w-10 shrink-0 rounded-full border-2 border-accent object-cover"
               src={dynamicSinger.photo}
@@ -101,7 +101,7 @@ export default function SingerSelector({
               }}
             />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="truncate text-[15px] font-extrabold text-ink">
+              <span className="truncate text-[15px] font-extrabold text-white">
                 {dynamicSinger.name}
               </span>
               {isLoadingSinger ? (
@@ -127,9 +127,9 @@ export default function SingerSelector({
             )}
           </div>
         ) : singerLoading ? (
-          <div className="mx-auto mt-3.5 flex max-w-[480px] items-center gap-3 rounded-md border border-accent/45 bg-gradient-to-br from-accent/14 to-accent2/10 px-3.5 py-2.5 shadow-[0_8px_24px_rgba(255,177,61,0.18)]">
+          <div className="mx-auto mt-3.5 flex max-w-[480px] items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="text-[15px] font-extrabold text-ink">加载歌曲数据中…</span>
+              <span className="text-[15px] font-extrabold text-white">加载歌曲数据中…</span>
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted">
                 <i className="inline-block h-[13px] w-[13px] shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
                 正在获取歌曲列表
@@ -139,7 +139,7 @@ export default function SingerSelector({
         ) : (
           <div className="relative mx-auto mt-3.5 max-w-[480px]">
             <input
-              className="w-full rounded-full border border-white/10 bg-[rgba(0,0,0,0.25)] px-[18px] py-[11px] text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-muted/50 focus:border-accent/45 focus:shadow-[0_0_0_3px_rgba(255,210,74,0.1)]"
+              className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-[18px] py-[11px] text-sm text-white outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/25 focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(230,57,70,0.15)]"
               type="text"
               value={searchKeyword}
               placeholder="搜索任意歌手（如：王菲、五月天、邓紫棋）"
@@ -156,7 +156,7 @@ export default function SingerSelector({
                 {searchResults.map((r) => (
                   <button
                     key={r.mid}
-                    className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-left text-[13px] font-semibold text-ink transition-all duration-200 animate-[cardIn_0.3s_cubic-bezier(0.2,0.8,0.2,1)_both] hover:-translate-y-0.5 hover:border-accent/45 hover:bg-accent/8 active:scale-[0.97]"
+                    className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-left text-[13px] font-semibold text-white transition-all duration-200 animate-[cardIn_0.3s_cubic-bezier(0.2,0.8,0.2,1)_both] hover:-translate-y-0.5 hover:border-accent/45 hover:bg-white/[0.06] active:scale-[0.97]"
                     type="button"
                     onClick={() => onLoadSinger && onLoadSinger(r)}
                   >

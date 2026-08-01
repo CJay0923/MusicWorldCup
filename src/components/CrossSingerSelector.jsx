@@ -43,8 +43,8 @@ export default function CrossSingerSelector({
 }) {
   const selectedList = [...(selectedSingers || [])];
   const selectedCount = selectedList.length;
-  const maxSingers = 8;
-  const minSingers = 2;
+const maxSingers = 16; // 增加到16位，支持更多歌手混战
+const minSingers = 2;
 
   // 计算可选规模：基于已加载歌手的总歌曲数
   const totalSongs = selectedList.reduce((sum, id) => {
@@ -72,18 +72,18 @@ export default function CrossSingerSelector({
   const dynamicList = dynamicSingers ? [...dynamicSingers.values()] : [];
 
   return (
-    <div className="mx-auto mb-5 max-w-[640px] rounded-2xl border border-white/10 bg-white/3 p-4 backdrop-blur-[6px]">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-extrabold text-ink">⚔️ 选择参赛歌手</span>
-        <span className="text-[13px] text-muted">
-          已选 <b className="text-accent">{selectedCount}</b> / {maxSingers} 位
-          {selectedCount < minSingers && (
-            <span className="ml-1 text-[11px] text-accent2">
-              （至少选 {minSingers} 位）
-            </span>
-          )}
-        </span>
-      </div>
+  <div className="mx-auto mb-4 max-w-[560px] rounded-xl border border-white/10 bg-white/[0.03] p-3.5 backdrop-blur-[6px]">
+    <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+      <span className="text-[13px] font-bold text-ink/9">⚔️ 选择参赛歌手</span>
+      <span className="text-[12px] text-muted">
+        已选 <b className="text-accent">{selectedCount}</b> / {maxSingers} 位
+        {selectedCount < minSingers && (
+          <span className="ml-1 text-[10px] text-accent2">
+            (至少 {minSingers} 位)
+          </span>
+        )}
+      </span>
+    </div>
 
       {/* 内置歌手多选按钮 */}
       <div className="mb-3 grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2">
@@ -209,7 +209,7 @@ export default function CrossSingerSelector({
       <div className="relative mb-3">
         <input
           type="text"
-          className="w-full rounded-full border border-white/10 bg-black/25 px-[18px] py-[11px] text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-muted/50 focus:border-accent/45 focus:shadow-[0_0_0_3px_rgba(255,210,74,0.1)]"
+          className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-[18px] py-[11px] text-sm text-white outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/25 focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(230,57,70,0.15)]"
           placeholder="搜索更多歌手加入混战…"
           value={crossSearchKeyword || ''}
           onChange={(e) => onCrossSearch?.(e.target.value)}
@@ -237,8 +237,8 @@ export default function CrossSingerSelector({
                   isSelected
                     ? 'border-accent/50 bg-accent/10 text-accent'
                     : isAdded
-                      ? 'border-good/40 bg-good/8 text-ink'
-                      : 'border-white/10 bg-white/4 text-ink hover:border-accent/40 hover:bg-accent/8',
+                      ? 'border-good/40 bg-good/[0.08] text-white'
+                        : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-accent/40 hover:bg-accent/[0.08]',
                   (isLoading ||
                     (!isAdded && !isSelected && selectedCount >= maxSingers)) &&
                     'cursor-not-allowed opacity-50',
@@ -311,8 +311,8 @@ export default function CrossSingerSelector({
                 className={clsx(
                   'cursor-pointer rounded-[20px] border px-4 py-1.5 text-[13px] font-semibold transition-all duration-200 active:scale-[0.94]',
                   currentSize === size
-                    ? 'border-accent bg-accent/18 text-paper shadow-[0_0_12px_rgba(255,210,74,0.2)]'
-                    : 'border-white/10 bg-white/4 text-muted hover:border-accent/30 hover:bg-accent/8 hover:text-[#e8d9a0]',
+                    ? 'border-accent/50 bg-accent/[0.15] text-white shadow-[0_0_20px_rgba(255,210,74,0.2)]'
+                    : 'border-white/[0.08] bg-white/[0.03] text-white/45 hover:border-accent/30 hover:bg-accent/[0.06] hover:text-[#e8d9a0]',
                 )}
                 onClick={() => onSelectSize(size)}
                 type="button"

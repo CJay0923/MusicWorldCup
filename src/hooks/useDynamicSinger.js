@@ -48,7 +48,11 @@ export function transformDynamicSingerData(raw, albumDetails, favMap) {
     if (isJunkTrack(name)) continue;
     if (isLiveTrack(name)) continue;
     if (isLiveAlbum(song.albumName)) continue;
-    // 运行时无 favCount，无法做「无封面且低收藏量」过滤，统一保留
+    // 无封面的直接过滤掉；有封面但收藏量低于 1w 的也过滤
+    const hasCover = !!(song.albumMid || song.pic);
+    if (!hasCover) continue;
+    const fav = favMap?.get(song.songmid) || song.favCount || 0;
+    if (fav < 50000) continue;
     const key = baseKey(name);
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);

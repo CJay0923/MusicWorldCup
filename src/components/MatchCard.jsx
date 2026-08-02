@@ -219,7 +219,7 @@ const handleImgError = (e) => {
         {isSinger && (
           <>
             {entrant?.topSong && (
-              <div className="text-xs text-white/45">代表作：{entrant.topSong}</div>
+              <div className="text-xs text-muted">代表作：{entrant.topSong}</div>
             )}
             <span className="mt-1 inline-block rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white/60">
               {entrant.songCount || 0} 首 · {entrant.albumCount || 0} 张专辑
@@ -229,7 +229,7 @@ const handleImgError = (e) => {
 
         {/* 提示文字 & 操作按钮行 */}
         <div className="mt-3 flex items-center justify-between">
-          <div className="text-[12.5px] font-semibold tracking-wide text-white/40">
+          <div className="text-[12.5px] font-semibold tracking-wide text-muted">
             点击选择晋级
           </div>
           <div className="flex items-center gap-2">

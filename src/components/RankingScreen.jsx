@@ -587,7 +587,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
                 style={{ backgroundColor: `${TIER_COLORS[i].bg}22`, borderRight: `2px solid ${TIER_COLORS[i].bg}45` }}
               >
                 <span className="text-sm font-black" style={{ color: TIER_COLORS[i].text }}>{tier.label}</span>
-                <small className="mt-0.5 text-center text-[9px] leading-tight text-white/35">
+                <small className="mt-0.5 text-center text-[9px] leading-tight text-muted">
                   {TIER_DESCRIPTIONS[i]}
                 </small>
               </div>
@@ -704,7 +704,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
                 style={{ backgroundColor: `${TIER_COLORS[i].bg}18`, borderRight: `2px solid ${TIER_COLORS[i].bg}35` }}
               >
                 <span className="text-[13px] font-black" style={{ color: TIER_COLORS[i].text }}>{tier.label}</span>
-                <small className="mt-0.5 text-center text-[8px] leading-tight text-white/35">
+                <small className="mt-0.5 text-center text-[8px] leading-tight text-muted">
                   {TIER_DESCRIPTIONS[i]}
                 </small>
                 <span className="mt-1 rounded-full px-1.5 text-[10px] font-bold text-white/50" style={{ backgroundColor: `${TIER_COLORS[i].bg}25` }}>

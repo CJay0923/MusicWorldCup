@@ -192,7 +192,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain 
                     <b>{s.winner.name}</b>
                   </span>
                   <span className="text-xs text-muted">
-                    击败 <s className="text-white/30">{s.loser?.name}</s>
+                    击败 <s className="text-muted/70">{s.loser?.name}</s>
                   </span>
                 </div>
               </div>

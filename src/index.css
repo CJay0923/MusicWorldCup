@@ -103,7 +103,7 @@
 }
 
 [data-theme="light"] .trophy-svg {
-  filter: drop-shadow(3px 3px 0 #1a1a1a);
+  filter: none;
 }
 
 /* 新粗野风格专用：硬边按钮 */
@@ -144,7 +144,7 @@
 /* 亮色主题：奖杯动画停止 */
 [data-theme="light"] .trophy-svg {
   animation: none !important;
-  filter: drop-shadow(3px 3px 0 #1a1a1a) !important;
+  filter: none !important;
 }
 
 * {
@@ -380,8 +380,8 @@ body::after {
 }
 .goat-card-seed--seed {
   border: 1px solid rgba(230,57,70,0.5);
-  background: rgba(230,57,70,0.25);
-  color: #ff6b7a;
+  background: rgba(230,57,70,0.2);
+  color: var(--accent);
 }
 .goat-card-seed:not(.goat-card-seed--seed) {
   background: rgba(0,0,0,0.45);
@@ -460,7 +460,7 @@ body::after {
   font-size: 28px;
   font-weight: 900;
   color: #fff;
-  box-shadow: 0 0 40px rgba(230,57,70,0.5);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 .wc-preview-btn {
   margin-top: 8px;
@@ -752,16 +752,15 @@ body::after {
 }
 .goat-card:hover:not(.goat-card--disabled) {
   border-color: rgba(230,57,70,0.3);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 20px rgba(230,57,70,0.08);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
 }
 .goat-card:active:not(.goat-card--disabled) { transform: translateY(-2px); }
 .goat-card--selected {
   border-color: var(--good);
-  box-shadow: 0 0 0 2px rgba(55,226,165,0.25), 0 12px 32px rgba(55,226,165,0.15);
+  box-shadow: 0 0 0 2px rgba(55,226,165,0.2), 0 8px 24px rgba(0,0,0,0.3);
 }
 .goat-preview-btn:hover {
   color: #fff;
-  text-shadow: 0 0 8px rgba(255,255,255,0.4);
 }
 
 /* 阶段栏 */
@@ -769,7 +768,6 @@ body::after {
   background: rgba(6,167,125,0.1);
   color: var(--good);
   border: 1px solid rgba(6,167,125,0.3);
-  box-shadow: 0 0 12px rgba(6,167,125,0.1);
 }
 .wc-phase-tab {
   border: 1px solid rgba(255,255,255,0.08);
@@ -783,10 +781,10 @@ body::after {
   transform: none;
 }
 .wc-phase-tab--active {
-  background: linear-gradient(135deg, var(--accent), #ffb13d);
+  background: var(--accent);
   color: #fff;
   border: none;
-  box-shadow: 0 4px 12px rgba(255,177,61,0.3);
+  box-shadow: 0 4px 12px rgba(230,57,70,0.2);
 }
 .wc-phase-tab--done {
   border-color: rgba(6,167,125,0.3);
@@ -828,10 +826,10 @@ body::after {
 
 /* 按钮 */
 .wc-btn--primary {
-  background: linear-gradient(135deg, var(--accent), #cc2238);
+  background: var(--accent);
   color: #fff;
   border: 2px solid rgba(230,57,70,0.6);
-  box-shadow: 0 0 20px rgba(230,57,70,0.3);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
 }
 .wc-btn--primary:hover:not(.wc-btn--disabled) { filter: brightness(1.15); transform: none; }
 .wc-btn--primary:active:not(.wc-btn--disabled) { transform: scale(0.97); filter: brightness(1); }

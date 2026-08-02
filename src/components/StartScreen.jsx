@@ -108,13 +108,13 @@ export default function StartScreen({
   const isCrossBattle = selectedMode === 'cross-battle';
   const isRanking = selectedMode === 'ranking';
 
-  // 赛制说明折叠状态（默认展开）
+  // 赛制说明折叠状态（默认折叠，减少首屏信息过载）
   const [rulesCollapsed, setRulesCollapsed] = useState({
-    classic: false,
-    wc: false,
-    custom: false,
-    cross: false,
-    ranking: false,
+    classic: true,
+    wc: true,
+    custom: true,
+    cross: true,
+    ranking: true,
   });
   // 主题状态（用于按钮图标切换）
   const [theme, setTheme] = useState(
@@ -181,17 +181,15 @@ return (
       {theme === 'light' ? '🌙' : '☀️'}
     </button>
 
-    {/* 英雄区背景光圈 — 暗黑增强 */}
-      <div className="pointer-events-none absolute -top-[60px] left-1/2 h-[480px] w-[600px] -translate-x-1/2 animate-[heroGlow_6s_ease-in-out_infinite_alternate] bg-[radial-gradient(ellipse_70%_55%_at_50%_40%,rgba(230,57,70,0.12),transparent_70%),radial-gradient(ellipse_50%_45%_at_30%_65%,rgba(59,130,246,0.08),transparent_60%)]" />
       <TrophySvg size={120} />
-      <h1 className="mx-0 mb-1.5 mt-[18px] bg-gradient-to-r from-accent via-[#FFB627] to-accent2 bg-clip-text font-display text-[clamp(30px,6vw,52px)] font-black leading-[1.15] tracking-tight text-transparent text-balance" style={{textShadow:'2px 2px 0 rgba(26,26,26,0.08)'}}>
-        <span className="bg-gradient-to-r from-accent via-[#FFB627] to-accent2 bg-clip-text">{isCustom
+      <h1 className="mx-0 mb-1.5 mt-[18px] font-display text-[clamp(30px,6vw,52px)] font-black leading-[1.15] tracking-tight text-ink text-balance">
+        {isCustom
           ? '自选歌曲世界杯'
           : isCrossBattle
             ? '多歌手混战世界杯'
             : isRanking
               ? '夯到拉排名'
-              : `${singer?.name}歌曲世界杯`}</span>
+              : `${singer?.name}歌曲世界杯`}
       </h1>
       <p className="mb-[30px] text-[15px] tracking-wide text-muted">
         {isCustom ? (
@@ -744,7 +742,7 @@ return (
       )}
 
       <button
-        className="relative inline-flex cursor-pointer items-center gap-[7px] overflow-hidden rounded-2xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-12 py-4 font-display text-lg font-semibold text-white shadow-[0_0_30px_rgba(230,57,70,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_45px_rgba(230,57,70,0.45)] active:translate-y-0.5 active:shadow-[0_0_20px_rgba(230,57,70,0.25)] disabled:cursor-default disabled:opacity-50 disabled:shadow-[0_0_20px_rgba(230,57,70,0.15)] animate-[ctaPulse_3s_ease-in-out_infinite]"
+        className="relative inline-flex cursor-pointer items-center gap-[7px] overflow-hidden rounded-2xl border-2 border-accent/60 bg-accent px-12 py-4 font-display text-lg font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[0_4px_12px_rgba(0,0,0,0.2)] disabled:cursor-default disabled:opacity-50"
         onClick={onStart}
         type="button"
         disabled={(isCustom && !canStartCustom) || (isCrossBattle && !canStartCross)}
@@ -770,7 +768,7 @@ return (
         </button>
       )}
 
-      <div className="mt-3.5 text-xs text-white/35">
+      <div className="mt-3.5 text-xs text-muted">
         {isCustom
           ? '提示：点击歌曲勾选/取消 · 可按专辑全选 · 每次开始对阵随机生成'
           : isCrossBattle

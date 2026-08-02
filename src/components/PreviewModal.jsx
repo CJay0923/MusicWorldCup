@@ -63,7 +63,7 @@ export default function PreviewModal({
           </div>
           <div className="mt-1 truncate text-[15px] font-semibold text-accent drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">{artist}</div>
           {song.albumName && (
-            <div className="mt-0.5 truncate text-[11px] text-white/30">{song.albumName}</div>
+            <div className="mt-0.5 truncate text-[11px] text-muted/70">{song.albumName}</div>
           )}
 
           {/* 播放控制 */}
@@ -110,7 +110,7 @@ export default function PreviewModal({
                   style={{ left: `${progress}%` }}
                 />
               </div>
-              <div className="mt-1 flex justify-between text-[10px] text-white/35 tabular-nums">
+              <div className="mt-1 flex justify-between text-[10px] text-muted tabular-nums">
                 <span>{fmtTime(currentTime)}</span>
                 <span>{fmtTime(duration)}</span>
               </div>

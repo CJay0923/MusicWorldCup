@@ -28,7 +28,7 @@ export default function ProgressBar({
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="whitespace-nowrap font-display text-xs tabular-nums text-white/40">
+      <span className="whitespace-nowrap font-display text-xs tabular-nums text-muted">
         第 <b className="text-white">{matchIdx}</b>/<b className="text-white">{matchTotal}</b>{' '}
         场 · 已决出 <b className="text-white">{doneCnt}</b>/
         <b className="text-white">{progTotal}</b>

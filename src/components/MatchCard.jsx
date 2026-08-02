@@ -94,14 +94,14 @@ const handleImgError = (e) => {
     side === 'left' &&
       'hover:border-accent/50 hover:shadow-[0_16px_48px_rgba(230,57,70,0.15)]',
     side === 'right' &&
-      'hover:border-right/55 hover:shadow-[0_16px_48px_rgba(255,182,39,0.15)]',
+      'hover:border-side-right/55 hover:shadow-[0_16px_48px_rgba(255,182,39,0.15)]',
     // 胜出状态：发光边框
     state === 'win' &&
       side === 'left' &&
       'border-accent shadow-[0_0_30px_rgba(230,57,70,0.35),0_0_60px_rgba(230,57,70,0.12)]',
     state === 'win' &&
       side === 'right' &&
-      'border-right shadow-[0_0_30px_rgba(255,182,39,0.35),0_0_60px_rgba(255,182,39,0.12)]',
+      'border-side-right shadow-[0_0_30px_rgba(255,182,39,0.35),0_0_60px_rgba(255,182,39,0.12)]',
     // 失败状态：灰暗 + 缩小
     state === 'lose' && 'scale-[0.97] opacity-40 grayscale',
     state === 'locked' && 'pointer-events-none',
@@ -114,15 +114,30 @@ const handleImgError = (e) => {
     'linear-gradient(to top, rgba(10,11,16,0.95) 0%, rgba(10,11,16,0.7) 35%, rgba(10,11,16,0.2) 65%, transparent 100%)';
 
   return (
-    <div className={cardCls} onClick={onPick}>
+    <div
+      className={cardCls}
+      role="button"
+      tabIndex={0}
+      aria-label={`选择「${entrant?.name || '—'}」晋级`}
+      onClick={onPick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onPick?.();
+        }
+      }}
+    >
       {/* ===== 全屏封面背景 ===== */}
       <div className="absolute inset-0 bg-bg3">
         {coverSrc ? (
           <img
             className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
             src={coverSrc}
-            alt={isAlbum ? '专辑封面' : isSinger ? '歌手头像' : '专辑封面'}
+            alt={isAlbum ? '专辑封面' : isSinger ? '歌手头像' : '歌曲封面'}
             loading="lazy"
+            decoding="async"
+            width={400}
+            height={400}
             onError={handleImgError}
           />
         ) : (
@@ -143,7 +158,7 @@ const handleImgError = (e) => {
             'absolute left-3.5 top-3.5 z-10 rounded-full px-2.5 py-1 text-[11px] font-extrabold tracking-wider backdrop-blur-md',
             side === 'left'
               ? 'border border-accent/40 bg-accent/20 text-accent'
-              : 'border border-right/40 bg-right/20 text-right',
+              : 'border border-side-right/40 bg-side-right/20 text-side-right',
           )}
         >
           {side === 'left' ? '左半区' : '右半区'}
@@ -171,6 +186,9 @@ const handleImgError = (e) => {
               src={entrant.singerPhoto}
               alt=""
               loading="lazy"
+              decoding="async"
+              width={20}
+              height={20}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -265,7 +283,7 @@ const handleImgError = (e) => {
           className={clsx(
             'mt-2 text-xs font-bold text-white/0 transition-all duration-300',
             'group-hover:text-white/50 group-hover:translate-x-1',
-            side === 'right' && 'group-hover:-translate-x-1 group-hover:text-right',
+            side === 'right' && 'group-hover:-translate-x-1 group-hover:text-side-right',
           )}
         >
           {side === 'left' ? '← 我选这个' : '我选这个 →'}
@@ -281,7 +299,7 @@ const handleImgError = (e) => {
           state === 'win' ? 'opacity-100' : 'opacity-0',
         )}
       >
-        <div className="flex h-20 w-20 items-center justify-center rounded-full border-3 border-accent bg-accent/90 text-4xl font-black text-white shadow-[0_0_40px_rgba(230,57,70,0.5)]">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full border-[3px] border-accent bg-accent/90 text-4xl font-black text-ink shadow-[0_0_40px_rgba(230,57,70,0.5)]">
           ✓
         </div>
       </div>

@@ -5,6 +5,7 @@ import SingerSelector from './SingerSelector.jsx';
 import ModeSelector from './ModeSelector.jsx';
 import SongPicker from './SongPicker.jsx';
 import CrossSingerSelector from './CrossSingerSelector.jsx';
+import PillButton from './ui/PillButton.jsx';
 import { classicOptions } from '../data/singers.js';
 
 /**
@@ -115,6 +116,10 @@ export default function StartScreen({
     cross: false,
     ranking: false,
   });
+  // 主题状态（用于按钮图标切换）
+  const [theme, setTheme] = useState(
+    () => document.documentElement.getAttribute('data-theme') || 'dark',
+  );
   const toggleRules = (key) =>
     setRulesCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
   const maxBracket = isClassic
@@ -161,17 +166,19 @@ return (
   <section className="relative px-2.5 pb-2.5 pt-14 text-center">
     {/* 主题切换按钮 - 右上角 */}
     <button
-      className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/20 bg-white/10 text-sm transition-all hover:scale-110 hover:bg-white/20"
+      className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border-2 border-side-left/30 bg-bg2 text-sm transition-all hover:scale-110 hover:border-side-left/50"
       type="button"
       onClick={() => {
         const current = document.documentElement.getAttribute('data-theme');
         const next = current === 'light' ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('theme', next);
+        setTheme(next);
       }}
       title="切换主题"
+      aria-label="切换主题"
     >
-      {document.documentElement.getAttribute('data-theme') === 'light' ? '🌙' : '☀️'}
+      {theme === 'light' ? '🌙' : '☀️'}
     </button>
 
     {/* 英雄区背景光圈 — 暗黑增强 */}
@@ -446,23 +453,19 @@ return (
       {isCrossBattle && (
         <>
           {/* 对决类型选择器 - 使用优化后的 Tab 样式 */}
-          <div className="mb-4 cross-battle-tabs">
+          <div className="mb-4 flex flex-wrap justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-1.5">
             {[
               { value: 'songs', label: '🎵 歌曲' },
               { value: 'albums', label: '💿 专辑' },
               { value: 'singers', label: '🎤 歌手' },
             ].map((opt) => (
-              <button
+              <PillButton
                 key={opt.value}
-                className={clsx(
-                  'cross-battle-tab',
-                  crossBattleType === opt.value && 'active',
-                )}
+                active={crossBattleType === opt.value}
                 onClick={() => onCrossBattleTypeChange?.(opt.value)}
-                type="button"
               >
                 {opt.label}
-              </button>
+              </PillButton>
             ))}
           </div>
           <CrossSingerSelector
@@ -491,16 +494,16 @@ return (
       {isRanking && (
         <div className="mb-4 flex flex-col gap-3">
           {/* 排名范围：单歌手 / 多歌手 */}
-          <div className="size-selector">
-            <span className="size-label">排名范围</span>
-            <div className="size-btns">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <span className="w-full mb-1 text-center text-[13px] font-semibold text-muted">排名范围</span>
+            <div className="flex flex-wrap justify-center gap-2.5">
               {[
                 { value: 'single', label: '单歌手' },
                 { value: 'cross', label: '多歌手' },
               ].map((opt) => (
-                <button
+                <PillButton
                   key={opt.value}
-                  className={clsx('size-btn', { active: rankingScope === opt.value })}
+                  active={rankingScope === opt.value}
                   onClick={() => {
                     onRankingScopeChange?.(opt.value);
                     // 切换范围时重置子模式
@@ -510,10 +513,9 @@ return (
                       onRankingSubModeChange?.('songs');
                     }
                   }}
-                  type="button"
                 >
                   {opt.label}
-                </button>
+                </PillButton>
               ))}
             </div>
           </div>
@@ -521,25 +523,22 @@ return (
           {/* 单歌手：子模式选择 */}
           {rankingScope === 'single' && (
             <>
-              <div className="size-selector">
-                <span className="size-label">排名对象</span>
-                <div className="size-btns">
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <span className="w-full mb-1 text-center text-[13px] font-semibold text-muted">排名对象</span>
+                <div className="flex flex-wrap justify-center gap-2.5">
                   {[
                     { value: 'all-songs', label: '所有歌曲' },
                     { value: 'album-songs', label: '专辑内歌曲' },
                     { value: 'top-x', label: '收藏量前N' },
                     { value: 'all-albums', label: '所有专辑' },
                   ].map((opt) => (
-                    <button
+                    <PillButton
                       key={opt.value}
-                      className={clsx('size-btn', {
-                        active: rankingSubMode === opt.value,
-                      })}
+                      active={rankingSubMode === opt.value}
                       onClick={() => onRankingSubModeChange?.(opt.value)}
-                      type="button"
                     >
                       {opt.label}
-                    </button>
+                    </PillButton>
                   ))}
                 </div>
               </div>
@@ -547,7 +546,7 @@ return (
               {/* 专辑内歌曲：选择专辑（卡片式） */}
               {rankingSubMode === 'album-songs' && baseSingerData?.entrants && (
                 <div className="mb-3 flex flex-col gap-2">
-                  <span className="size-label">选择专辑</span>
+                  <span className="w-full mb-1 text-center text-[13px] font-semibold text-muted">选择专辑</span>
                   <div className="grid max-h-[280px] gap-2 overflow-y-auto rounded-[10px] bg-black/15 p-1 [grid-template-columns:repeat(auto-fill,minmax(80px,1fr))]">
                     <div
                       className={clsx(
@@ -629,18 +628,17 @@ return (
 
               {/* 收藏量前N：选择N */}
               {rankingSubMode === 'top-x' && (
-                <div className="size-selector">
-                  <span className="size-label">取前几首</span>
-                  <div className="size-btns">
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <span className="w-full mb-1 text-center text-[13px] font-semibold text-muted">取前几首</span>
+                  <div className="flex flex-wrap justify-center gap-2.5">
                     {[8, 16, 32, 64].map((n) => (
-                      <button
+                      <PillButton
                         key={n}
-                        className={clsx('size-btn', { active: rankingTopX === n })}
+                        active={rankingTopX === n}
                         onClick={() => onRankingTopXChange?.(n)}
-                        type="button"
                       >
                         {n}首
-                      </button>
+                      </PillButton>
                     ))}
                   </div>
                 </div>
@@ -665,24 +663,21 @@ return (
                 dynamicSingers={crossDynamicSingers}
                 loadingMids={crossLoadingMids}
               />
-              <div className="size-selector">
-                <span className="size-label">排名对象</span>
-                <div className="size-btns">
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <span className="w-full mb-1 text-center text-[13px] font-semibold text-muted">排名对象</span>
+                <div className="flex flex-wrap justify-center gap-2.5">
                   {[
                     { value: 'songs', label: '歌曲' },
                     { value: 'albums', label: '专辑' },
                     { value: 'singers', label: '歌手' },
                   ].map((opt) => (
-                    <button
+                    <PillButton
                       key={opt.value}
-                      className={clsx('size-btn', {
-                        active: rankingSubMode === opt.value,
-                      })}
+                      active={rankingSubMode === opt.value}
                       onClick={() => onRankingSubModeChange?.(opt.value)}
-                      type="button"
                     >
                       {opt.label}
-                    </button>
+                    </PillButton>
                   ))}
                 </div>
               </div>
@@ -697,24 +692,20 @@ return (
         bracketSize={bracketSize}
       />
 
-      {/* 自选模式：先选规模 - 使用优化后的按钮样式 */}
+      {/* 自选模式：先选规模 */}
       {isCustom && customAllSizes.length > 1 && (
-        <div className="mb-5 bracket-sizes">
+        <div className="mb-5 flex flex-wrap justify-center gap-2.5">
           <span className="mb-2 block w-full text-center text-[13px] font-semibold text-muted">
             淘汰赛规模
           </span>
           {customAllSizes.map((size) => (
-            <button
+            <PillButton
               key={size}
-              className={clsx(
-                'bracket-size-btn',
-                customBracketSize === size && 'active',
-              )}
+              active={customBracketSize === size}
               onClick={() => onSelectSize(size)}
-              type="button"
             >
               {size}强
-            </button>
+            </PillButton>
           ))}
         </div>
       )}
@@ -734,24 +725,20 @@ return (
         />
       )}
 
-      {/* 经典模式：规模选择器（仅当有多种规模可选时显示） - 使用优化后的按钮样式 */}
+      {/* 经典模式：规模选择器（仅当有多种规模可选时显示） */}
       {isClassic && availableSizes.length > 1 && (
-        <div className="mb-5 bracket-sizes">
+        <div className="mb-5 flex flex-wrap justify-center gap-2.5">
           <span className="mb-2 block w-full text-center text-[13px] font-semibold text-muted">
             淘汰赛规模
           </span>
           {availableSizes.map((size) => (
-            <button
+            <PillButton
               key={size}
-              className={clsx(
-                'bracket-size-btn',
-                bracketSize === size && 'active',
-              )}
+              active={bracketSize === size}
               onClick={() => onSelectSize(size)}
-              type="button"
             >
               {size}强
-            </button>
+            </PillButton>
           ))}
         </div>
       )}

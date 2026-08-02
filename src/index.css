@@ -1,19 +1,21 @@
 @import 'tailwindcss';
 
 /* ===== 暗黑大图主题 (GOAT-inspired) - 默认 ===== */
+/* @theme 中的颜色令牌通过 var() 桥接到 :root / [data-theme] 的 CSS 自定义属性，
+   这样切换 data-theme 时 Tailwind 工具类（bg-bg / text-ink / text-accent 等）也会随之变化 */
 @theme {
-  --color-bg: #0a0b10;
-  --color-bg2: #11131a;
-  --color-bg3: #181b24;
-  --color-ink: #e8eaed;
-  --color-muted: #8b8f9a;
-  --color-accent: #e63946;
-  --color-accent2: #3b82f6;
-  --color-left: #e63946;
-  --color-right: #ffb627;
-  --color-good: #06a77d;
-  --color-paper: #0a0b10;
-  --color-white: #e8eaed;
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-bg3: var(--bg3);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent2: var(--accent2);
+  --color-side-left: var(--left);
+  --color-side-right: var(--right);
+  --color-good: var(--good);
+  --color-paper: var(--paper);
+  --color-white: var(--ink);
   /* Display: 粗犷有力的标题字体 */
   --font-display: 'DIN Alternate', 'Bebas Neue', 'Arial Black', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --radius-sm: 8px;
@@ -74,6 +76,20 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --font-display: 'Arial Black', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  /* 覆盖 @theme 桥接的 Tailwind 颜色令牌（使工具类也响应亮色主题）*/
+  --color-bg: #FFE66D;
+  --color-bg2: #FFD93D;
+  --color-bg3: #FFC300;
+  --color-ink: #1a1a1a;
+  --color-muted: #4a4a4a;
+  --color-accent: #FF6B6B;
+  --color-accent2: #4ECDC4;
+  --color-side-left: #FF6B6B;
+  --color-side-right: #FF8E53;
+  --color-good: #06D6A0;
+  --color-paper: #FFFFFF;
+  --color-white: #1a1a1a;
 }
 
 [data-theme="light"] * {
@@ -91,11 +107,7 @@
 }
 
 /* 新粗野风格专用：硬边按钮 */
-[data-theme="light"] button,
-[data-theme="light"] .bracket-size-btn,
-[data-theme="light"] .size-btn,
-[data-theme="light"] .cross-battle-tab,
-[data-theme="light"] .ranking-tab {
+[data-theme="light"] button {
   border: 2.5px solid #1a1a1a !important;
   box-shadow: 3px 3px 0 #1a1a1a !important;
   font-weight: 800 !important;
@@ -103,11 +115,7 @@
 }
 
 [data-theme="light"] button:hover,
-[data-theme="light"] button.active,
-[data-theme="light"] .bracket-size-btn.active,
-[data-theme="light"] .size-btn.active,
-[data-theme="light"] .cross-battle-tab.active,
-[data-theme="light"] .ranking-tab.active {
+[data-theme="light"] button[aria-pressed="true"] {
   transform: translate(-2px, -2px) !important;
   box-shadow: 5px 5px 0 #1a1a1a !important;
 }
@@ -122,6 +130,21 @@
 [data-theme="light"] [class*="rounded"] {
   border: 3px solid #1a1a1a !important;
   box-shadow: 6px 6px 0 #1a1a1a !important;
+}
+
+/* 亮色主题：覆盖暗色背景光晕 */
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(600px 400px at 15% 20%, rgba(255, 107, 107, 0.08), transparent 50%),
+    radial-gradient(500px 350px at 75% 65%, rgba(78, 205, 196, 0.06), transparent 50%),
+    radial-gradient(400px 300px at 50% 90%, rgba(255, 142, 83, 0.05), transparent 50%),
+    linear-gradient(180deg, #FFE66D 0%, #FFD93D 50%, #FFE66D 100%);
+}
+
+/* 亮色主题：奖杯动画停止 */
+[data-theme="light"] .trophy-svg {
+  animation: none !important;
+  filter: drop-shadow(3px 3px 0 #1a1a1a) !important;
 }
 
 * {
@@ -229,174 +252,22 @@ body::after {
   z-index: var(--z-confetti);
 }
 
-/* ===== 通用选择器样式（规模/模式/Tabs） ===== */
-.size-selector {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+/* ===== 减少动态效果（可访问性） ===== */
+@media (prefers-reduced-motion: reduce) {
+  .trophy-svg,
+  [class*="animate-["],
+  [style*="animation"] {
+    animation: none !important;
+  }
+
+  [class*="hover:translate"],
+  [class*="hover:-translate"],
+  [class*="hover:scale"] {
+    transform: none !important;
+  }
+
+  [class*="transition"] {
+    transition: none !important;
+  }
 }
 
-.size-label {
-  width: 100%;
-  margin-bottom: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-
-.size-btns {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-
-/* 基础按钮样式 */
-.size-btn {
-  cursor: pointer;
-  padding: 10px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
-  transition: all 0.2s ease;
-}
-
-.size-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 210, 74, 0.3);
-  color: rgba(255, 255, 255, 0.75);
-  transform: translateY(-1px);
-}
-
-/* 选中状态：清晰可见 */
-.size-btn.active {
-  color: #fff;
-  background: rgba(230, 57, 70, 0.15);
-  border-color: #e63946;
-  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  font-weight: 700;
-}
-
-.size-btn:active {
-  transform: scale(0.97) !important;
-}
-
-/* 跨歌手混战 Tab 样式优化 */
-.cross-battle-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  padding: 6px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-}
-
-.cross-battle-tab {
-  cursor: pointer;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.cross-battle-tab:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.cross-battle-tab.active {
-  color: #fff;
-  background: rgba(230, 57, 70, 0.2);
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.15);
-}
-
-/* 夯到拉排名 Tab 样式 */
-.ranking-tabs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
-  max-width: 520px;
-  margin: 0 auto;
-}
-
-.ranking-tab {
-  cursor: pointer;
-  padding: 12px 16px;
-  font-size: 13.5px;
-  font-weight: 600;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  transition: all 0.2s ease;
-}
-
-.ranking-tab:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(59, 130, 246, 0.3);
-  color: rgba(255, 255, 255, 0.85);
-  transform: translateY(-1px);
-}
-
-.ranking-tab.active {
-  color: #fff;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.15));
-  border-color: #3b82f6;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  font-weight: 700;
-}
-
-/* 淘汰赛规模按钮组 */
-.bracket-sizes {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-
-.bracket-size-btn {
-  cursor: pointer;
-  min-width: 64px;
-  padding: 10px 18px;
-  font-size: 14px;
-  font-weight: 700;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
-  transition: all 0.2s ease;
-}
-
-.bracket-size-btn:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 210, 74, 0.25);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.bracket-size-btn.active {
-  color: #fff;
-  background: linear-gradient(135deg, rgba(230, 57, 70, 0.18), rgba(255, 140, 0, 0.12));
-  border-color: #e63946;
-  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.25);
-  font-weight: 800;
-}
-
-.bracket-size-btn:active {
-  transform: scale(0.95) !important;
-}

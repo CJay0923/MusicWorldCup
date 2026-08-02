@@ -1,4 +1,4 @@
-// 四选二小组赛舞台：4 张卡片网格，用户点选 2 首直接晋级
+// 四选二小组赛舞台：4 张 GOAT 风格大图卡片，封面铺满
 import { useEffect, useRef } from 'react';
 import { clsx } from 'clsx';
 
@@ -42,120 +42,128 @@ export default function GroupPickStage({
   const pickedCount = group.picks.length;
   const isReady = pickedCount === 2;
 
-  // 图片 onError fallback：专辑封面 → 歌曲封面 → 空
-  const handleImgError = (e, songPic) => {
-    const img = e.currentTarget;
-    if (songPic && img.src !== songPic) {
-      img.src = songPic;
-    } else {
-      img.style.display = 'none';
-    }
+  // 图片优先级：picLocal > albumMid CDN > songmid CDN > pic > songPic
+  const getCoverSrc = (e) => {
+    if (e.picLocal) return e.picLocal;
+    if (e.albumMid) return `https://y.gtimg.cn/music/photo_new/T002R400x400M000${e.albumMid}.jpg`;
+    if (e.songmid) return `https://y.gtimg.cn/music/photo_new/T062R400x400M000${e.songmid}.jpg`;
+    if (e.pic) return e.pic;
+    if (e.songPic) return e.songPic;
+    return '';
   };
 
+  // 图片加载错误处理
+  const handleImgError = (ev, e) => {
+    const img = ev.currentTarget;
+    const tried = img.dataset.tried;
+    if (tried) { img.style.display = 'none'; return; }
+    img.dataset.tried = '1';
+    if (e.songmid && !img.src.includes('T062')) img.src = `https://y.gtimg.cn/music/photo_new/T062R400x400M000${e.songmid}.jpg`;
+    else if (e.albumMid && !img.src.includes('T002')) img.src = `https://y.gtimg.cn/music/photo_new/T002R400x400M000${e.albumMid}.jpg`;
+    else if (e.pic && img.src !== e.pic) img.src = e.pic;
+    else img.style.display = 'none';
+  };
+
+  // 底部渐变遮罩
+  const overlayGradient = 'linear-gradient(to top, rgba(10,11,16,0.95) 0%, rgba(10,11,16,0.7) 35%, rgba(10,11,16,0.2) 65%, transparent 100%)';
+
   return (
-    <div className="mt-1.5 rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 pb-[26px] pt-[22px] backdrop-blur-[8px] shadow-[inset_0_1px_0_rgba(255,255,255,0.02),0_12px_36px_rgba(0,0,0,0.4)]">
-      <div className="mb-3.5 text-center">
-        <h3 className="m-0 font-display text-lg font-black tracking-tight">
-          <span className="mr-0.5 text-[22px] text-accent">{group.name}</span>组 · 四选二
+    <div className="wc-group-stage">
+      <div className="wc-group-header">
+        <h3 className="m-0 font-display">
+          <span className="group-name">{group.name}</span>组 · 四选二
         </h3>
-        <p className="m-0 text-[12.5px] text-muted">
+        <p className="m-0 wc-sub">
           从 4 首中选 2 首直接晋级，无需两两对决
         </p>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 max-[720px]:grid-cols-2">
+      <div className="wc-cards-grid">
         {group.members.map((idx, mi) => {
           const e = entrants[idx];
           if (!e) return null;
           const selected = group.picks.includes(mi);
           const order = selected ? group.picks.indexOf(mi) + 1 : 0;
+          const coverSrc = getCoverSrc(e);
 
           return (
             <div
               key={mi}
               className={clsx(
-                'relative flex min-h-[220px] cursor-pointer flex-col items-center overflow-hidden rounded-xl border border-white/[0.08] px-3 pb-3.5 pt-[18px] text-center backdrop-blur-[8px]',
-                'bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_4px_16px_rgba(0,0,0,0.3)]',
-                'transition-all duration-250 ease-[cubic-bezier(0.22,1,0.36,1)]',
-                'hover:-translate-y-1 hover:border-accent/45 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_12px_30px_rgba(255,210,74,0.15)]',
-                'active:translate-y-0 active:scale-[0.97]',
-                selected &&
-                  'border-good bg-good/6 shadow-[0_0_0_1px_var(--good),0_12px_30px_rgba(55,226,165,0.18)]',
-                !selected &&
-                  pickedCount >= 2 &&
-                  'cursor-not-allowed opacity-40 hover:translate-y-0 hover:border-white/10 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_4px_16px_rgba(0,0,0,0.2)]',
+                'goat-card',
+                selected && 'goat-card--selected',
+                !selected && pickedCount >= 2 && 'goat-card--disabled',
               )}
               onClick={() => onToggle(mi)}
             >
-              <span
-                className={clsx(
-                  'absolute right-3 top-2.5 text-[10px] font-bold',
-                  selected ? 'text-good' : 'text-muted',
+              {/* 全屏封面背景 */}
+              <div className="goat-card-bg">
+                {coverSrc ? (
+                  <img
+                    className="goat-card-img"
+                    src={coverSrc}
+                    alt={e.name}
+                    loading="lazy"
+                    decoding="async"
+                    width={400}
+                    height={400}
+                    onError={(ev) => handleImgError(ev, e)}
+                  />
+                ) : (
+                  <div className="goat-card-empty">
+                    <span>♪</span>
+                  </div>
                 )}
-              >
+              </div>
+
+              {/* 底部渐变遮罩 */}
+              <div className="goat-card-overlay" style={{ background: overlayGradient }} />
+
+              {/* 种子/排名标签 */}
+              <span className={clsx(
+                'goat-card-seed',
+                e.isSeed ? 'goat-card-seed--seed' : '',
+              )}>
                 {e.isSeed ? `种子#${e.seedRank}` : `#${e.seed}`}
               </span>
-              <div
-                className={clsx(
-                  'relative mb-2.5 mt-1.5 flex h-[78px] w-[78px] items-center justify-center overflow-hidden rounded-xl bg-white/4',
-                  !e.pic && 'before:text-[28px] before:text-muted before:content-["♪"]',
-                  selected && 'shadow-[0_0_0_2px_rgba(55,226,165,0.4)]',
-                )}
-              >
-                {e.pic && (
-                  <img
-                    className="h-full w-full object-cover"
-                    src={e.pic}
-                    alt="专辑封面"
-                    loading="lazy"
-                    onError={(ev) => handleImgError(ev, e.songPic)}
-                  />
+
+              {/* 底部内容区 */}
+              <div className="goat-card-body">
+                <div className="goat-card-name">{e.name}</div>
+                <div className={clsx('goat-card-status', selected && 'goat-card-status--selected')}>
+                  {selected ? `✓ 第 ${order} 个晋级` : '点击选择'}
+                </div>
+                {onPreview && (
+                  <button
+                    className="goat-preview-btn"
+                    type="button"
+                    aria-label="试听"
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      onPreview(e);
+                    }}
+                  >
+                    ▶ 试听
+                  </button>
                 )}
               </div>
-              <div className="mb-1.5 break-words text-sm font-extrabold leading-snug text-white">
-                {e.name}
-              </div>
-              <div
-                className={clsx(
-                  'mt-auto text-[11px] font-semibold tracking-wide',
-                  selected ? 'font-extrabold text-good' : 'text-muted',
-                )}
-              >
-                {selected ? `✓ 第 ${order} 个晋级` : '点击选择'}
-              </div>
-              {onPreview && (
-                <button
-                  className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.04] px-[11px] py-[5px] text-[11px] font-bold text-white/60 transition-all duration-200 hover:border-accent/50 hover:bg-white/[0.08] hover:text-accent hover:-translate-y-px"
-                  type="button"
-                  aria-label="试听"
-                  onClick={(ev) => {
-                    ev.stopPropagation();
-                    onPreview(e);
-                  }}
-                >
-                  ▶ 试听
-                </button>
-              )}
-              <div
-                className={clsx(
-                  'pointer-events-none absolute left-3 top-2.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-good text-[13px] font-black text-bg transition-opacity duration-200',
-                  selected ? 'opacity-100' : 'opacity-0',
-                )}
-              >
-                ✓
+
+              {/* 胜出勾选覆盖层 */}
+              <div className={clsx('goat-check-overlay', selected && 'goat-check-overlay--show')}>
+                <div className="goat-check-circle">✓</div>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="mt-[18px] flex flex-wrap items-center justify-center gap-[18px]">
-        <span className="text-sm tracking-wide text-muted">
+      <div className="wc-footer">
+        <span className="wc-footer-text">
           {isReady ? (
-            <span className="font-semibold text-good">✓ 已选满 2 首，即将晋级…</span>
+            <span className="wc-footer-ready">✓ 已选满 2 首，即将晋级…</span>
           ) : (
             <>
-              已选 <b className="text-lg font-black text-accent">{pickedCount}</b> / 2
+              已选 <b className="wc-footer-count">{pickedCount}</b> / 2
             </>
           )}
         </span>

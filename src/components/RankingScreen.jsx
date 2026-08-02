@@ -28,13 +28,13 @@ const TIER_DESCRIPTIONS = [
   '垫底，体验极差',
 ];
 
-// 每个等级的颜色（用于标签背景和边框高亮）
+// 每个等级的颜色 — 同色相(accent红)明度递减阶梯
 const TIER_COLORS = [
-  { bg: '#E74C3C', labelBg: 'rgba(231,76,60,0.12)', text: '#FF6B6B' },   // 夯 - 红
-  { bg: '#F39C12', labelBg: 'rgba(243,156,18,0.12)', text: '#F5AB35' },    // 顶级 - 橙
-  { bg: '#F1C40F', labelBg: 'rgba(241,196,15,0.12)', text: '#F4D03F' },    // 人上人 - 黄
-  { bg: '#95A5A6', labelBg: 'rgba(149,165,166,0.10)', text: '#BDC3C7' },   // NPC - 灰
-  { bg: '#7F8C8D', labelBg: 'rgba(127,140,141,0.10)', text: '#95A5A6' },   // 拉完了 - 深灰
+  { bg: '#E63946', labelBg: 'rgba(230,57,70,0.10)', text: '#E63946' },   // 夯 - 全饱和红
+  { bg: '#C9444F', labelBg: 'rgba(201,68,79,0.10)', text: '#D05862' },    // 顶级 - 中红
+  { bg: '#B05660', labelBg: 'rgba(176,86,96,0.08)', text: '#C0707A' },    // 人上人 - 浅红
+  { bg: '#8E7A80', labelBg: 'rgba(142,122,128,0.06)', text: '#9A8A90' },   // NPC - 红灰
+  { bg: '#7A7075', labelBg: 'rgba(122,112,117,0.05)', text: '#8A8085' },   // 拉完了 - 近中性灰
 ];
 
 // 获取项目唯一标识用于 key
@@ -674,7 +674,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             />
           </div>
           <span className="shrink-0 text-xs tabular-nums text-muted">
-            {totalAssigned} / {items.length}
+            已分类 {totalAssigned} 首
           </span>
         </div>
         <p className="mt-1.5 text-xs text-muted">👆 长按拖拽项目到对应等级</p>
@@ -689,8 +689,9 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
               key={i}
               data-drop-zone={String(i)}
               className={clsx(
-                'flex min-h-[64px] overflow-hidden rounded-xl border transition-all duration-200',
-                isActive && `shadow-[0_0_12px_rgba(255,210,74,0.2)]`,
+                'flex overflow-hidden rounded-xl border transition-all duration-200',
+                isActive && 'border-accent',
+                state.assignments[i].length === 0 ? 'min-h-[40px]' : 'min-h-[64px]',
                 `tier-${i}`,
               )}
               style={{

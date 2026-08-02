@@ -80,10 +80,10 @@ export default function MatchStage({
       {/* 爆冷横幅 */}
       {showUpsetBanner && (
         <div className="mb-2.5 flex animate-[upsetPop_0.5s_cubic-bezier(0.22,1.4,0.36,1)] justify-center">
-          <div className="flex items-center gap-2 rounded-full border-2 border-accent/50 bg-accent/15 px-4 py-1.5">
-            <span className="text-base">💥</span>
-            <span className="font-display text-[13px] font-black tracking-wide text-accent">
-              爆冷！
+          <div className="flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5">
+            <span className="text-sm">⚠</span>
+            <span className="text-[13px] font-bold tracking-wide text-accent">
+              爆冷
             </span>
             <span className="text-[11px] text-muted">
               {upsetInfo.winner?.seedRank ?? '?'} 种子击败{' '}
@@ -107,7 +107,7 @@ export default function MatchStage({
         <div className="flex min-w-[70px] flex-col items-center justify-center gap-2.5 max-md:flex-row max-md:min-w-0 max-md:py-4">
           <div
             className={clsx(
-              'flex h-[64px] w-[64px] items-center justify-center rounded-full border-2 font-display text-xl font-black tracking-wider',
+              'flex h-[64px] w-[64px] items-center justify-center rounded-full border-2 text-xl font-black tracking-wider',
               isHighTension
                 ? 'border-accent bg-bg2 text-accent shadow-[0_4px_16px_rgba(0,0,0,0.25)]'
                 : 'border-accent/60 bg-bg2 text-accent shadow-[0_4px_12px_rgba(0,0,0,0.2)]',

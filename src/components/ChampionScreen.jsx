@@ -95,7 +95,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
       </div>
 
       <h1
-        className="mx-0 mb-2 mt-3.5 font-display text-[clamp(40px,9vw,80px)] font-black leading-[1.1] tracking-wide text-balance"
+        className="mx-0 mb-2 mt-3.5 text-[clamp(40px,9vw,80px)] font-black leading-[1.1] tracking-normal text-balance"
         style={champNameStyle}
       >
         {champion?.name || '—'}
@@ -129,7 +129,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
           </button>
         )}
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97]"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-white/15 bg-white/[0.05] px-4 py-2 text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/30 hover:bg-white/[0.1] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97]"
           onClick={onAgain}
           type="button"
         >

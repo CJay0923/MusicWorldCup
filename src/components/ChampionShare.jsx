@@ -461,8 +461,8 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
         );
 
   // 连接线线宽：小规模用更粗的线增强可见性
-  const connLineW = bs >= 64 ? 1.2 : bs >= 16 ? 1.5 : 1.8;
-  const champConnLineW = Math.max(2.4, connLineW * 1.8);
+  const connLineW = bs >= 64 ? 1.0 : bs >= 16 ? 1.3 : 1.5;
+  const champConnLineW = Math.max(1.8, connLineW * 1.4);
 
   // ---- 加载封面图（照搬 music-cup share.js thumbs Map：按歌曲 ID 去重）----
   const coverKey = (e) => (e && e.songmid ? e.songmid : `id-${e?.id}`);

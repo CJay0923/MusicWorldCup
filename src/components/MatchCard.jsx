@@ -204,8 +204,8 @@ const handleImgError = (e) => {
         {/* 歌曲名 — 大字突出 */}
         <div
           className={clsx(
-            'mb-1 font-display font-black leading-tight tracking-tight break-words text-balance',
-            isAlbum || isSinger ? 'text-[17px]' : 'text-[clamp(28px,5.5vw,44px)]',
+            'mb-1 font-black leading-tight tracking-normal break-words text-balance',
+            isAlbum || isSinger ? 'text-[17px]' : 'text-[clamp(22px,7vw,44px)]',
           )}
         >
           {entrant?.name || '—'}
@@ -233,7 +233,7 @@ const handleImgError = (e) => {
           <div className="text-[13px] font-bold tracking-wide text-muted">
             点击选择晋级
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* 试听按钮 */}
             {isSong && entrant && onPreview && (
               <button

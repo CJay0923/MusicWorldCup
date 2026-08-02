@@ -215,6 +215,12 @@ return (
         )}
       </p>
 
+      <ModeSelector
+        selected={selectedMode}
+        onSelect={onSelectMode}
+        bracketSize={bracketSize}
+      />
+
       {/* Classic rules */}
       <div
         className={clsx(
@@ -685,12 +691,6 @@ return (
           )}
         </div>
       )}
-
-      <ModeSelector
-        selected={selectedMode}
-        onSelect={onSelectMode}
-        bracketSize={bracketSize}
-      />
 
       {/* 自选模式：先选规模 */}
       {isCustom && customAllSizes.length > 1 && (

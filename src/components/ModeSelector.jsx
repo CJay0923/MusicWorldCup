@@ -59,13 +59,13 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
         <span className="text-4xl">{ico}</span>
         <span
           className={clsx(
-            'font-display text-[15px] font-bold',
+            'text-[15px] font-bold',
             isSelected ? colors.text : 'text-white/55',
           )}
         >
           {title}
         </span>
-        <span className="mt-0.5 block text-[11.5px] leading-relaxed text-muted">
+        <span className="mt-0.5 block text-[11px] leading-relaxed text-muted">
           {desc}
         </span>
         {/* 选中指示器 */}

@@ -82,32 +82,30 @@ const handleImgError = (e) => {
       ? `https://y.qq.com/n/ryqq/albumDetail/${entrant.albumMid}`
       : '';
 
-  // GOAT-style: border glow based on side and state
+  // GOAT-style: 实色边框 + 平实阴影，无彩色外发光
   const cardCls = clsx(
     // 基础：全高卡片，封面铺满
-    'group relative flex min-h-[380px] cursor-pointer flex-col items-end justify-end overflow-hidden',
+    'group relative flex min-h-[300px] cursor-pointer flex-col items-end justify-end overflow-hidden sm:min-h-[380px]',
     'rounded-2xl text-left',
     'border-2 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-    // 默认状态：暗色边框 + 微光
-    'border-white/10 bg-bg3 shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
-    // 悬浮效果
-    'hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)]',
-    side === 'left' &&
-      'hover:border-accent/50 hover:shadow-[0_16px_48px_rgba(230,57,70,0.15)]',
-    side === 'right' &&
-      'hover:border-side-right/55 hover:shadow-[0_16px_48px_rgba(255,182,39,0.15)]',
-    // 胜出状态：发光边框
+    // 默认状态：暗色边框 + 平实阴影
+    'border-white/10 bg-bg3 shadow-[0_4px_16px_rgba(0,0,0,0.25)]',
+    // 悬浮效果：边框微亮 + 平实阴影
+    'hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
+    side === 'left' && 'hover:border-accent/40',
+    side === 'right' && 'hover:border-side-right/40',
+    // 胜出状态：实色边框 + 浅底色 + 平实阴影（无彩色外发光）
     state === 'win' &&
       side === 'left' &&
-      'border-accent shadow-[0_0_30px_rgba(230,57,70,0.35),0_0_60px_rgba(230,57,70,0.12)]',
+      'border-accent bg-accent/[0.06] shadow-[0_4px_20px_rgba(0,0,0,0.3)]',
     state === 'win' &&
       side === 'right' &&
-      'border-side-right shadow-[0_0_30px_rgba(255,182,39,0.35),0_0_60px_rgba(255,182,39,0.12)]',
-    // 失败状态：灰暗 + 缩小
-    state === 'lose' && 'scale-[0.97] opacity-40 grayscale',
+      'border-side-right bg-side-right/[0.06] shadow-[0_4px_20px_rgba(0,0,0,0.3)]',
+    // 失败状态：保留可读性，不过度灰暗
+    state === 'lose' && 'scale-[0.97] opacity-60 grayscale-[0.5]',
     state === 'locked' && 'pointer-events-none',
     // 种子卡片
-    entrant?.isSeed && 'border-accent/40 bg-bg2',
+    entrant?.isSeed && 'border-accent/30 bg-bg2',
     // 爆冷获胜抖动
     isUpsetWin && state === 'win' && 'animate-[upsetShake_0.5s_ease-in-out]',
   );
@@ -145,7 +143,7 @@ const handleImgError = (e) => {
           />
         ) : (
           /* 无封面时的占位图案 */
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-bg2 to-bg3">
+          <div className="flex h-full w-full items-center justify-center bg-bg3">
             <span className="text-6xl text-white/5">♪</span>
           </div>
         )}
@@ -197,7 +195,7 @@ const handleImgError = (e) => {
               }}
             />
           )}
-          <span className="text-xs font-medium text-white/70">{entrant.singerName}</span>
+          <span className="text-xs font-medium text-muted">{entrant.singerName}</span>
         </div>
       )}
 
@@ -215,7 +213,7 @@ const handleImgError = (e) => {
 
         {/* 专辑/歌手元信息 */}
         {isAlbum && entrant?.songCount && (
-          <span className="inline-block rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white/60">
+          <span className="inline-block rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-muted">
             {entrant.songCount} 首歌
           </span>
         )}
@@ -232,14 +230,14 @@ const handleImgError = (e) => {
 
         {/* 提示文字 & 操作按钮行 */}
         <div className="mt-3 flex items-center justify-between">
-          <div className="text-[12.5px] font-semibold tracking-wide text-muted">
+          <div className="text-[13px] font-bold tracking-wide text-muted">
             点击选择晋级
           </div>
           <div className="flex items-center gap-2">
             {/* 试听按钮 */}
             {isSong && entrant && onPreview && (
               <button
-                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/70 backdrop-blur-sm transition-all duration-200 hover:border-white/30 hover:bg-white/20 hover:text-white"
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-ink backdrop-blur-sm transition-all duration-200 hover:border-white/30 hover:bg-white/20"
                 type="button"
                 aria-label="试听"
                 onClick={(e) => {
@@ -285,7 +283,7 @@ const handleImgError = (e) => {
         <div
           className={clsx(
             'mt-2 text-xs font-bold text-white/0 transition-all duration-300',
-            'group-hover:text-white/50 group-hover:translate-x-1',
+            'group-hover:text-muted group-hover:translate-x-1',
             side === 'right' && 'group-hover:-translate-x-1 group-hover:text-side-right',
           )}
         >
@@ -293,18 +291,16 @@ const handleImgError = (e) => {
         </div>
       </div>
 
-      {/* 胜出勾选 — 大号覆盖层 */}
+      {/* 胜出勾选 — 缩小圆章，移至右上角，不遮挡封面 */}
       <div
         className={clsx(
-          'pointer-events-none absolute inset-0 z-20 flex items-center justify-center',
-          'bg-accent/20 backdrop-blur-[2px]',
+          'pointer-events-none absolute right-4 top-16 z-20 flex h-12 w-12 items-center justify-center',
+          'rounded-full border-2 border-accent bg-accent/90 text-xl font-black text-white shadow-[0_2px_8px_rgba(0,0,0,0.25)]',
           'transition-all duration-400 ease-[cubic-bezier(0.22,1.4,0.36,1)]',
-          state === 'win' ? 'opacity-100' : 'opacity-0',
+          state === 'win' ? 'opacity-100 scale-100' : 'opacity-0 scale-75',
         )}
       >
-        <div className="flex h-20 w-20 items-center justify-center rounded-full border-[3px] border-accent bg-accent/90 text-4xl font-black text-ink shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
-          ✓
-        </div>
+        ✓
       </div>
     </div>
   );

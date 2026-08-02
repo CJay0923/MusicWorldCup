@@ -50,13 +50,12 @@ export default function SingerSelector({
               key={id}
               className={clsx(
                 'inline-flex cursor-pointer items-center gap-[9px] rounded-full border px-6 py-[11px]',
-                'text-sm font-bold backdrop-blur-[4px] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-                'shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]',
-                'hover:-translate-y-0.5 hover:bg-white/10 hover:border-white/25 hover:text-ink hover:shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)]',
+                'text-sm font-bold transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                'hover:-translate-y-0.5 hover:bg-white/10 hover:border-white/25 hover:text-ink hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)]',
                 'active:scale-[0.96]',
                 id === current
-                  ? 'border-accent/60 bg-accent/[0.12] text-white shadow-[0_0_20px_rgba(230,57,70,0.2),inset_0_1px_0_rgba(255,255,255,0.05)]'
-                  : 'border-white/[0.08] bg-white/[0.03] text-white/50',
+                  ? 'border-accent/60 bg-accent/[0.12] text-ink'
+                  : 'border-white/[0.08] bg-white/[0.03] text-white/65',
               )}
               onClick={() => onSelect(id)}
               type="button"
@@ -66,7 +65,7 @@ export default function SingerSelector({
                   className={clsx(
                     'h-[30px] w-[30px] shrink-0 rounded-full border-2 object-cover transition-all duration-300',
                     id === current
-                      ? 'border-accent shadow-[0_0_12px_rgba(255,210,74,0.5)]'
+                      ? 'border-accent'
                       : 'border-white/15',
                   )}
                   src={photo}
@@ -91,7 +90,7 @@ export default function SingerSelector({
       {/* 动态歌手搜索 / 已选动态歌手 */}
       {hasSearch &&
         (dynamicSinger ? (
-            <div className="mx-auto mt-3.5 flex max-w-[480px] items-center gap-3 rounded-xl border border-accent/40 bg-accent/[0.1] px-3.5 py-2.5 shadow-[0_8px_24px_rgba(230,57,70,0.15)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]">
+            <div className="mx-auto mt-3.5 flex max-w-[480px] items-center gap-3 rounded-xl border border-accent/40 bg-accent/[0.1] px-3.5 py-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.2)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]">
             <img
               className="h-10 w-10 shrink-0 rounded-full border-2 border-accent object-cover"
               src={dynamicSinger.photo}
@@ -139,7 +138,7 @@ export default function SingerSelector({
         ) : (
           <div className="relative mx-auto mt-3.5 max-w-[480px]">
             <input
-              className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-[18px] py-[11px] text-sm text-white outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/25 focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(230,57,70,0.15)]"
+              className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-[18px] py-[11px] text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/40 focus:border-accent focus:ring-2 focus:ring-accent/40"
               type="text"
               value={searchKeyword}
               placeholder="搜索任意歌手（如：王菲、五月天、邓紫棋）"
@@ -152,11 +151,11 @@ export default function SingerSelector({
               </span>
             )}
             {!isSearching && searchResults.length > 0 && (
-              <div className="mt-2.5 grid max-h-[280px] grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2 overflow-y-auto p-0.5">
+              <div className="mt-2.5 grid max-h-[280px] grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2 overflow-y-auto rounded-xl border border-white/[0.08] bg-bg2 p-1">
                 {searchResults.map((r) => (
                   <button
                     key={r.mid}
-                    className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-left text-[13px] font-semibold text-white transition-all duration-200 animate-[cardIn_0.3s_cubic-bezier(0.2,0.8,0.2,1)_both] hover:-translate-y-0.5 hover:border-accent/45 hover:bg-white/[0.06] active:scale-[0.97]"
+                    className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-left text-[13px] font-semibold text-ink transition-all duration-200 animate-[cardIn_0.3s_cubic-bezier(0.2,0.8,0.2,1)_both] hover:-translate-y-0.5 hover:border-accent/45 hover:bg-white/[0.06] active:scale-[0.97]"
                     type="button"
                     onClick={() => onLoadSinger && onLoadSinger(r)}
                   >

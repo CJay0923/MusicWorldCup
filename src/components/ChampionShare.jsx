@@ -424,7 +424,7 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   const H = headerH + sideSpan + footerH;
 
   // 冠军块大小：小规模时比例更小（避免占据过多画布）
-  const champRatio = bs <= 8 ? 0.38 : bs <= 16 ? 0.42 : bs <= 32 ? 0.46 : 0.5;
+  const champRatio = bs <= 8 ? 0.32 : bs <= 16 ? 0.36 : bs <= 32 ? 0.40 : 0.44;
   const champCover = Math.min(168, Math.max(72, Math.round(sideSpan * champRatio)));
   const champHalfW = Math.max(72, Math.round(champCover * 0.6 + 18));
 
@@ -523,19 +523,6 @@ async function renderShareCanvas({ champion, rounds, singerName, bracketSize }) 
   bg.addColorStop(0.45, '#12122a');
   bg.addColorStop(1, '#0b0b13');
   ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
-
-  const glow = ctx.createRadialGradient(
-    centerX,
-    centerY,
-    0,
-    centerX,
-    centerY,
-    Math.max(360, sideSpan * 0.35),
-  );
-  glow.addColorStop(0, 'rgba(255,210,74,0.10)');
-  glow.addColorStop(1, 'rgba(255,210,74,0)');
-  ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
   // 细网格点(轻微)
@@ -748,22 +735,8 @@ function drawChampionBlock(
   const nameOffset = Math.max(16, Math.round(size * 0.13));
   const labelOffset = Math.max(20, Math.round(size * 0.16));
 
-  // 外层光晕
-  const haloR = half + Math.max(20, size * 0.15);
-  const halo = ctx.createRadialGradient(
-    centerX,
-    coverY + half,
-    4,
-    centerX,
-    coverY + half,
-    haloR,
-  );
-  halo.addColorStop(0, 'rgba(255,210,74,0.30)');
-  halo.addColorStop(1, 'rgba(255,210,74,0)');
-  ctx.fillStyle = halo;
-  ctx.beginPath();
-  ctx.arc(centerX, coverY + half, haloR, 0, Math.PI * 2);
-  ctx.fill();
+  // 外层光晕（已移除，按设计约束不再使用径向光斑）
+  // 保留冠军块仅用实色边框强调
 
   // 皇冠
   ctx.textAlign = 'center';
@@ -908,7 +881,7 @@ export default function ChampionShare({
     <>
       <div className="mt-5 flex justify-center">
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-accent/45 bg-gradient-to-br from-accent/18 to-accent2/14 px-6 py-[11px] text-sm font-semibold text-accent transition-all duration-200 hover:border-accent/70 hover:from-accent/28 hover:to-accent2/20 hover:brightness-105 active:scale-[0.97] disabled:cursor-default disabled:opacity-55 disabled:brightness-100"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-accent/45 bg-accent/15 px-6 py-[11px] text-sm font-semibold text-accent transition-all duration-200 hover:border-accent/70 hover:bg-accent/25 active:scale-[0.97] disabled:cursor-default disabled:opacity-55"
           type="button"
           onClick={handleShare}
           disabled={!canShare || state === 'loading'}
@@ -919,7 +892,7 @@ export default function ChampionShare({
 
       {state !== 'idle' && (
         <div
-          className="fixed inset-0 z-[--z-share] flex items-center justify-center overflow-y-auto bg-[rgba(6,8,20,0.85)] p-6 backdrop-blur-[10px] animate-[fade_0.3s_ease]"
+          className="fixed inset-0 z-[--z-share] flex items-center justify-center overflow-y-auto bg-[rgba(6,8,20,0.85)] p-6 backdrop-blur-[6px] animate-[fade_0.3s_ease]"
           onClick={handleClose}
         >
           <div
@@ -941,7 +914,7 @@ export default function ChampionShare({
                 />
                 <div className="flex gap-3">
                   <button
-                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97]"
                     type="button"
                     onClick={handleDownload}
                   >

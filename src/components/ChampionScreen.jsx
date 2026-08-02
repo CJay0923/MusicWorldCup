@@ -13,21 +13,14 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
   // 默认展开夺冠之路
   const [showRecap, setShowRecap] = useState(true);
 
-  // Champion name gradient based on which half they came from
-  const champNameStyle =
-    champion?.side === 'L'
-      ? {
-          background: 'linear-gradient(120deg,#1a1a1a,#e63946)',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          color: 'transparent',
-        }
-      : {
-          background: 'linear-gradient(120deg,#1a1a1a,#ffb627)',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          color: 'transparent',
-        };
+  // Champion name color based on which half they came from (实色，无渐变)
+  const champColor = champion?.side === 'L' ? 'var(--color-accent)' : 'var(--color-side-right)';
+
+  const champNameStyle = {
+    color: champColor,
+    fontWeight: 900,
+    letterSpacing: '0.04em',
+  };
 
   // Champion's path: matches where champion was the winner
   const steps = (history || []).filter(
@@ -89,28 +82,27 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
       {getCover(champion) && (
         <div className="relative mx-auto mb-1.5 mt-4 h-[150px] w-[150px]">
           <img
-            className="h-full w-full rounded-xl border-2 border-white/10 object-cover shadow-[0_8px_28px_rgba(0,0,0,0.5)]"
+            className="h-full w-full rounded-xl border-2 border-white/10 object-cover shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
             src={getCover(champion)}
             alt="冠军专辑封面"
             onError={(e) => handleImgError(e, champion)}
           />
-          <div className="absolute -inset-2 animate-spin rounded-full bg-[conic-gradient(from_0deg,transparent,rgba(230,57,70,0.2),transparent_35%,rgba(255,182,39,0.2),transparent_70%)] opacity-60 [animation-duration:4s]" />
         </div>
-      )}
+      )}}
 
       <div className="mt-3.5 inline-block rounded-full border border-accent/40 bg-accent/[0.12] px-4 py-1.5 text-xs font-extrabold tracking-[3px] text-accent">
         CHAMPION
       </div>
 
       <h1
-        className="mx-0 mb-2 mt-3.5 bg-clip-text font-display text-[clamp(40px,9vw,80px)] font-black leading-[1.1] tracking-wide text-transparent text-balance"
+        className="mx-0 mb-2 mt-3.5 font-display text-[clamp(40px,9vw,80px)] font-black leading-[1.1] tracking-wide text-balance"
         style={champNameStyle}
       >
         {champion?.name || '—'}
       </h1>
 
-      <div className="mb-[26px] text-sm text-white/50">
-        本届 <b className="text-white">{singerName}歌曲世界杯</b> 终极冠军
+      <div className="mb-[26px] text-sm text-muted">
+        本届 <b className="text-ink">{singerName}歌曲世界杯</b> 终极冠军
       </div>
 
       {/* 打法称号 */}
@@ -137,7 +129,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
           </button>
         )}
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97]"
           onClick={onAgain}
           type="button"
         >
@@ -169,7 +161,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
                 <div className="flex shrink-0 items-center gap-1.5">
                   <div
                     className={clsx(
-                      'h-[38px] w-[38px] shrink-0 overflow-hidden rounded-lg border-[1.5px] border-accent/60 shadow-[0_0_8px_rgba(255,210,74,0.25)]',
+                      'h-[38px] w-[38px] shrink-0 overflow-hidden rounded-lg border-[1.5px] border-accent/60',
                       !getCover(s.winner) &&
                         'flex items-center justify-center bg-white/6 text-muted',
                     )}
@@ -210,9 +202,9 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
                   </div>
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-sm text-white">
-                    <b>{s.winner.name}</b>
-                  </span>
+                <span className="truncate text-sm text-ink">
+                  <b>{s.winner.name}</b>
+                </span>
                   <span className="text-xs text-muted">
                     击败 <s className="text-muted/70">{s.loser?.name}</s>
                   </span>

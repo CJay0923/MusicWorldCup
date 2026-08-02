@@ -630,7 +630,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
-            className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+            className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97]"
             type="button"
             onClick={() => setShowResult(false)}
           >
@@ -669,7 +669,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
         <div className="mx-auto mt-2 flex max-w-[300px] items-center gap-2">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-accent2 to-accent transition-[width] duration-300"
+              className="h-full rounded-full bg-accent transition-[width] duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -707,7 +707,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
                 <small className="mt-0.5 text-center text-[8px] leading-tight text-muted">
                   {TIER_DESCRIPTIONS[i]}
                 </small>
-                <span className="mt-1 rounded-full px-1.5 text-[10px] font-bold text-white/50" style={{ backgroundColor: `${TIER_COLORS[i].bg}25` }}>
+                <span className="mt-1 rounded-full px-1.5 text-[10px] font-bold text-muted" style={{ backgroundColor: `${TIER_COLORS[i].bg}25` }}>
                   {state.assignments[i].length}
                 </span>
               </div>
@@ -764,7 +764,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       </div>
 
       {/* 底部操作栏 */}
-      <div className="sticky bottom-0 z-10 flex justify-center gap-3 bg-gradient-to-t from-bg via-bg/95 to-transparent pb-3 pt-4">
+      <div className="sticky bottom-0 z-10 flex justify-center gap-3 bg-bg pb-3 pt-4">
         <button
           className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
           type="button"
@@ -773,7 +773,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
           ↺ 全部重置
         </button>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97] disabled:cursor-default disabled:opacity-40"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97] disabled:cursor-default disabled:opacity-40"
           type="button"
           onClick={() => setShowResult(true)}
           disabled={totalAssigned === 0}

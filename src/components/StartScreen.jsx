@@ -193,7 +193,7 @@ return (
               ? '夯到拉排名'
               : `${singer?.name}歌曲世界杯`}
       </h1>
-      <p className="mb-[30px] text-[15px] tracking-wide text-muted">
+      <p className="mb-8 text-[15px] tracking-wide text-muted">
         {isCustom ? (
           <>
             {customBracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军
@@ -218,7 +218,7 @@ return (
       {/* Classic rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
+          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
           rulesCollapsed.classic ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: isClassic ? 'block' : 'none' }}
@@ -230,7 +230,7 @@ return (
           <span>赛制说明 · 经典{bracketSize}强</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.classic ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.classic && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-muted [&_li]:[text-wrap:pretty]', rulesCollapsed.classic && 'hidden')}>
           <li>
             选曲原则：取 QQ 音乐收藏量前 {bracketSize}{' '}
             位，剔除所有英文歌曲及《北京欢迎你》《站起来》等多人合唱。
@@ -281,7 +281,7 @@ return (
       {/* WC rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
+          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
           rulesCollapsed.wc ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: selectedMode === 'wc' ? 'block' : 'none' }}
@@ -293,7 +293,7 @@ return (
           <span>赛制说明 · 世界杯模式</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.wc ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.wc && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-muted [&_li]:[text-wrap:pretty]', rulesCollapsed.wc && 'hidden')}>
           <li>
             <b>小组赛</b>：取 QQ 音乐收藏量前 <b>48 首</b>，按收藏量分 4 档抽签，分入{' '}
             <b>12 个小组</b>（A–L），每组 4 首，每组 1 个种子选手。
@@ -320,7 +320,7 @@ return (
       {/* Custom rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
+          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
           rulesCollapsed.custom ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: isCustom ? 'block' : 'none' }}
@@ -332,7 +332,7 @@ return (
           <span>赛制说明 · 自选模式</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.custom ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.custom && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-muted [&_li]:[text-wrap:pretty]', rulesCollapsed.custom && 'hidden')}>
           <li>
             先选择<b>淘汰赛规模</b>（4/8/16/32/64/128 强），再从下方歌曲列表中
             <b>自由勾选</b>参赛歌曲。
@@ -359,7 +359,7 @@ return (
       {/* Cross-battle rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
+          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
           rulesCollapsed.cross ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: isCrossBattle ? 'block' : 'none' }}
@@ -371,7 +371,7 @@ return (
           <span>赛制说明 · 多歌手混战</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.cross ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.cross && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-muted [&_li]:[text-wrap:pretty]', rulesCollapsed.cross && 'hidden')}>
           <li>
             选择 <b>2-8 位歌手</b> 参战，可从内置歌手中选择，也可搜索添加更多歌手。
           </li>
@@ -392,7 +392,7 @@ return (
       {/* Ranking rules */}
       <div
         className={clsx(
-          'mx-auto mb-[30px] max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left backdrop-blur-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.4)]',
+          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
           rulesCollapsed.ranking ? 'p-[14px_22px]' : 'p-[20px_22px]',
         )}
         style={{ display: isRanking ? 'block' : 'none' }}
@@ -404,7 +404,7 @@ return (
           <span>赛制说明 · 夯到拉排名</span>
           <span className="ml-2 shrink-0 text-[11px] opacity-60">{rulesCollapsed.ranking ? '▶' : '▼'}</span>
         </h3>
-        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-white/60 [&_li]:[text-wrap:pretty]', rulesCollapsed.ranking && 'hidden')}>
+        <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-muted [&_li]:[text-wrap:pretty]', rulesCollapsed.ranking && 'hidden')}>
           <li>
             选择排名对象：<b>歌曲</b>、<b>专辑</b> 或 <b>歌手</b>。
           </li>
@@ -552,11 +552,11 @@ return (
                       className={clsx(
                         'flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-transparent bg-white/3 p-1.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/8',
                         !rankingAlbumMid &&
-                          'border-accent bg-accent/10 shadow-[0_0_12px_rgba(255,210,74,0.3)]',
+                          'border-accent bg-accent/10',
                       )}
                       onClick={() => onRankingAlbumMidChange?.('')}
                     >
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[#4a3a1e] to-[#2a2a4e] text-[28px]">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-bg3 text-[28px]">
                         <span>🎵</span>
                       </div>
                       <span className="line-clamp-2 text-[11px] leading-[1.3] text-ink [word-break:break-all]">全部歌曲</span>
@@ -590,11 +590,11 @@ return (
                             className={clsx(
                               'flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-transparent bg-white/3 p-1.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/8',
                               rankingAlbumMid === key &&
-                                'border-accent bg-accent/10 shadow-[0_0_12px_rgba(255,210,74,0.3)]',
+                                'border-accent bg-accent/10',
                             )}
                             onClick={() => onRankingAlbumMidChange?.(key)}
                           >
-                            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[#2a2a4e] to-[#1a1a2e] text-[28px]">
+                            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-bg3 text-[28px]">
                               {info.pic ? (
                                 <img
                                   src={info.pic}
@@ -744,7 +744,7 @@ return (
       )}
 
       <button
-        className="relative inline-flex cursor-pointer items-center gap-[7px] overflow-hidden rounded-2xl border-2 border-accent/60 bg-accent px-12 py-4 font-display text-lg font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[0_4px_12px_rgba(0,0,0,0.2)] disabled:cursor-default disabled:opacity-50"
+        className="relative inline-flex w-full max-w-[320px] cursor-pointer items-center justify-center gap-[7px] overflow-hidden rounded-2xl border-2 border-accent bg-accent px-8 py-4 font-display text-lg font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0.5 active:shadow-[0_2px_8px_rgba(0,0,0,0.15)] disabled:cursor-default disabled:opacity-50 sm:w-auto sm:px-12"
         onClick={onStart}
         type="button"
         disabled={(isCustom && !canStartCustom) || (isCrossBattle && !canStartCross)}
@@ -762,7 +762,7 @@ return (
 
       {showResume && !isCustom && !isCrossBattle && !isRanking && (
         <button
-          className="ml-2.5 inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-[9px] text-[13px] font-semibold text-white/60 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.96]"
+          className="ml-2.5 inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-[9px] text-[13px] font-semibold text-muted transition-all duration-200 hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.96]"
           onClick={onResume}
           type="button"
         >

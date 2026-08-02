@@ -19,16 +19,16 @@ export default function PreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(0,0,0,0.96)] p-6 backdrop-blur-[12px] animate-[fade_0.25s_ease]"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(0,0,0,0.96)] p-6 backdrop-blur-[6px] animate-[fade_0.25s_ease]"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/[0.12] bg-[#1a1a2e] shadow-[0_32px_80px_rgba(0,0,0,0.8)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]"
+        className="relative w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/[0.12] bg-[#1a1a2e] shadow-[0_8px_32px_rgba(0,0,0,0.5)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 关闭按钮 */}
         <button
-          className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.06] text-lg text-white/50 transition-all duration-200 hover:bg-white/[0.12] hover:text-white"
+          className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.06] text-lg text-muted transition-all duration-200 hover:bg-white/[0.12] hover:text-ink"
           type="button"
           onClick={onClose}
           aria-label="关闭"
@@ -58,10 +58,10 @@ export default function PreviewModal({
 
         {/* 歌曲信息 */}
         <div className="relative px-7 pb-6 pt-3">
-          <div className="truncate text-2xl font-extrabold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" title={song.name}>
+          <div className="truncate text-2xl font-extrabold text-ink" title={song.name}>
             {song.name}
           </div>
-          <div className="mt-1 truncate text-lg font-semibold text-accent drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">{artist}</div>
+          <div className="mt-1 truncate text-lg font-semibold text-accent">{artist}</div>
           {song.albumName && (
             <div className="mt-0.5 truncate text-sm text-muted/70">{song.albumName}</div>
           )}
@@ -73,7 +73,7 @@ export default function PreviewModal({
                 'flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-none text-2xl transition-all duration-200',
                 isLoading
                   ? 'cursor-default bg-accent/25'
-                  : 'cursor-pointer bg-gradient-to-br from-accent to-[#cc2238] text-white shadow-[0_4px_14px_rgba(230,57,70,0.35)] hover:scale-[1.08]',
+                  : 'cursor-pointer bg-accent text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:scale-[1.08] hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)]',
               )}
               type="button"
               onClick={onTogglePlay}
@@ -95,12 +95,12 @@ export default function PreviewModal({
                 onTouchMove={onSeek}
               >
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-accent2 to-accent"
+                  className="h-full rounded-full bg-accent"
                   style={{ width: `${progress}%` }}
                 />
                 {chorusTime != null && chorusPct > 0 && (
                   <div
-                    className="absolute top-1/2 h-2 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-accent2 shadow-[0_0_4px_rgba(255,92,138,0.7)]"
+                    className="absolute top-1/2 h-2 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-accent2"
                     style={{ left: `${chorusPct}%` }}
                     title="高潮片段"
                   />

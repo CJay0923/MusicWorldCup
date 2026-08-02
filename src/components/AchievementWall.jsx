@@ -37,7 +37,7 @@ export default function AchievementWall({ unlocked = {} }) {
               className={clsx(
                 'flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all duration-200',
                 isUnlocked
-                  ? 'border-accent/30 bg-accent/[0.08] shadow-[0_0_12px_rgba(230,57,70,0.08)]'
+                  ? 'border-accent/30 bg-accent/[0.08]'
                   : 'border-white/[0.06] bg-white/[0.02] opacity-45',
               )}
             >

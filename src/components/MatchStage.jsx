@@ -58,13 +58,10 @@ export default function MatchStage({
               style={{
                 width: `${tension}%`,
                 background: isExtremeTension
-                  ? 'linear-gradient(90deg, #ff6b6b, #ffd24a, #ff6b6b)'
+                  ? 'var(--accent)'
                   : isHighTension
-                    ? 'linear-gradient(90deg, #ffb627, #ffd24a)'
-                    : 'linear-gradient(90deg, rgba(139,143,154,0.5), rgba(139,143,154,0.8))',
-                boxShadow: isHighTension
-                  ? '0 0 8px rgba(255,182,39,0.4)'
-                  : 'none',
+                    ? 'var(--color-side-right)'
+                    : 'var(--muted)',
               }}
             />
           </div>
@@ -83,7 +80,7 @@ export default function MatchStage({
       {/* 爆冷横幅 */}
       {showUpsetBanner && (
         <div className="mb-2.5 flex animate-[upsetPop_0.5s_cubic-bezier(0.22,1.4,0.36,1)] justify-center">
-          <div className="flex items-center gap-2 rounded-full border-2 border-accent/50 bg-accent/15 px-4 py-1.5 shadow-[0_0_20px_rgba(230,57,70,0.2)] backdrop-blur-sm">
+          <div className="flex items-center gap-2 rounded-full border-2 border-accent/50 bg-accent/15 px-4 py-1.5">
             <span className="text-base">💥</span>
             <span className="font-display text-[13px] font-black tracking-wide text-accent">
               爆冷！
@@ -112,13 +109,13 @@ export default function MatchStage({
             className={clsx(
               'flex h-[64px] w-[64px] items-center justify-center rounded-full border-2 font-display text-xl font-black tracking-wider',
               isHighTension
-                ? 'border-accent bg-bg2 text-accent shadow-[0_0_40px_rgba(230,57,70,0.4),inset_0_1px_0_rgba(255,255,255,0.05)] animate-[pulse_1.2s_ease-in-out_infinite]'
-                : 'border-accent/60 bg-bg2 text-accent shadow-[0_0_30px_rgba(230,57,70,0.25),inset_0_1px_0_rgba(255,255,255,0.05)] animate-[pulse_2.4s_ease-in-out_infinite]',
+                ? 'border-accent bg-bg2 text-accent shadow-[0_4px_16px_rgba(0,0,0,0.25)]'
+                : 'border-accent/60 bg-bg2 text-accent shadow-[0_4px_12px_rgba(0,0,0,0.2)]',
             )}
           >
             VS
           </div>
-          <div className="font-display text-[11px] uppercase tracking-[3px] text-white/25 max-md:hidden">
+          <div className="font-display text-[11px] uppercase tracking-[3px] text-muted max-md:hidden">
             VERSUS
           </div>
         </div>

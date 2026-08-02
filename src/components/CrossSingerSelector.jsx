@@ -72,9 +72,9 @@ const minSingers = 2;
   const dynamicList = dynamicSingers ? [...dynamicSingers.values()] : [];
 
   return (
-  <div className="mx-auto mb-4 max-w-[560px] rounded-xl border border-white/10 bg-white/[0.03] p-3.5 backdrop-blur-[6px]">
+  <div className="mx-auto mb-4 max-w-[560px] rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
     <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-      <span className="text-[13px] font-bold text-ink/9">⚔️ 选择参赛歌手</span>
+      <span className="text-[13px] font-bold text-ink">⚔️ 选择参赛歌手</span>
       <span className="text-[12px] text-muted">
         已选 <b className="text-accent">{selectedCount}</b> / {maxSingers} 位
         {selectedCount < minSingers && (
@@ -102,7 +102,7 @@ const minSingers = 2;
               className={clsx(
                 'relative flex cursor-pointer flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-center transition-all duration-200',
                 isSelected
-                  ? 'border-accent/50 bg-accent/10 shadow-[0_0_10px_rgba(255,210,74,0.15)]'
+                  ? 'border-accent/50 bg-accent/10'
                   : 'border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8',
                 !isSelected &&
                   selectedCount >= maxSingers &&
@@ -164,7 +164,7 @@ const minSingers = 2;
                 className={clsx(
                   'relative flex cursor-pointer flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-center transition-all duration-200',
                   isSelected
-                    ? 'border-accent/50 bg-accent/10 shadow-[0_0_10px_rgba(255,210,74,0.15)]'
+                    ? 'border-accent/50 bg-accent/10'
                     : 'border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8',
                   !isSelected &&
                     selectedCount >= maxSingers &&
@@ -209,7 +209,7 @@ const minSingers = 2;
       <div className="relative mb-3">
         <input
           type="text"
-          className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-[18px] py-[11px] text-sm text-white outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/25 focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(230,57,70,0.15)]"
+          className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-[18px] py-[11px] text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/40 focus:border-accent focus:ring-2 focus:ring-accent/40"
           placeholder="搜索更多歌手加入混战…"
           value={crossSearchKeyword || ''}
           onChange={(e) => onCrossSearch?.(e.target.value)}
@@ -238,7 +238,7 @@ const minSingers = 2;
                     ? 'border-accent/50 bg-accent/10 text-accent'
                     : isAdded
                       ? 'border-good/40 bg-good/[0.08] text-white'
-                        : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-accent/40 hover:bg-accent/[0.08]',
+                        : 'border-white/[0.08] bg-white/[0.03] text-muted hover:border-accent/40 hover:bg-accent/[0.08] hover:text-ink',
                   (isLoading ||
                     (!isAdded && !isSelected && selectedCount >= maxSingers)) &&
                     'cursor-not-allowed opacity-50',
@@ -311,8 +311,8 @@ const minSingers = 2;
                 className={clsx(
                   'cursor-pointer rounded-[20px] border px-4 py-1.5 text-[13px] font-semibold transition-all duration-200 active:scale-[0.94]',
                   currentSize === size
-                    ? 'border-accent/50 bg-accent/[0.15] text-white shadow-[0_0_20px_rgba(255,210,74,0.2)]'
-                    : 'border-white/[0.08] bg-white/[0.03] text-white/45 hover:border-accent/30 hover:bg-accent/[0.06] hover:text-[#e8d9a0]',
+                    ? 'border-accent/50 bg-accent/[0.15] text-ink'
+                    : 'border-white/[0.08] bg-white/[0.03] text-muted hover:border-accent/30 hover:bg-accent/[0.06] hover:text-ink',
                 )}
                 onClick={() => onSelectSize(size)}
                 type="button"

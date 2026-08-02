@@ -387,7 +387,7 @@ export default function SongPicker({
                           {/* 选中勾选 */}
                           <div
                             className={clsx(
-                              'absolute right-2 top-2 grid h-[26px] w-[26px] place-items-center rounded-full bg-gradient-to-br from-accent to-accent2 text-sm font-black text-[#1a1a2e] shadow-[0_4px_12px_rgba(0,0,0,0.4)] transition-all duration-250 ease-[cubic-bezier(0.2,1.4,0.2,1)]',
+                              'absolute right-2 top-2 grid h-[26px] w-[26px] place-items-center rounded-full bg-accent text-sm font-black text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all duration-250 ease-[cubic-bezier(0.2,1.4,0.2,1)]',
                               isSelected
                                 ? 'scale-100 opacity-100'
                                 : 'scale-[0.4] opacity-0',
@@ -402,7 +402,7 @@ export default function SongPicker({
                                 'absolute bottom-[7px] right-[7px] z-[3] grid h-[30px] w-[30px] place-items-center rounded-full border-none bg-black/60 text-xs text-paper backdrop-blur-[4px] transition-all duration-200',
                                 'opacity-0 scale-[0.8] group-hover:opacity-100 group-hover:scale-100',
                                 isThisPlaying &&
-                                  'opacity-100 scale-100 bg-gradient-to-br from-accent to-accent2 text-[#1a1a2e]',
+                                  'opacity-100 scale-100 bg-accent text-white',
                               )}
                               type="button"
                               aria-label={showPause ? '暂停' : '试听'}

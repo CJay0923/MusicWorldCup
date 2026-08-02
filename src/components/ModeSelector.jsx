@@ -37,11 +37,12 @@ const MODE_COLORS = {
 
 export default function ModeSelector({ selected, onSelect, bracketSize }) {
   const modeBtnBase = [
-    'relative flex w-[180px] cursor-pointer flex-col items-center gap-2.5',
-    'rounded-xl border px-6 py-5 text-center',
+    'relative flex w-[150px] cursor-pointer flex-col items-center gap-2.5',
+    'rounded-xl border px-4 py-5 text-center',
     'transition-all duration-250 ease-out',
-    'hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(0,0,0,0.35)]',
+    'hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.25)]',
     'active:translate-y-0 active:scale-[0.98]',
+    'sm:w-[170px] sm:px-6',
   ];
 
   const item = (mode, ico, title, desc) => {
@@ -81,7 +82,7 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
   };
 
   return (
-    <div className="mb-6 flex flex-wrap justify-center gap-4">
+    <div className="mb-6 flex flex-wrap justify-center gap-3 sm:gap-4">
       {item('classic', '🏆', `经典 ${bracketSize} 强`, '单败淘汰 · 二选一')}
       {item('wc', '⚽', '世界杯模式', '小组赛 + 淘汰赛')}
       {item('custom', '✏️', '自选模式', '自定义歌曲 · 随心对战')}

@@ -35,7 +35,7 @@ export default function MiniPlayer({
         'absolute bottom-0 left-0 right-0 z-[2] flex items-center gap-1.5 rounded-b-lg-[--radius] px-2.5 pb-[5px] pt-1',
         variant === 'gp' && 'gap-1 px-2 pb-1 pt-[3px]',
         active
-          ? 'bg-gradient-to-t from-black/50 via-black/15 to-transparent'
+          ? 'bg-black/30'
           : 'justify-center bg-transparent p-1',
       )}
     >
@@ -44,8 +44,8 @@ export default function MiniPlayer({
           'flex shrink-0 cursor-pointer items-center justify-center rounded-full border-none text-[11px]',
           variant === 'gp' ? 'h-5 w-5 text-[9px]' : 'h-6 w-6',
           isLoading
-            ? 'cursor-default bg-bg3 text-white/40 shadow-none'
-            : 'bg-gradient-to-br from-accent to-[#cc2238] text-white shadow-[0_2px_8px_rgba(230,57,70,0.4)] hover:scale-[1.08] active:scale-[0.94]',
+            ? 'cursor-default bg-bg3 text-muted shadow-none'
+            : 'bg-accent text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] hover:scale-[1.08] active:scale-[0.94]',
         )}
         type="button"
         aria-label={isPlaying ? '暂停' : '播放'}
@@ -71,12 +71,12 @@ export default function MiniPlayer({
               onTouchMove={onSeek}
             >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-accent2 to-accent"
+                className="h-full rounded-full bg-accent"
                 style={{ width: `${progress}%` }}
               />
               {chorusTime != null && chorusPct > 0 && (
                 <div
-                  className="absolute top-1/2 h-2 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-accent2 shadow-[0_0_4px_rgba(255,92,138,0.7)]"
+                  className="absolute top-1/2 h-2 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-accent2"
                   style={{ left: `${chorusPct}%` }}
                   title="高潮片段"
                 />
@@ -88,7 +88,7 @@ export default function MiniPlayer({
             </div>
             <div
               className={clsx(
-                'mt-0.5 flex justify-between text-white/35 tabular-nums',
+                'mt-0.5 flex justify-between text-muted tabular-nums',
                 variant === 'gp' ? 'text-[8px]' : 'text-[9px]',
               )}
             >
@@ -97,7 +97,7 @@ export default function MiniPlayer({
             </div>
           </div>
           <button
-            className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[10px] text-white/30 transition-colors duration-200 hover:text-accent2"
+            className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[10px] text-muted transition-colors duration-200 hover:text-accent2"
             type="button"
             aria-label="停止试听"
             onClick={(e) => {

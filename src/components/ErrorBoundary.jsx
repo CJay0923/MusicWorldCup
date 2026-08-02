@@ -53,7 +53,7 @@ class ErrorBoundary extends React.Component {
             {import.meta.env?.DEV && error && (
               <details className="mb-4 text-left">
                 <summary className="cursor-pointer text-xs text-muted">错误详情</summary>
-                <pre className="max-h-[200px] overflow-x-auto rounded-lg bg-black/20 p-2 text-[11px] text-muted">
+                <pre className="max-h-50 overflow-x-auto rounded-lg bg-black/20 p-2 text-[11px] text-muted">
                   {error.toString()}
                   {errorInfo ? '\n' + errorInfo.componentStack : ''}
                 </pre>
@@ -61,14 +61,14 @@ class ErrorBoundary extends React.Component {
             )}
             <div className="flex flex-wrap justify-center gap-3">
               <button
-                className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.15] bg-white/[0.05] px-4 py-[10px] text-[13px] font-semibold text-white/80 transition-all duration-200 hover:border-white/30 hover:bg-white/[0.1] active:scale-[0.96]"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/[0.15] bg-white/[0.05] px-4 py-[10px] text-[13px] font-semibold text-white/80 transition-all duration-200 hover:border-white/30 hover:bg-white/[0.1] active:scale-[0.96]"
                 type="button"
                 onClick={this.handleSoftReset}
               >
                 ↻ 刷新页面
               </button>
               <button
-                className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-6 py-[10px] text-[13px] font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-accent/60 bg-accent px-6 py-[10px] text-[13px] font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
                 type="button"
                 onClick={this.handleReset}
               >

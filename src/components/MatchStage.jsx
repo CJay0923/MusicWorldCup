@@ -52,7 +52,7 @@ export default function MatchStage({
           <span className="text-[11px] font-bold tracking-wide text-muted">
             张力
           </span>
-          <div className="h-[5px] flex-1 overflow-hidden rounded-full bg-white/10">
+          <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
               style={{
@@ -93,7 +93,7 @@ export default function MatchStage({
         </div>
       )}
 
-      <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-[20px] max-md:grid-cols-1 max-md:gap-4">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-5 max-md:grid-cols-1 max-md:gap-4">
         <MatchCard
           entrant={leftEntrant}
           side="left"
@@ -107,7 +107,7 @@ export default function MatchStage({
         <div className="flex min-w-[70px] flex-col items-center justify-center gap-2.5 max-md:flex-row max-md:min-w-0 max-md:py-4">
           <div
             className={clsx(
-              'flex h-[64px] w-[64px] items-center justify-center rounded-full border-2 text-xl font-black tracking-wider',
+              'flex h-16 w-16 items-center justify-center rounded-full border-2 text-xl font-black tracking-wider',
               isHighTension
                 ? 'border-accent bg-bg2 text-accent shadow-[0_4px_16px_rgba(0,0,0,0.25)]'
                 : 'border-accent/60 bg-bg2 text-accent shadow-[0_4px_12px_rgba(0,0,0,0.2)]',

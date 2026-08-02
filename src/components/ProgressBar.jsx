@@ -18,11 +18,11 @@ export default function ProgressBar({
   const pct = Math.min(100, progTotal > 0 ? (doneCnt / progTotal) * 100 : 0);
 
   return (
-    <div className="mb-[22px] mt-1.5 flex flex-wrap items-center gap-3.5">
-      <span className="whitespace-nowrap rounded-full border border-accent/35 bg-accent/[0.12] px-3.5 py-[7px] font-display text-[13px] font-extrabold tracking-wider text-accent">
+    <div className="mb-6 mt-1.5 flex flex-wrap items-center gap-3.5">
+      <span className="whitespace-nowrap rounded-full border border-accent/35 bg-accent/[0.12] px-3.5 py-2 font-display text-[13px] font-extrabold tracking-wider text-accent">
         {roundName}
       </span>
-      <div className="relative h-2.5 min-w-[160px] flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="relative h-2.5 min-w-40 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
         <i
           className="block h-full rounded-full bg-accent transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{ width: `${pct}%` }}

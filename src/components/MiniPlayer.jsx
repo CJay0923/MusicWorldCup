@@ -32,8 +32,8 @@ export default function MiniPlayer({
   return (
     <div
       className={clsx(
-        'absolute bottom-0 left-0 right-0 z-[2] flex items-center gap-1.5 rounded-b-lg-[--radius] px-2.5 pb-[5px] pt-1',
-        variant === 'gp' && 'gap-1 px-2 pb-1 pt-[3px]',
+        'absolute bottom-0 left-0 right-0 z-2 flex items-center gap-1.5 rounded-b-lg-[--radius] px-2.5 pb-1 pt-1',
+        variant === 'gp' && 'gap-1 px-2 pb-1 pt-1',
         active
           ? 'bg-black/30'
           : 'justify-center bg-transparent p-1',
@@ -97,7 +97,7 @@ export default function MiniPlayer({
             </div>
           </div>
           <button
-            className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[10px] text-muted transition-colors duration-200 hover:text-accent2"
+            className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[10px] text-muted transition-colors duration-200 hover:text-accent2"
             type="button"
             aria-label="停止试听"
             onClick={(e) => {

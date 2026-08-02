@@ -75,7 +75,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
   };
 
   return (
-    <section className="block animate-[fade_0.5s_ease] px-2.5 py-[30px] text-center">
+    <section className="block animate-[fade_0.5s_ease] px-2.5 py-8 text-center">
       <TrophySvg size={128} />
 
       {/* 冠军封面 */}
@@ -101,13 +101,13 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
         {champion?.name || '—'}
       </h1>
 
-      <div className="mb-[26px] text-sm text-muted">
+      <div className="mb-6 text-sm text-muted">
         本届 <b className="text-ink">{singerName}歌曲世界杯</b> 终极冠军
       </div>
 
       {/* 打法称号 */}
       {playstyle && (
-        <div className="mb-[26px] inline-flex items-center gap-2.5 rounded-full border border-accent/30 bg-accent/[0.08] px-4 py-2">
+        <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-accent/30 bg-accent/[0.08] px-4 py-2">
           <span className="text-xl">{playstyle.icon}</span>
           <div className="flex flex-col text-left">
             <span className="font-display text-[14px] font-black tracking-wide text-accent">
@@ -121,7 +121,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
       <div className="flex flex-wrap justify-center gap-3">
         {onReset && (
           <button
-            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.15] bg-white/[0.05] px-4 py-[9px] text-[13px] font-semibold text-white/80 transition-all duration-200 hover:border-white/30 hover:bg-white/[0.1] active:scale-[0.96]"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/[0.15] bg-white/[0.05] px-4 py-2 text-[13px] font-semibold text-white/80 transition-all duration-200 hover:border-white/30 hover:bg-white/[0.1] active:scale-[0.96]"
             onClick={onReset}
             type="button"
           >
@@ -136,7 +136,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
           🔄 再战一届
         </button>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-[9px] text-[13px] font-semibold text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.96]"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-[13px] font-semibold text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.96]"
           onClick={toggleRecap}
           type="button"
         >
@@ -145,7 +145,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
       </div>
 
       {showRecap && (
-        <div className="mx-auto mt-[34px] max-w-[640px] text-left">
+        <div className="mx-auto mt-8 max-w-[640px] text-left">
           <h3 className="mb-3 mt-0 text-center text-[13px] tracking-[2px] text-muted">
             夺冠之路
           </h3>
@@ -161,7 +161,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
                 <div className="flex shrink-0 items-center gap-1.5">
                   <div
                     className={clsx(
-                      'h-[38px] w-[38px] shrink-0 overflow-hidden rounded-lg border-[1.5px] border-accent/60',
+                      'h-10 w-10 shrink-0 overflow-hidden rounded-lg border-[1.5px] border-accent/60',
                       !getCover(s.winner) &&
                         'flex items-center justify-center bg-white/6 text-muted',
                     )}
@@ -183,7 +183,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
                   </span>
                   <div
                     className={clsx(
-                      'h-[38px] w-[38px] shrink-0 overflow-hidden rounded-lg border-[1.5px] border-white/12 opacity-55',
+                      'h-10 w-10 shrink-0 overflow-hidden rounded-lg border-[1.5px] border-white/12 opacity-55',
                       !getCover(s.loser) &&
                         'flex items-center justify-center bg-white/6 text-muted',
                     )}

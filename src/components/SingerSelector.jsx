@@ -49,7 +49,7 @@ export default function SingerSelector({
             <button
               key={id}
               className={clsx(
-                'inline-flex cursor-pointer items-center gap-[9px] rounded-full border px-6 py-[11px]',
+                'inline-flex cursor-pointer items-center gap-2 rounded-full border px-6 py-3',
                 'text-sm font-bold transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
                 'hover:-translate-y-0.5 hover:bg-white/10 hover:border-white/25 hover:text-ink hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)]',
                 'active:scale-[0.96]',
@@ -105,7 +105,7 @@ export default function SingerSelector({
               </span>
               {isLoadingSinger ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted">
-                  <i className="inline-block h-[13px] w-[13px] shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
+                  <i className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
                   {loadingProgress || '加载中…'}
                 </span>
               ) : (
@@ -130,7 +130,7 @@ export default function SingerSelector({
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="text-[15px] font-extrabold text-white">加载歌曲数据中…</span>
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted">
-                <i className="inline-block h-[13px] w-[13px] shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
+                <i className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
                 正在获取歌曲列表
               </span>
             </div>
@@ -138,7 +138,7 @@ export default function SingerSelector({
         ) : (
           <div className="relative mx-auto mt-3.5 max-w-[480px]">
             <input
-              className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-[18px] py-[11px] text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/40 focus:border-accent focus:ring-2 focus:ring-accent/40"
+              className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-5 py-3 text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/40 focus:border-accent focus:ring-2 focus:ring-accent/40"
               type="text"
               value={searchKeyword}
               placeholder="搜索任意歌手（如：王菲、五月天、邓紫棋）"
@@ -146,12 +146,12 @@ export default function SingerSelector({
             />
             {isSearching && (
               <span className="pointer-events-none absolute right-4 top-1/2 inline-flex -translate-y-1/2 items-center gap-1.5 text-xs text-muted">
-                <i className="inline-block h-[13px] w-[13px] shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
+                <i className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
                 搜索中…
               </span>
             )}
             {!isSearching && searchResults.length > 0 && (
-              <div className="mt-2.5 grid max-h-[280px] grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2 overflow-y-auto rounded-xl border border-white/[0.08] bg-bg2 p-1">
+              <div className="mt-2.5 grid max-h-70 grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2 overflow-y-auto rounded-xl border border-white/[0.08] bg-bg2 p-1">
                 {searchResults.map((r) => (
                   <button
                     key={r.mid}

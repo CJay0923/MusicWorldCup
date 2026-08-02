@@ -881,7 +881,7 @@ export default function ChampionShare({
     <>
       <div className="mt-5 flex justify-center">
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-accent/45 bg-accent/15 px-6 py-[11px] text-sm font-semibold text-accent transition-all duration-200 hover:border-accent/70 hover:bg-accent/25 active:scale-[0.97] disabled:cursor-default disabled:opacity-55"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-accent/45 bg-accent/15 px-6 py-3 text-sm font-semibold text-accent transition-all duration-200 hover:border-accent/70 hover:bg-accent/25 active:scale-[0.97] disabled:cursor-default disabled:opacity-55"
           type="button"
           onClick={handleShare}
           disabled={!canShare || state === 'loading'}
@@ -914,14 +914,14 @@ export default function ChampionShare({
                 />
                 <div className="flex gap-3">
                   <button
-                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97]"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-accent/60 bg-accent px-4 py-2 text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97]"
                     type="button"
                     onClick={handleDownload}
                   >
                     ⬇ 下载图片
                   </button>
                   <button
-                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/4 px-4 py-2 text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
                     type="button"
                     onClick={handleClose}
                   >
@@ -936,14 +936,14 @@ export default function ChampionShare({
                 <div className="text-sm text-muted">生成失败，请重试</div>
                 <div className="flex gap-3">
                   <button
-                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/4 px-4 py-2 text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
                     type="button"
                     onClick={handleShare}
                   >
                     重试
                   </button>
                   <button
-                    className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/4 px-4 py-2 text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
                     type="button"
                     onClick={handleClose}
                   >

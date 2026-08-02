@@ -209,7 +209,7 @@ const minSingers = 2;
       <div className="relative mb-3">
         <input
           type="text"
-          className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-[18px] py-[11px] text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/40 focus:border-accent focus:ring-2 focus:ring-accent/40"
+          className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-5 py-3 text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/40 focus:border-accent focus:ring-2 focus:ring-accent/40"
           placeholder="搜索更多歌手加入混战…"
           value={crossSearchKeyword || ''}
           onChange={(e) => onCrossSearch?.(e.target.value)}
@@ -222,7 +222,7 @@ const minSingers = 2;
 
       {/* 搜索结果 */}
       {crossSearchResults && crossSearchResults.length > 0 && (
-        <div className="mb-3 grid max-h-[200px] grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 overflow-y-auto">
+        <div className="mb-3 grid max-h-50 grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 overflow-y-auto">
           {crossSearchResults.slice(0, 8).map((singer) => {
             const dynId = `dyn_${singer.mid}`;
             const isAdded = dynamicSingers?.has(singer.mid);

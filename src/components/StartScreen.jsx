@@ -225,7 +225,7 @@ return (
       <div
         className={clsx(
           'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
-          rulesCollapsed.classic ? 'p-[14px_22px]' : 'p-[20px_22px]',
+          rulesCollapsed.classic ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isClassic ? 'block' : 'none' }}
       >
@@ -288,7 +288,7 @@ return (
       <div
         className={clsx(
           'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
-          rulesCollapsed.wc ? 'p-[14px_22px]' : 'p-[20px_22px]',
+          rulesCollapsed.wc ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: selectedMode === 'wc' ? 'block' : 'none' }}
       >
@@ -327,7 +327,7 @@ return (
       <div
         className={clsx(
           'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
-          rulesCollapsed.custom ? 'p-[14px_22px]' : 'p-[20px_22px]',
+          rulesCollapsed.custom ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isCustom ? 'block' : 'none' }}
       >
@@ -366,7 +366,7 @@ return (
       <div
         className={clsx(
           'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
-          rulesCollapsed.cross ? 'p-[14px_22px]' : 'p-[20px_22px]',
+          rulesCollapsed.cross ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isCrossBattle ? 'block' : 'none' }}
       >
@@ -399,7 +399,7 @@ return (
       <div
         className={clsx(
           'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
-          rulesCollapsed.ranking ? 'p-[14px_22px]' : 'p-[20px_22px]',
+          rulesCollapsed.ranking ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isRanking ? 'block' : 'none' }}
       >
@@ -461,9 +461,9 @@ return (
           {/* 对决类型选择器 - 使用优化后的 Tab 样式 */}
           <div className="mb-4 flex flex-wrap justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-1.5">
             {[
-              { value: 'songs', label: '🎵 歌曲' },
-              { value: 'albums', label: '💿 专辑' },
-              { value: 'singers', label: '🎤 歌手' },
+              { value: 'songs', label: '歌曲' },
+              { value: 'albums', label: '专辑' },
+              { value: 'singers', label: '歌手' },
             ].map((opt) => (
               <PillButton
                 key={opt.value}
@@ -553,7 +553,7 @@ return (
               {rankingSubMode === 'album-songs' && baseSingerData?.entrants && (
                 <div className="mb-3 flex flex-col gap-2">
                   <span className="w-full mb-1 text-center text-[13px] font-semibold text-muted">选择专辑</span>
-                  <div className="grid max-h-[280px] gap-2 overflow-y-auto rounded-[10px] bg-black/15 p-1 [grid-template-columns:repeat(auto-fill,minmax(80px,1fr))]">
+                  <div className="grid max-h-70 gap-2 overflow-y-auto rounded-[10px] bg-black/15 p-1 [grid-template-columns:repeat(auto-fill,minmax(80px,1fr))]">
                     <div
                       className={clsx(
                         'flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-transparent bg-white/3 p-1.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/8',
@@ -563,7 +563,7 @@ return (
                       onClick={() => onRankingAlbumMidChange?.('')}
                     >
                       <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-bg3 text-[28px]">
-                        <span>🎵</span>
+                        <span className="text-muted">♪</span>
                       </div>
                       <span className="line-clamp-2 text-[11px] leading-[1.3] text-ink [word-break:break-all]">全部歌曲</span>
                     </div>
@@ -618,7 +618,7 @@ return (
                                   }}
                                 />
                               ) : (
-                                <span>💿</span>
+                                <span className="text-muted">◎</span>
                               )}
                             </div>
                             <span className="line-clamp-2 text-[11px] leading-[1.3] text-ink [word-break:break-all]">{info.name}</span>
@@ -744,25 +744,25 @@ return (
       )}
 
       <button
-        className="relative inline-flex w-full max-w-[320px] cursor-pointer items-center justify-center gap-[7px] overflow-hidden rounded-2xl border-2 border-accent bg-accent px-8 py-4 font-display text-lg font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0.5 active:shadow-[0_2px_8px_rgba(0,0,0,0.15)] disabled:cursor-default disabled:opacity-50 sm:w-auto sm:px-12"
+        className="relative inline-flex w-full max-w-[320px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-2xl border-2 border-accent bg-accent px-8 py-4 font-display text-lg font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0.5 active:shadow-[0_2px_8px_rgba(0,0,0,0.15)] disabled:cursor-default disabled:opacity-50 sm:w-auto sm:px-12"
         onClick={onStart}
         type="button"
         disabled={(isCustom && !canStartCustom) || (isCrossBattle && !canStartCross)}
       >
         {isCustom
-          ? `🏆 开始 ${customBracketSize} 强`
+          ? `开始 ${customBracketSize} 强`
           : isCrossBattle
-            ? `⚔️ 开始混战`
+            ? '开始混战'
             : isRanking
-              ? '📊 开始排名'
+              ? '开始排名'
               : selectedMode === 'wc'
-                ? '⚽ 开始世界杯'
-                : `🏆 开始 ${bracketSize} 强`}
+                ? '开始世界杯'
+                : `开始 ${bracketSize} 强`}
       </button>
 
       {showResume && !isCustom && !isCrossBattle && !isRanking && (
         <button
-          className="ml-2.5 inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-[9px] text-[13px] font-semibold text-muted transition-all duration-200 hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.96]"
+          className="ml-2.5 inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-[13px] font-semibold text-muted transition-all duration-200 hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.96]"
           onClick={onResume}
           type="button"
         >
@@ -782,7 +782,7 @@ return (
 
       {/* 成就墙 */}
       {achievements && (
-        <div className="mt-[30px]">
+        <div className="mt-8">
           <AchievementWall unlocked={achievements} />
         </div>
       )}

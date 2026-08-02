@@ -512,7 +512,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-6">
         <p className="text-sm text-muted">没有可排名的项目</p>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/4 px-4 py-2 text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
           type="button"
           onClick={onReset}
         >
@@ -533,7 +533,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       <div
         key={itemKey(item)}
         className={clsx(
-          'flex w-[54px] cursor-grab select-none flex-col items-center transition-[opacity,transform] duration-150 active:cursor-grabbing active:scale-95',
+          'flex w-14 cursor-grab select-none flex-col items-center transition-[opacity,transform] duration-150 active:cursor-grabbing active:scale-95',
           isDragging && 'opacity-20',
         )}
         onPointerDown={(e) => onItemPointerDown(e, item, fromType, tierIndex, itemIndex)}
@@ -552,7 +552,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             {category === 'singer' ? '🎤' : '🎵'}
           </div>
         )}
-        <span className="mt-[3px] max-w-[54px] truncate text-center text-[10px] text-ink pointer-events-none">
+        <span className="mt-1 max-w-14 truncate text-center text-[10px] text-ink pointer-events-none">
           {item.name}
         </span>
       </div>
@@ -583,7 +583,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             >
               {/* 统一宽度的等级标签 */}
               <div
-                className="flex w-[80px] shrink-0 flex-col items-center justify-center px-2 py-3"
+                className="flex w-20 shrink-0 flex-col items-center justify-center px-2 py-3"
                 style={{ backgroundColor: `${TIER_COLORS[i].bg}22`, borderRight: `2px solid ${TIER_COLORS[i].bg}45` }}
               >
                 <span className="text-sm font-black" style={{ color: TIER_COLORS[i].text }}>{tier.label}</span>
@@ -598,7 +598,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
                   state.assignments[i].map((item, j) => (
                     <div
                       key={itemKey(item)}
-                      className="flex w-[54px] flex-col items-center"
+                      className="flex w-14 flex-col items-center"
                     >
                       {getItemArt(item) ? (
                         <img
@@ -613,11 +613,11 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
                           🎵
                         </div>
                       )}
-                      <span className="mt-0.5 max-w-[54px] truncate text-center text-[10px] text-ink">
+                      <span className="mt-0.5 max-w-14 truncate text-center text-[10px] text-ink">
                         {item.name}
                       </span>
                       {item.singerName && category !== 'singer' && (
-                        <small className="max-w-[54px] truncate text-[8px] text-muted">
+                        <small className="max-w-14 truncate text-[8px] text-muted">
                           {item.singerName}
                         </small>
                       )}
@@ -630,14 +630,14 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
-            className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97]"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-accent/60 bg-accent px-4 py-2 text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97]"
             type="button"
             onClick={() => setShowResult(false)}
           >
             ↩ 重新调整
           </button>
           <button
-            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96] disabled:cursor-default disabled:opacity-40"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/4 px-4 py-2 text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96] disabled:cursor-default disabled:opacity-40"
             type="button"
             onClick={exportImage}
             disabled={exporting}
@@ -645,7 +645,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             {exporting ? '⏳ 生成中...' : '📥 导出图片'}
           </button>
           <button
-            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/4 px-4 py-2 text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
             type="button"
             onClick={onReset}
           >
@@ -691,7 +691,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
               className={clsx(
                 'flex overflow-hidden rounded-xl border transition-all duration-200',
                 isActive && 'border-accent',
-                state.assignments[i].length === 0 ? 'min-h-[40px]' : 'min-h-[64px]',
+                state.assignments[i].length === 0 ? 'min-h-[40px]' : 'min-h-16',
                 `tier-${i}`,
               )}
               style={{
@@ -701,7 +701,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             >
               {/* 统一宽度的等级标签 */}
               <div
-                className="flex w-[72px] shrink-0 flex-col items-center justify-center px-2 py-2"
+                className="flex w-18 shrink-0 flex-col items-center justify-center px-2 py-2"
                 style={{ backgroundColor: `${TIER_COLORS[i].bg}18`, borderRight: `2px solid ${TIER_COLORS[i].bg}35` }}
               >
                 <span className="text-[13px] font-black" style={{ color: TIER_COLORS[i].text }}>{tier.label}</span>
@@ -753,7 +753,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
             </button>
           </div>
         </div>
-        <div className="flex max-h-[360px] flex-wrap content-start items-start gap-1.5 overflow-y-auto">
+        <div className="flex max-h-90 flex-wrap content-start items-start gap-1.5 overflow-y-auto">
           {state.pool.length === 0 ? (
             <div className="w-full py-6 text-center text-sm text-good">
               ✅ 全部分类完成！点击下方查看排名
@@ -767,14 +767,14 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
       {/* 底部操作栏 */}
       <div className="sticky bottom-0 z-10 flex justify-center gap-3 bg-bg pb-3 pt-4">
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-white/4 px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/4 px-4 py-2 text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
           type="button"
           onClick={resetAll}
         >
           ↺ 全部重置
         </button>
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97] disabled:cursor-default disabled:opacity-40"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-accent/60 bg-accent px-4 py-2 text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.97] disabled:cursor-default disabled:opacity-40"
           type="button"
           onClick={() => setShowResult(true)}
           disabled={totalAssigned === 0}
@@ -805,7 +805,7 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
               {category === 'singer' ? '🎤' : '🎵'}
             </div>
           )}
-          <span className="mt-[3px] max-w-[90px] truncate text-[10px] text-paper [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">
+          <span className="mt-1 max-w-[90px] truncate text-[10px] text-paper [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">
             {dragVisual.item.name}
           </span>
         </div>

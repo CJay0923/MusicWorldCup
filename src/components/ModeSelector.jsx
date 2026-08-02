@@ -37,7 +37,7 @@ const MODE_COLORS = {
 
 export default function ModeSelector({ selected, onSelect, bracketSize }) {
   const modeBtnBase = [
-    'relative flex w-[150px] cursor-pointer flex-col items-center gap-2.5',
+    'relative flex w-[150px] cursor-pointer flex-col items-center gap-2',
     'rounded-xl border px-4 py-5 text-center',
     'transition-all duration-250 ease-out',
     'hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.25)]',
@@ -45,7 +45,7 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
     'sm:w-[170px] sm:px-6',
   ];
 
-  const item = (mode, ico, title, desc) => {
+  const item = (mode, title, desc) => {
     const isSelected = selected === mode;
     const colors = MODE_COLORS[mode] || MODE_COLORS.classic;
     const baseCls = clsx(
@@ -56,7 +56,14 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
     );
     return (
       <div className={baseCls} onClick={() => onSelect(mode)}>
-        <span className="text-4xl">{ico}</span>
+        {/* 色点圆标 — 替代 emoji 图标 */}
+        <span
+          className={clsx(
+            'h-3 w-3 rounded-full transition-all duration-250',
+            isSelected ? colors.dot : 'bg-white/20',
+            isSelected && 'scale-125',
+          )}
+        />
         <span
           className={clsx(
             'text-[15px] font-bold',
@@ -72,7 +79,7 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
         {isSelected && (
           <div
             className={clsx(
-              'absolute -bottom-[9px] left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-full',
+              'absolute -bottom-2 left-1/2 h-0.75 w-8 -translate-x-1/2 rounded-full',
               colors.dot,
             )}
           />
@@ -83,11 +90,11 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
 
   return (
     <div className="mb-6 flex flex-wrap justify-center gap-3 sm:gap-4">
-      {item('classic', '🏆', `经典 ${bracketSize} 强`, '单败淘汰 · 二选一')}
-      {item('wc', '⚽', '世界杯模式', '小组赛 + 淘汰赛')}
-      {item('custom', '✏️', '自选模式', '自定义歌曲 · 随心对战')}
-      {item('cross-battle', '⚔️', '多歌手混战', '跨歌手对决 · 公平分配')}
-      {item('ranking', '📊', '夯到拉排名', '分层排名 · 曲线递增')}
+      {item('classic', `经典 ${bracketSize} 强`, '单败淘汰 · 二选一')}
+      {item('wc', '世界杯模式', '小组赛 + 淘汰赛')}
+      {item('custom', '自选模式', '自定义歌曲 · 随心对战')}
+      {item('cross-battle', '多歌手混战', '跨歌手对决 · 公平分配')}
+      {item('ranking', '夯到拉排名', '分层排名 · 曲线递增')}
     </div>
   );
 }

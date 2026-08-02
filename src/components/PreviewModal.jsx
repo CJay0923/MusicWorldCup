@@ -19,7 +19,7 @@ export default function PreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(0,0,0,0.96)] p-6 backdrop-blur-[6px] animate-[fade_0.25s_ease]"
+      className="fixed inset-0 z-9999 flex items-center justify-center bg-[rgba(0,0,0,0.96)] p-6 backdrop-blur-[6px] animate-[fade_0.25s_ease]"
       onClick={onClose}
     >
       <div

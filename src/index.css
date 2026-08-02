@@ -252,6 +252,13 @@ body::after {
   z-index: var(--z-confetti);
 }
 
+/* ===== 大列表渲染优化 ===== */
+/* content-visibility: auto 让浏览器跳过不可见区域的渲染，显著减少大列表的开销 */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 60px;
+}
+
 /* ===== 减少动态效果（可访问性） ===== */
 @media (prefers-reduced-motion: reduce) {
   .trophy-svg,

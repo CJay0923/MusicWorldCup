@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   base: './',
   build: {
-    assetsInlineLimit: 100000000,
+    assetsInlineLimit: 4096,
     cssCodeSplit: false,
     rollupOptions: {
       output: {

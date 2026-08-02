@@ -2,7 +2,7 @@
 // 整合 useGameState / useWorldCup / useAudioPlayer 三个 hook，
 // 根据当前歌手、模式和游戏阶段渲染对应的界面。
 
-import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from 'react';
 import {
   SINGERS,
   buildCustomSingerData,
@@ -25,8 +25,8 @@ import { MIN_FAV_WITH_COVER } from './utils/filters.js';
 import StartScreen from './components/StartScreen.jsx';
 import MatchStage from './components/MatchStage.jsx';
 import ChampionScreen from './components/ChampionScreen.jsx';
-import ChampionShare from './components/ChampionShare.jsx';
-import Confetti from './components/Confetti.jsx';
+const ChampionShare = lazy(() => import('./components/ChampionShare.jsx'));
+const Confetti = lazy(() => import('./components/Confetti.jsx'));
 import RoundOverlay from './components/RoundOverlay.jsx';
 import ProgressBar from './components/ProgressBar.jsx';
 import WCPhaseBar from './components/wc/WCPhaseBar.jsx';
@@ -34,7 +34,7 @@ import GroupPickStage from './components/wc/GroupPickStage.jsx';
 import DrawScreen from './components/wc/DrawScreen.jsx';
 import WildcardScreen from './components/wc/WildcardScreen.jsx';
 import PreviewModal from './components/PreviewModal.jsx';
-import RankingScreen from './components/RankingScreen.jsx';
+const RankingScreen = lazy(() => import('./components/RankingScreen.jsx'));
 import LoadingOverlay from './components/LoadingOverlay.jsx';
 import { WC_TOTAL_MATCHES, WC_KO_TEAMS } from './data/singers.js';
 
@@ -909,6 +909,7 @@ const handlePickerPreview = useCallback(
 
       {/* 夯到拉排名模式 */}
       {gameStarted && isRanking && rankingItems.length > 0 && (
+        <Suspense fallback={null}>
         <RankingScreen
           items={rankingItems}
           category={
@@ -921,12 +922,15 @@ const handlePickerPreview = useCallback(
           singerName={rankingScope === 'cross' ? '多歌手' : baseSingerData?.name || ''}
           onReset={handleReset}
         />
+        </Suspense>
       )}
 
       {/* 冠军界面 */}
       {isChampion && (
         <>
-          <Confetti active canvasRef={confettiRef} />
+          <Suspense fallback={null}>
+            <Confetti active canvasRef={confettiRef} />
+          </Suspense>
           <ChampionScreen
             champion={selectedMode === 'wc' ? wcState.champion : gameState.champion}
             singerName={singerData.name}
@@ -957,6 +961,7 @@ const handlePickerPreview = useCallback(
             onAgain={handleAgain}
           />
           {/* 冠军晋级之路分享图 */}
+          <Suspense fallback={null}>
           <ChampionShare
             champion={selectedMode === 'wc' ? wcState.champion : gameState.champion}
             history={
@@ -988,6 +993,7 @@ const handlePickerPreview = useCallback(
             singerName={singerData.name}
             bracketSize={selectedMode === 'wc' ? WC_KO_TEAMS : gameState.bracketSize}
           />
+          </Suspense>
         </>
       )}
 

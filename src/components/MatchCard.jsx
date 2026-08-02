@@ -12,7 +12,7 @@ import { clsx } from 'clsx';
  * @param {() => void} onPick - called when the card is clicked to pick a winner
  * @param {() => void} onPreview - called when the preview button is clicked (songs only)
  */
-export default function MatchCard({
+const MatchCard = React.memo(function MatchCard({
   entrant,
   side,
   state,
@@ -299,10 +299,12 @@ const handleImgError = (e) => {
           state === 'win' ? 'opacity-100' : 'opacity-0',
         )}
       >
-        <div className="flex h-20 w-20 items-center justify-center rounded-full border-[3px] border-accent bg-accent/90 text-4xl font-black text-ink shadow-[0_0_40px_rgba(230,57,70,0.5)]">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full border-[3px] border-accent bg-accent/90 text-4xl font-black text-ink shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
           ✓
         </div>
       </div>
     </div>
   );
-}
+});
+
+export default MatchCard;

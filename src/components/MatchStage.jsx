@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import MatchCard from './MatchCard.jsx';
 
 /**
@@ -24,6 +24,10 @@ export default function MatchStage({
   onPreview,
   children,
 }) {
+  const onPickLeft = useCallback(() => onPick?.(0), [onPick]);
+  const onPickRight = useCallback(() => onPick?.(1), [onPick]);
+  const onPreviewLeft = useCallback(() => onPreview?.(0), [onPreview]);
+  const onPreviewRight = useCallback(() => onPreview?.(1), [onPreview]);
   return (
     <>
       <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-[20px] max-md:grid-cols-1 max-md:gap-4">
@@ -32,8 +36,8 @@ export default function MatchStage({
           side="left"
           state={leftState}
           showSideTag={showSideTag}
-          onPick={() => onPick?.(0)}
-          onPreview={() => onPreview?.(0)}
+          onPick={onPickLeft}
+          onPreview={onPreviewLeft}
         />
         {/* VS 徽章 — 居中发光 */}
         <div className="flex min-w-[70px] flex-col items-center justify-center gap-2.5 max-md:flex-row max-md:min-w-0 max-md:py-4">
@@ -49,8 +53,8 @@ export default function MatchStage({
           side="right"
           state={rightState}
           showSideTag={showSideTag}
-          onPick={() => onPick?.(1)}
-          onPreview={() => onPreview?.(1)}
+          onPick={onPickRight}
+          onPreview={onPreviewRight}
         />
       </div>
       {children}

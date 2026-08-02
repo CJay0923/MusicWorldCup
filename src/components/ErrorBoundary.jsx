@@ -34,6 +34,11 @@ class ErrorBoundary extends React.Component {
     window.location.reload();
   };
 
+  handleSoftReset = () => {
+    // 仅刷新页面不清除存档（保留其他模式的进度）
+    window.location.reload();
+  };
+
   render() {
     if (this.state.hasError) {
       const { error, errorInfo } = this.state;
@@ -43,7 +48,7 @@ class ErrorBoundary extends React.Component {
             <div className="mb-3 text-5xl">😵</div>
             <h2 className="mb-2 mt-0 text-[22px] font-black">出错了</h2>
             <p className="mb-6 mt-0 text-sm text-muted">
-              应用遇到了一个意外错误。可以尝试重置后重新开始。
+              应用遇到了一个意外错误。可以尝试直接刷新，或清除存档后重新开始。
             </p>
             {import.meta.env?.DEV && error && (
               <details className="mb-4 text-left">
@@ -54,13 +59,22 @@ class ErrorBoundary extends React.Component {
                 </pre>
               </details>
             )}
-            <button
-              className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-6 py-[10px] text-[13px] font-bold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
-              type="button"
-              onClick={this.handleReset}
-            >
-              ↺ 重置并刷新
-            </button>
+            <div className="flex flex-wrap justify-center gap-3">
+              <button
+                className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.15] bg-white/[0.05] px-4 py-[10px] text-[13px] font-semibold text-white/80 transition-all duration-200 hover:border-white/30 hover:bg-white/[0.1] active:scale-[0.96]"
+                type="button"
+                onClick={this.handleSoftReset}
+              >
+                ↻ 刷新页面
+              </button>
+              <button
+                className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-6 py-[10px] text-[13px] font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+                type="button"
+                onClick={this.handleReset}
+              >
+                ↺ 清除存档并重置
+              </button>
+            </div>
           </div>
         </div>
       );

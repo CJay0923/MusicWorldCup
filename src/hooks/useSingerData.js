@@ -26,8 +26,23 @@ const singerDataLoaders = import.meta.glob(
 );
 
 // ---------- 数据缓存（模块级，跨组件复用）----------
+// LRU 缓存：最多保留 4 位歌手的已 transform 数据，避免长会话内存无限增长
+const DATA_CACHE_MAX = 4;
 const dataCache = new Map(); // singerId -> transformed data
 const fetchPromiseCache = new Map(); // singerId -> in-flight Promise
+
+function evictIfNeeded() {
+  if (dataCache.size <= DATA_CACHE_MAX) return;
+  // Map 保持插入顺序，删除最早的（LRU）
+  const oldest = dataCache.keys().next().value;
+  if (oldest !== undefined) dataCache.delete(oldest);
+}
+
+function cacheSingerData(singerId, data) {
+  if (dataCache.has(singerId)) dataCache.delete(singerId); // 重新插入到末尾
+  dataCache.set(singerId, data);
+  evictIfNeeded();
+}
 
 /**
  * 从预打包的模块中获取懒加载器
@@ -224,19 +239,19 @@ export async function loadSingerData(singerId) {
       if (!loader) {
         // 预打包数据中没有 → 降级到静态数据
         const fallback = STATIC_SINGERS[singerId] || null;
-        if (fallback) dataCache.set(singerId, fallback);
+        if (fallback) cacheSingerData(singerId, fallback);
         return fallback;
       }
 
       // 动态 import 加载歌手数据 chunk
       const raw = await loader();
       const data = transformToSingerData(raw, registry, singerId);
-      dataCache.set(singerId, data);
+      cacheSingerData(singerId, data);
       return data;
     } catch (err) {
       // chunk 加载失败 → 降级到静态数据
       const fallback = STATIC_SINGERS[singerId] || null;
-      if (fallback) dataCache.set(singerId, fallback);
+      if (fallback) cacheSingerData(singerId, fallback);
       return fallback;
     }
   })();

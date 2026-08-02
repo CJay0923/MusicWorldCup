@@ -200,9 +200,9 @@ describe('track filtering', () => {
     expect(mod.isJunkTrack('遇见')).toBe(false);
   });
 
-  it('MIN_FAV_WITHOUT_COVER = 1000', async () => {
+  it('MIN_FAV_WITH_COVER = 50000', async () => {
     const mod = await import('./filters.js');
-    expect(mod.MIN_FAV_WITHOUT_COVER).toBe(1000);
+    expect(mod.MIN_FAV_WITH_COVER).toBe(50000);
   });
 });
 

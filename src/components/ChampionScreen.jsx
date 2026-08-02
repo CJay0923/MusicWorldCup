@@ -9,7 +9,7 @@ import TrophySvg from './TrophySvg.jsx';
  * @param {Array} history - array of {roundName, winner, loser}
  * @param {() => void} onAgain - called when the "再战一届" button is clicked
  */
-export default function ChampionScreen({ champion, singerName, history, onAgain }) {
+export default function ChampionScreen({ champion, singerName, history, onAgain, onReset }) {
   // 默认展开夺冠之路
   const [showRecap, setShowRecap] = useState(true);
 
@@ -114,8 +114,17 @@ export default function ChampionScreen({ champion, singerName, history, onAgain 
       </div>
 
       <div className="flex flex-wrap justify-center gap-3">
+        {onReset && (
+          <button
+            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/[0.15] bg-white/[0.05] px-4 py-[9px] text-[13px] font-semibold text-white/80 transition-all duration-200 hover:border-white/30 hover:bg-white/[0.1] active:scale-[0.96]"
+            onClick={onReset}
+            type="button"
+          >
+            🏠 返回首页
+          </button>
+        )}
         <button
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-gradient-to-br from-accent to-[#cc2238] px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(230,57,70,0.3)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-xl border-2 border-accent/60 bg-accent px-4 py-[9px] text-[13px] font-semibold text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
           onClick={onAgain}
           type="button"
         >

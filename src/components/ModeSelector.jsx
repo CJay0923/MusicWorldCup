@@ -12,27 +12,97 @@ const MODE_COLORS = {
     selected: 'border-accent bg-accent/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
     text: 'text-accent',
     dot: 'bg-accent',
+    stroke: 'stroke-accent',
   },
   wc: {
     selected: 'border-good bg-good/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
     text: 'text-good',
     dot: 'bg-good',
+    stroke: 'stroke-good',
   },
   custom: {
     selected: 'border-accent2 bg-accent2/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
     text: 'text-accent2',
     dot: 'bg-accent2',
+    stroke: 'stroke-accent2',
   },
   'cross-battle': {
     selected: 'border-side-right bg-side-right/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
     text: 'text-side-right',
     dot: 'bg-side-right',
+    stroke: 'stroke-side-right',
   },
   ranking: {
     selected: 'border-accent2 bg-accent2/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
     text: 'text-accent2',
     dot: 'bg-accent2',
+    stroke: 'stroke-accent2',
   },
+};
+
+// ---- 极简线性 SVG 图标（24×24, stroke-based, currentColor） ----
+
+const ICON_PROPS = {
+  width: 28,
+  height: 28,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  strokeWidth: 2,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+};
+
+// 经典模式：淘汰赛对阵树（两线汇合）
+const IconClassic = ({ className }) => (
+  <svg {...ICON_PROPS} className={className}>
+    <path d="M4 4v6a4 4 0 0 0 4 4h4" />
+    <path d="M20 4v6a4 4 0 0 1-4 4h-4" />
+    <path d="M12 14v6" />
+    <path d="M9 20h6" />
+  </svg>
+);
+
+// 世界杯模式：五边形（足球截面抽象）
+const IconWorldCup = ({ className }) => (
+  <svg {...ICON_PROPS} className={className}>
+    <polygon points="12,3 21,9 18,20 6,20 3,9" />
+    <path d="M12 8v4l3 2" />
+  </svg>
+);
+
+// 自选模式：铅笔尖（编辑/自定义）
+const IconCustom = ({ className }) => (
+  <svg {...ICON_PROPS} className={className}>
+    <path d="M14 4l6 6-9 9H5v-6z" />
+    <path d="M14 4l6 6" />
+  </svg>
+);
+
+// 多歌手混战：交叉双刃（对决）
+const IconCrossBattle = ({ className }) => (
+  <svg {...ICON_PROPS} className={className}>
+    <path d="M5 19L19 5" />
+    <path d="M5 5l14 14" />
+    <circle cx="5" cy="5" r="2.5" />
+    <circle cx="19" cy="5" r="2.5" />
+  </svg>
+);
+
+// 夯到拉排名：递增条形图（分层排名）
+const IconRanking = ({ className }) => (
+  <svg {...ICON_PROPS} className={className}>
+    <rect x="3" y="14" width="5" height="6" rx="1" />
+    <rect x="9.5" y="9" width="5" height="11" rx="1" />
+    <rect x="16" y="4" width="5" height="16" rx="1" />
+  </svg>
+);
+
+const MODE_ICONS = {
+  classic: IconClassic,
+  wc: IconWorldCup,
+  custom: IconCustom,
+  'cross-battle': IconCrossBattle,
+  ranking: IconRanking,
 };
 
 export default function ModeSelector({ selected, onSelect, bracketSize }) {
@@ -48,6 +118,7 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
   const item = (mode, title, desc) => {
     const isSelected = selected === mode;
     const colors = MODE_COLORS[mode] || MODE_COLORS.classic;
+    const Icon = MODE_ICONS[mode] || IconClassic;
     const baseCls = clsx(
       ...modeBtnBase,
       isSelected
@@ -56,12 +127,11 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
     );
     return (
       <div className={baseCls} onClick={() => onSelect(mode)}>
-        {/* 色点圆标 — 替代 emoji 图标 */}
-        <span
+        {/* SVG 线性图标 — 选中时品牌色，未选时灰色 */}
+        <Icon
           className={clsx(
-            'h-3 w-3 rounded-full transition-all duration-250',
-            isSelected ? colors.dot : 'bg-white/20',
-            isSelected && 'scale-125',
+            'transition-colors duration-250',
+            isSelected ? colors.stroke : 'stroke-white/30',
           )}
         />
         <span

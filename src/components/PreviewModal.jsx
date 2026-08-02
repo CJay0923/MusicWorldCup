@@ -23,12 +23,12 @@ export default function PreviewModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-[340px] overflow-hidden rounded-2xl border border-white/[0.12] bg-[#1a1a2e] shadow-[0_32px_80px_rgba(0,0,0,0.8)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]"
+        className="relative w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/[0.12] bg-[#1a1a2e] shadow-[0_32px_80px_rgba(0,0,0,0.8)] animate-[pop_0.3s_cubic-bezier(0.22,1.3,0.36,1)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 关闭按钮 */}
         <button
-          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.06] text-base text-white/50 transition-all duration-200 hover:bg-white/[0.12] hover:text-white"
+          className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.06] text-lg text-white/50 transition-all duration-200 hover:bg-white/[0.12] hover:text-white"
           type="button"
           onClick={onClose}
           aria-label="关闭"
@@ -39,7 +39,7 @@ export default function PreviewModal({
         {/* 封面区域 — 全宽铺满 */}
         <div
           className={clsx(
-            'relative h-[200px] w-full overflow-hidden',
+            'relative h-[340px] w-full overflow-hidden',
             !song.pic && 'flex items-center justify-center bg-bg3',
           )}
         >
@@ -57,20 +57,20 @@ export default function PreviewModal({
         </div>
 
         {/* 歌曲信息 */}
-        <div className="relative px-5 pb-4 pt-2">
-          <div className="truncate text-xl font-extrabold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" title={song.name}>
+        <div className="relative px-7 pb-6 pt-3">
+          <div className="truncate text-2xl font-extrabold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" title={song.name}>
             {song.name}
           </div>
-          <div className="mt-1 truncate text-[15px] font-semibold text-accent drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">{artist}</div>
+          <div className="mt-1 truncate text-lg font-semibold text-accent drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">{artist}</div>
           {song.albumName && (
-            <div className="mt-0.5 truncate text-[11px] text-muted/70">{song.albumName}</div>
+            <div className="mt-0.5 truncate text-sm text-muted/70">{song.albumName}</div>
           )}
 
           {/* 播放控制 */}
           <div className="mt-4 flex items-center gap-3">
             <button
               className={clsx(
-                'flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-none text-lg transition-all duration-200',
+                'flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-none text-2xl transition-all duration-200',
                 isLoading
                   ? 'cursor-default bg-accent/25'
                   : 'cursor-pointer bg-gradient-to-br from-accent to-[#cc2238] text-white shadow-[0_4px_14px_rgba(230,57,70,0.35)] hover:scale-[1.08]',
@@ -90,7 +90,7 @@ export default function PreviewModal({
 
             <div className="min-w-0 flex-1">
               <div
-                className="relative h-1.5 cursor-pointer rounded-full bg-white/[0.08]"
+                className="relative h-2 cursor-pointer rounded-full bg-white/[0.08]"
                 onClick={onSeek}
                 onTouchMove={onSeek}
               >
@@ -110,7 +110,7 @@ export default function PreviewModal({
                   style={{ left: `${progress}%` }}
                 />
               </div>
-              <div className="mt-1 flex justify-between text-[10px] text-muted tabular-nums">
+              <div className="mt-1 flex justify-between text-xs text-muted tabular-nums">
                 <span>{fmtTime(currentTime)}</span>
                 <span>{fmtTime(duration)}</span>
               </div>

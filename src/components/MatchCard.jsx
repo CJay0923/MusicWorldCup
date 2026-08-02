@@ -17,6 +17,7 @@ const MatchCard = React.memo(function MatchCard({
   side,
   state,
   showSideTag,
+  isUpsetWin,
   onPick,
   onPreview,
 }) {
@@ -107,6 +108,8 @@ const handleImgError = (e) => {
     state === 'locked' && 'pointer-events-none',
     // 种子卡片
     entrant?.isSeed && 'border-accent/40 bg-bg2',
+    // 爆冷获胜抖动
+    isUpsetWin && state === 'win' && 'animate-[upsetShake_0.5s_ease-in-out]',
   );
 
   // 底部渐变遮罩（让文字在封面上清晰可读）

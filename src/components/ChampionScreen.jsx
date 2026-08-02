@@ -9,7 +9,7 @@ import TrophySvg from './TrophySvg.jsx';
  * @param {Array} history - array of {roundName, winner, loser}
  * @param {() => void} onAgain - called when the "再战一届" button is clicked
  */
-export default function ChampionScreen({ champion, singerName, history, onAgain, onReset }) {
+export default function ChampionScreen({ champion, singerName, history, onAgain, onReset, playstyle }) {
   // 默认展开夺冠之路
   const [showRecap, setShowRecap] = useState(true);
 
@@ -112,6 +112,19 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
       <div className="mb-[26px] text-sm text-white/50">
         本届 <b className="text-white">{singerName}歌曲世界杯</b> 终极冠军
       </div>
+
+      {/* 打法称号 */}
+      {playstyle && (
+        <div className="mb-[26px] inline-flex items-center gap-2.5 rounded-full border border-accent/30 bg-accent/[0.08] px-4 py-2">
+          <span className="text-xl">{playstyle.icon}</span>
+          <div className="flex flex-col text-left">
+            <span className="font-display text-[14px] font-black tracking-wide text-accent">
+              {playstyle.title}
+            </span>
+            <span className="text-[11px] text-muted">{playstyle.desc}</span>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap justify-center gap-3">
         {onReset && (

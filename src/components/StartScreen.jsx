@@ -7,6 +7,7 @@ import SongPicker from './SongPicker.jsx';
 import CrossSingerSelector from './CrossSingerSelector.jsx';
 import PillButton from './ui/PillButton.jsx';
 import { classicOptions } from '../data/singers.js';
+import AchievementWall from './AchievementWall.jsx';
 
 /**
  * Start / hero screen.
@@ -102,6 +103,7 @@ export default function StartScreen({
   rankingCanStart,
   baseSingerData,
   crossSingerDataList,
+  achievements,
 }) {
   const isClassic = selectedMode === 'classic';
   const isCustom = selectedMode === 'custom';
@@ -777,6 +779,13 @@ return (
               ? '提示：逐个将项目分配到等级 · 等级容量按曲线递增 · 支持撤销'
               : '提示：可用键盘 ← 选左、→ 选右 · 每次开始对阵随机生成'}
       </div>
+
+      {/* 成就墙 */}
+      {achievements && (
+        <div className="mt-[30px]">
+          <AchievementWall unlocked={achievements} />
+        </div>
+      )}
     </section>
   );
 }

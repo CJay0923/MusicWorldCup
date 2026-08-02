@@ -36,6 +36,16 @@ import WildcardScreen from './components/wc/WildcardScreen.jsx';
 import PreviewModal from './components/PreviewModal.jsx';
 const RankingScreen = lazy(() => import('./components/RankingScreen.jsx'));
 import LoadingOverlay from './components/LoadingOverlay.jsx';
+import AchievementToast from './components/AchievementToast.jsx';
+import { useAchievements } from './hooks/useAchievements.js';
+import {
+  computePlaystyle,
+  countUpsets,
+  isUpsetPick,
+  loadStats,
+  updateStats,
+  saveStats,
+} from './utils/playstyle.js';
 import { WC_TOTAL_MATCHES, WC_KO_TEAMS } from './data/singers.js';
 
 const KO_ROUND_NAMES = ['32强', '16强', '8强', '4强', '决赛'];
@@ -48,6 +58,11 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [customSelectedIds, setCustomSelectedIds] = useState(new Set());
   const confettiRef = useRef(null);
+
+  // 成就系统：追踪回退使用、游戏开始时间、战绩更新
+  const undoUsedRef = useRef(false);
+  const gameStartRef = useRef(null);
+  const statsUpdatedRef = useRef(false);
 
   // 跨歌手混战状态
   const [crossSelectedSingers, setCrossSelectedSingers] = useState(new Set());
@@ -365,6 +380,11 @@ const handlePickerPreview = useCallback(
   const handleStart = useCallback(() => {
     audio.stopAudition();
 
+    // 重置成就追踪
+    undoUsedRef.current = false;
+    gameStartRef.current = Date.now();
+    statsUpdatedRef.current = false;
+
     // 夯到拉排名模式：准备排名项目
     if (selectedMode === 'ranking') {
       let items = [];
@@ -479,12 +499,20 @@ const handlePickerPreview = useCallback(
   const handleResume = useCallback(() => {
     audio.stopAudition();
     setGameStarted(true);
+    // 续玩时重置追踪（不计入速通成就）
+    undoUsedRef.current = false;
+    gameStartRef.current = null; // null 表示续玩，不计时
+    statsUpdatedRef.current = false;
     if (selectedMode === 'wc') wcState.startWorldCup(true);
     else gameState.startGame(true);
   }, [selectedMode, wcState, gameState, audio]);
 
   const handleAgain = useCallback(() => {
     audio.stopAudition();
+    // 重置成就追踪
+    undoUsedRef.current = false;
+    gameStartRef.current = Date.now();
+    statsUpdatedRef.current = false;
     if (selectedMode === 'wc') wcState.resetWC();
     else gameState.resetState();
   }, [selectedMode, wcState, gameState, audio]);
@@ -500,6 +528,7 @@ const handlePickerPreview = useCallback(
   // ---------- 回退上一场 ----------
   const handleUndo = useCallback(() => {
     audio.stopAudition();
+    undoUsedRef.current = true; // 标记本届使用了回退
     if (selectedMode === 'wc') wcState.undoWC();
     else gameState.undo();
   }, [selectedMode, wcState, gameState, audio]);
@@ -634,6 +663,8 @@ const handlePickerPreview = useCallback(
   // ---------- 进度条数据 ----------
   const progData = (() => {
     if (!gameStarted || isChampion) return null;
+    // 夯到拉排名模式不需要进度条
+    if (selectedMode === 'ranking') return null;
 
     if (selectedMode === 'wc' && wcState.wc) {
       const wc = wcState.wc;
@@ -702,7 +733,7 @@ const handlePickerPreview = useCallback(
 
   // ---------- WC 阶段栏数据 ----------
   const wcBarProps = (() => {
-    if (selectedMode !== 'wc' || !wcState.wc) return null;
+    if (selectedMode !== 'wc' || !wcState.wc || !gameStarted) return null;
     const wc = wcState.wc;
     if (wc.phase === 'group') {
       return {
@@ -733,6 +764,70 @@ const handlePickerPreview = useCallback(
     (selectedMode === 'wc'
       ? wcState.phase === 'group' || wcState.phase === 'knockout'
       : true);
+
+  // ---------- 成就系统：爆冷检测 ----------
+  const upsetInfo = useMemo(() => {
+    const lp = selectedMode === 'wc' ? wcState.lastPick : gameState.lastPick;
+    if (!lp || !isUpsetPick(lp)) return null;
+    return { side: lp.slot, winner: lp.winner, loser: lp.loser };
+  }, [selectedMode, wcState.lastPick, gameState.lastPick]);
+
+  // ---------- 成就系统：耗时计算 ----------
+  const elapsedSecs = isChampion && gameStartRef.current
+    ? Math.round((Date.now() - gameStartRef.current) / 1000)
+    : 0;
+
+  // ---------- 成就系统：打法称号 ----------
+  const playstyle = useMemo(() => {
+    if (!isChampion) return null;
+    const hist =
+      selectedMode === 'wc' ? wcState.wc?.history || [] : gameState.history;
+    const bs = selectedMode === 'wc' ? WC_KO_TEAMS : gameState.bracketSize;
+    return computePlaystyle(hist, bs, elapsedSecs, !undoUsedRef.current);
+  }, [isChampion, selectedMode, wcState.wc, wcState.champion, gameState.history, gameState.bracketSize, gameState.champion, elapsedSecs]);
+
+  // ---------- 成就系统 hook ----------
+  const { unlocked: achievements, newAchievements, dismissNew } = useAchievements({
+    mode: selectedMode,
+    champion: selectedMode === 'wc' ? wcState.champion : gameState.champion,
+    history: selectedMode === 'wc' ? wcState.wc?.history || [] : gameState.history,
+    bracketSize: selectedMode === 'wc' ? WC_KO_TEAMS : gameState.bracketSize,
+    noUndo: !undoUsedRef.current,
+    elapsed: elapsedSecs,
+    isCrossBattle,
+    isRankingDone: false,
+  });
+
+  // ---------- 轮次过渡时自动停止试听 ----------
+  useEffect(() => {
+    if (transitionData && audio.playingId != null) {
+      audio.stopAudition();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transitionData]);
+
+  // ---------- 成就系统：夺冠时更新跨会话战绩 ----------
+  useEffect(() => {
+    if (!isChampion || statsUpdatedRef.current) return;
+    statsUpdatedRef.current = true;
+
+    const hist =
+      selectedMode === 'wc' ? wcState.wc?.history || [] : gameState.history;
+    const upsets = countUpsets(hist);
+    const totalPicks = hist.filter((h) => h.phase !== 'group').length;
+    const bs = selectedMode === 'wc' ? WC_KO_TEAMS : gameState.bracketSize;
+
+    const currentStats = loadStats();
+    const newStats = updateStats(currentStats, {
+      singerName: singerData.name,
+      bracketSize: bs,
+      elapsed: elapsedSecs,
+      upsets,
+      totalPicks,
+      mode: selectedMode,
+    });
+    saveStats(newStats);
+  }, [isChampion, selectedMode, wcState.wc, gameState.history, singerData.name, elapsedSecs]);
 
   // ==================== 渲染 ====================
   return (
@@ -842,6 +937,7 @@ const handlePickerPreview = useCallback(
           rankingCanStart={rankingCanStart}
           baseSingerData={baseSingerData}
           crossSingerDataList={crossSingerDataList}
+          achievements={achievements}
         />
       )}
 
@@ -900,6 +996,7 @@ const handlePickerPreview = useCallback(
               leftState={getCardState(0)}
               rightState={getCardState(1)}
               showSideTag={selectedMode !== 'wc'}
+              upsetInfo={upsetInfo}
               onPick={handlePick}
               onPreview={handlePreview}
             />
@@ -959,6 +1056,7 @@ const handlePickerPreview = useCallback(
                 : gameState.history
             }
             onAgain={handleAgain}
+            playstyle={playstyle}
           />
           {/* 冠军晋级之路分享图 */}
           <Suspense fallback={null}>
@@ -1034,8 +1132,8 @@ const handlePickerPreview = useCallback(
         />
       )}
 
-      {/* 试听弹窗 */}
-      {audio.playingId != null && (
+      {/* 试听弹窗 — 轮次过渡时自动隐藏并停止播放 */}
+      {audio.playingId != null && !transitionData && (
         <PreviewModal
           song={audio.currentSong}
           artist={audio.artist}
@@ -1054,6 +1152,9 @@ const handlePickerPreview = useCallback(
 
       {/* 音频元素（常驻 DOM，供 useAudioPlayer 绑定事件） */}
       <audio ref={audio.audioRef} preload="metadata" />
+
+      {/* 成就解锁 Toast */}
+      <AchievementToast newAchievements={newAchievements} onDismiss={dismissNew} />
     </div>
   );
 }

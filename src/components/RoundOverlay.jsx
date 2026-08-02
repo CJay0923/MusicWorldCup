@@ -13,7 +13,7 @@ export default function RoundOverlay({ show, icon, title, sub, onContinue }) {
   return (
     <div
       className={clsx(
-        'fixed inset-0 z-[--z-overlay] items-center justify-center backdrop-blur-[8px]',
+        'fixed inset-0 z-[99999] items-center justify-center backdrop-blur-[8px]',
         'bg-[rgba(10,11,16,0.92)]',
         show ? 'flex animate-[fade_0.3s_ease]' : 'hidden',
       )}

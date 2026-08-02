@@ -1,8 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
+import { clsx } from 'clsx';
 import MatchCard from './MatchCard.jsx';
+import { computeTension } from '../utils/playstyle.js';
 
 /**
- * Battle stage: two cards + VS marker.
+ * Battle stage: two cards + VS marker + tension bar.
  * Dark theme with glowing VS badge.
  *
  * @param {object|null} leftEntrant - left song object
@@ -12,6 +14,7 @@ import MatchCard from './MatchCard.jsx';
  * @param {boolean} showSideTag - whether to show half tags on the cards
  * @param {(slot: 0|1) => void} onPick - called with 0 (left) or 1 (right) when a card is picked
  * @param {(slot: 0|1) => void} onPreview - called with 0 (left) or 1 (right) for preview
+ * @param {object|null} upsetInfo - { side: 0|1, winner, loser } when an upset just occurred
  * @param {React.ReactNode} children - extra content
  */
 export default function MatchStage({
@@ -22,26 +25,97 @@ export default function MatchStage({
   showSideTag,
   onPick,
   onPreview,
+  upsetInfo,
   children,
 }) {
   const onPickLeft = useCallback(() => onPick?.(0), [onPick]);
   const onPickRight = useCallback(() => onPick?.(1), [onPick]);
   const onPreviewLeft = useCallback(() => onPreview?.(0), [onPreview]);
   const onPreviewRight = useCallback(() => onPreview?.(1), [onPreview]);
+
+  // 对决张力（0-100）：seedRank 差越小越紧张
+  const tension = useMemo(
+    () => computeTension(leftEntrant, rightEntrant),
+    [leftEntrant, rightEntrant],
+  );
+  const isHighTension = tension >= 65;
+  const isExtremeTension = tension >= 85;
+
+  // 爆冷检测：upsetInfo 非空且当前处于胜负过渡状态
+  const showUpsetBanner = !!upsetInfo && (leftState === 'win' || rightState === 'win');
+
   return (
     <>
+      {/* 张力条 */}
+      {leftEntrant && rightEntrant && (
+        <div className="mb-3 flex items-center gap-2.5">
+          <span className="text-[11px] font-bold tracking-wide text-muted">
+            张力
+          </span>
+          <div className="h-[5px] flex-1 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{
+                width: `${tension}%`,
+                background: isExtremeTension
+                  ? 'linear-gradient(90deg, #ff6b6b, #ffd24a, #ff6b6b)'
+                  : isHighTension
+                    ? 'linear-gradient(90deg, #ffb627, #ffd24a)'
+                    : 'linear-gradient(90deg, rgba(139,143,154,0.5), rgba(139,143,154,0.8))',
+                boxShadow: isHighTension
+                  ? '0 0 8px rgba(255,182,39,0.4)'
+                  : 'none',
+              }}
+            />
+          </div>
+          {isExtremeTension ? (
+            <span className="animate-[pulse_1.5s_ease-in-out_infinite] text-[11px] font-extrabold text-accent">
+              悬念拉满!
+            </span>
+          ) : isHighTension ? (
+            <span className="text-[11px] font-bold text-side-right">
+              势均力敌
+            </span>
+          ) : null}
+        </div>
+      )}
+
+      {/* 爆冷横幅 */}
+      {showUpsetBanner && (
+        <div className="mb-2.5 flex animate-[upsetPop_0.5s_cubic-bezier(0.22,1.4,0.36,1)] justify-center">
+          <div className="flex items-center gap-2 rounded-full border-2 border-accent/50 bg-accent/15 px-4 py-1.5 shadow-[0_0_20px_rgba(230,57,70,0.2)] backdrop-blur-sm">
+            <span className="text-base">💥</span>
+            <span className="font-display text-[13px] font-black tracking-wide text-accent">
+              爆冷！
+            </span>
+            <span className="text-[11px] text-muted">
+              {upsetInfo.winner?.seedRank ?? '?'} 种子击败{' '}
+              {upsetInfo.loser?.seedRank ?? '?'} 种子
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-[20px] max-md:grid-cols-1 max-md:gap-4">
         <MatchCard
           entrant={leftEntrant}
           side="left"
           state={leftState}
           showSideTag={showSideTag}
+          isUpsetWin={showUpsetBanner && upsetInfo?.side === 0}
           onPick={onPickLeft}
           onPreview={onPreviewLeft}
         />
-        {/* VS 徽章 — 居中发光 */}
+        {/* VS 徽章 — 居中发光，高张力时加强脉冲 */}
         <div className="flex min-w-[70px] flex-col items-center justify-center gap-2.5 max-md:flex-row max-md:min-w-0 max-md:py-4">
-          <div className="flex h-[64px] w-[64px] items-center justify-center rounded-full border-2 border-accent/60 bg-bg2 font-display text-xl font-black tracking-wider text-accent shadow-[0_0_30px_rgba(230,57,70,0.25),inset_0_1px_0_rgba(255,255,255,0.05)] animate-[pulse_2.4s_ease-in-out_infinite]">
+          <div
+            className={clsx(
+              'flex h-[64px] w-[64px] items-center justify-center rounded-full border-2 font-display text-xl font-black tracking-wider',
+              isHighTension
+                ? 'border-accent bg-bg2 text-accent shadow-[0_0_40px_rgba(230,57,70,0.4),inset_0_1px_0_rgba(255,255,255,0.05)] animate-[pulse_1.2s_ease-in-out_infinite]'
+                : 'border-accent/60 bg-bg2 text-accent shadow-[0_0_30px_rgba(230,57,70,0.25),inset_0_1px_0_rgba(255,255,255,0.05)] animate-[pulse_2.4s_ease-in-out_infinite]',
+            )}
+          >
             VS
           </div>
           <div className="font-display text-[11px] uppercase tracking-[3px] text-white/25 max-md:hidden">
@@ -53,6 +127,7 @@ export default function MatchStage({
           side="right"
           state={rightState}
           showSideTag={showSideTag}
+          isUpsetWin={showUpsetBanner && upsetInfo?.side === 1}
           onPick={onPickRight}
           onPreview={onPreviewRight}
         />

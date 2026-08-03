@@ -1,82 +1,82 @@
 {
-  "stefanie": {
-    "songCount": 184,
-    "albumCount": 49
-  },
-  "jj": {
-    "songCount": 397,
-    "albumCount": 123
-  },
   "jay": {
-    "songCount": 324,
-    "albumCount": 68
-  },
-  "jolin": {
-    "songCount": 275,
-    "albumCount": 76
-  },
-  "david": {
-    "songCount": 184,
-    "albumCount": 57
-  },
-  "she": {
-    "songCount": 152,
-    "albumCount": 34
-  },
-  "eason": {
-    "songCount": 606,
-    "albumCount": 136
+    "songCount": 214,
+    "total": 1761
   },
   "leehom": {
-    "songCount": 285,
-    "albumCount": 82
+    "songCount": 235,
+    "total": 1053
+  },
+  "david": {
+    "songCount": 114,
+    "total": 677
+  },
+  "jj": {
+    "songCount": 245,
+    "total": 1738
   },
   "khalil": {
-    "songCount": 194,
-    "albumCount": 52
+    "songCount": 151,
+    "total": 581
+  },
+  "eason": {
+    "songCount": 467,
+    "total": 2000
   },
   "mayday": {
-    "songCount": 264,
-    "albumCount": 63
+    "songCount": 206,
+    "total": 1411
   },
   "lironghao": {
-    "songCount": 154,
-    "albumCount": 60
+    "songCount": 93,
+    "total": 583
+  },
+  "stefanie": {
+    "songCount": 164,
+    "total": 853
+  },
+  "jolin": {
+    "songCount": 205,
+    "total": 1353
   },
   "fish": {
-    "songCount": 229,
-    "albumCount": 52
+    "songCount": 187,
+    "total": 823
   },
   "elva": {
-    "songCount": 184,
-    "albumCount": 33
+    "songCount": 178,
+    "total": 591
   },
   "angela": {
-    "songCount": 261,
-    "albumCount": 135
+    "songCount": 156,
+    "total": 862
   },
   "cyndi": {
-    "songCount": 202,
-    "albumCount": 52
+    "songCount": 166,
+    "total": 681
   },
   "rainie": {
-    "songCount": 208,
-    "albumCount": 72
+    "songCount": 151,
+    "total": 699
+  },
+  "she": {
+    "songCount": 131,
+    "total": 662
   },
   "amei": {
-    "songCount": 272,
-    "albumCount": 71
+    "songCount": 231,
+    "total": 1223
   },
   "gem": {
-    "songCount": 236,
-    "albumCount": 90
+    "songCount": 149,
+    "total": 1051
   },
   "sandy": {
-    "songCount": 499,
-    "albumCount": 130
+    "songCount": 392,
+    "total": 1848
   },
   "lala": {
-    "songCount": 215,
-    "albumCount": 101
+    "songCount": 114,
+    "total": 550
   }
 }

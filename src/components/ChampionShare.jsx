@@ -13,6 +13,7 @@
 //   bracketSize 128 / 64 / 32 ...
 
 import React, { useRef, useState } from 'react';
+import { getCoverBase } from '../lib/assets.js';
 
 // ---------------- 常量 ----------------
 const FONT =
@@ -89,10 +90,16 @@ function wrapText(ctx, text, maxWidth, maxLines = 2) {
   return lines.slice(0, maxLines);
 }
 
-// CORS 代理：将 QQ 音乐 CDN 图片或本地封面路径转为可通过 CORS 的 URL
+// CORS 代理：将 QQ 音乐 CDN 图片 / 本地封面 / R2 封面转为可通过 CORS 的 URL
 function corsProxyUrl(url) {
   if (!url) return '';
   if (url.startsWith('data:')) return url;
+  // R2 封面：经 weserv 代理以获取 CORS 头（canvas 绘制需要，避免污染）
+  const base = getCoverBase();
+  if (base && url.startsWith(base)) {
+    const stripped = url.replace(/^https?:\/\//, '');
+    return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}`;
+  }
   // 本地路径转 CDN URL（用于分享链接场景）
   if (url.startsWith('./covers/album_') || url.startsWith('/covers/album_')) {
     const m = url.match(/album_([^.]+)/);

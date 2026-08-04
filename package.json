@@ -7,6 +7,8 @@
     "dev": "vite --host",
     "dev:full": "concurrently \"vite --host\" \"node server/index.js\"",
     "dev:client": "vite --host",
+    "dev:cf": "wrangler pages dev --proxy 5173 http://localhost:5173",
+    "dev:cf:build": "wrangler pages dev dist",
     "dev:server": "node server/index.js",
     "start": "node server/index.js",
     "build": "vite build",
@@ -51,6 +53,7 @@
     "tailwindcss": "^4.3.3",
     "vite": "^6.0.0",
     "vite-plugin-singlefile": "^2.3.3",
-    "vitest": "^3.2.7"
+    "vitest": "^3.2.7",
+    "wrangler": "^4.118.0"
   }
 }

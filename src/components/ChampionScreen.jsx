@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { clsx } from 'clsx';
 import TrophySvg from './TrophySvg.jsx';
+import Leaderboard from './Leaderboard.jsx';
 
 /**
  * Champion display screen.
@@ -9,7 +10,7 @@ import TrophySvg from './TrophySvg.jsx';
  * @param {Array} history - array of {roundName, winner, loser}
  * @param {() => void} onAgain - called when the "再战一届" button is clicked
  */
-export default function ChampionScreen({ champion, singerName, history, onAgain, onReset, playstyle }) {
+export default function ChampionScreen({ champion, singerName, history, onAgain, onReset, playstyle, scope }) {
   // 默认展开夺冠之路
   const [showRecap, setShowRecap] = useState(true);
 
@@ -88,7 +89,7 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
             onError={(e) => handleImgError(e, champion)}
           />
         </div>
-      )}}
+      )}
 
       <div className="mt-3.5 inline-block rounded-full border border-accent/40 bg-accent/[0.12] px-4 py-1.5 text-xs font-extrabold tracking-[3px] text-accent">
         CHAMPION
@@ -214,6 +215,8 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
           </div>
         </div>
       )}
+
+      <Leaderboard scope={scope} />
     </section>
   );
 }

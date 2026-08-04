@@ -23,6 +23,7 @@ import {
 } from '../data/singers.js';
 import { shuffleArr, bracketOrder } from '../utils/bracket.js';
 import { slimE, restoreE } from '../utils/format.js';
+import { reportResult } from '../lib/stats.js';
 
 const PICK_DELAY = 750;
 const storageKey = (id, mode) => 'song_cup_' + id + '_wc_' + (mode || 'hot');
@@ -562,6 +563,17 @@ const resetWC = useCallback(() => {
         let next;
         if (isChampion) {
           const champ = newRounds[KO_ROUNDS - 1]?.[0] || winner;
+          // 赛后一次性上报（fire-and-forget）：只取淘汰赛阶段真实对局，四选二小组赛不计入
+          const koHistory = baseWc.history.filter((h) =>
+            ['r32', 'r16', 'qf', 'sf', 'final'].includes(h.phase),
+          );
+          reportResult({
+            scope: singerId,
+            mode: 'worldcup',
+            size: 32,
+            history: koHistory,
+            champion: champ,
+          });
           next = { ...baseWc, ko: updatedKo, phase: 'champion', champion: champ };
         } else {
           next = { ...baseWc, ko: updatedKo };
@@ -577,7 +589,7 @@ const resetWC = useCallback(() => {
         }
       }, PICK_DELAY);
     },
-    [busy, wc, saveWC],
+    [busy, wc, saveWC, singerId],
   );
 
   const dismissTransition = useCallback(() => {

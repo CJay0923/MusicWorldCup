@@ -8,6 +8,9 @@ export default defineConfig({
   base: './',
   build: {
     assetsInlineLimit: 4096,
+    // 关闭 vite 自动清空 dist：本机 safe-delete 回收站 shim 会拦截 rm 导致 build 失败。
+    // 代价：跨次构建会残留旧 hash 资源文件，部署前用 `mv dist dist_bak && npm run build` 清一次即可。
+    emptyOutDir: false,
     cssCodeSplit: false,
     rollupOptions: {
       output: {

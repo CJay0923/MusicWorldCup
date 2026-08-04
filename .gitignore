@@ -33,3 +33,9 @@ Thumbs.db
 *.log
 npm-debug.log*
 docs/
+
+# Local wrangler state (D1/R2 local sim, cache, traces)
+.wrangler/
+
+# Build backup
+dist_bak/

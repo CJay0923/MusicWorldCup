@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { freshRounds, generateRoundNames } from '../utils/bracket.js';
 import { slimE, restoreE } from '../utils/format.js';
+import { reportResult } from '../lib/stats.js';
 
 const PICK_DELAY = 750;
 const storageKey = (id, bs) => 'song_cup_' + id + '_' + bs;
@@ -243,6 +244,14 @@ export function useGameState(singerId, singerData, bracketSizeOverride) {
             // 决赛结束，产生冠军
             const champ = newRounds[nextRound]?.[0] || winner;
             setChampion(champ);
+            // 赛后一次性上报（fire-and-forget，绝不影响冠军页）
+            reportResult({
+              scope: singerId,
+              mode: 'classic',
+              size: newHistory.length + 1,
+              history: newHistory,
+              champion: champ,
+            });
             setCurRound(nextRound);
             setCurMatch(nextMatch);
             saveState(newRounds, nextRound, nextMatch, newHistory, true);
@@ -265,7 +274,7 @@ export function useGameState(singerId, singerData, bracketSizeOverride) {
         setBusy(false);
       }, PICK_DELAY);
     },
-    [busy, rounds, curRound, curMatch, history, roundNames, NUM_ROUNDS, saveState],
+    [busy, rounds, curRound, curMatch, history, roundNames, NUM_ROUNDS, saveState, singerId],
   );
 
   const dismissTransition = useCallback(() => {

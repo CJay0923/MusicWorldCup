@@ -10,6 +10,7 @@ import { useState, useEffect, useRef } from 'react';
 import { SINGER_REGISTRY } from '../data/singerRegistry.js';
 import { STATIC_SINGERS } from '../data/singers.js';
 import { baseKey } from '../utils/text.js';
+import { coverUrl } from '../lib/assets.js';
 import {
   isLiveTrack,
   isLiveAlbum,
@@ -98,7 +99,7 @@ function transformToSingerData(raw, registry, singerId) {
         songmid: song.songmid,
         songid: song.songid,
         pic: song.pic || cdnAlbumPic || cdnSongPic,
-        picLocal: albumMid ? `./covers/album_${albumMid}.jpg` : '',
+        picLocal: coverUrl(albumMid),
         songPic: song.songPic || cdnSongPic,
         albumMid,
         albumName: song.albumName,
@@ -178,7 +179,7 @@ function transformToSingerData(raw, registry, singerId) {
       songmid: song.songmid,
       songid: song.songid,
       pic: cdnAlbumPic || cdnSongPic,
-      picLocal: albumMid ? `./covers/album_${albumMid}.jpg` : '',
+      picLocal: coverUrl(albumMid),
       songPic: cdnSongPic,
       albumMid,
       albumName: song.albumName,

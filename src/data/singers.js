@@ -3,6 +3,7 @@
 // 本文件不再包含静态歌曲数组（LEFT/RIGHT/NIDS/PICS/CHORUS），大幅减少打包体积
 
 import { shuffleArr } from '../utils/bracket.js';
+import { coverUrl } from '../lib/assets.js';
 
 // ---------- 歌手元数据（仅用于初始 UI 显示，歌曲数据懒加载）----------
 export const SINGERS = {
@@ -355,7 +356,7 @@ export function buildCrossSingerAlbumData(singerDataList, bracketSize) {
           type: 'album',
           name: album.name,
           pic: album.pic || (albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg` : ''),
-          picLocal: albumMid ? `./covers/album_${albumMid}.jpg` : '',
+          picLocal: coverUrl(albumMid),
           albumMid,
           singerName: c.singerName,
           singerPhoto: c.singerPhoto,

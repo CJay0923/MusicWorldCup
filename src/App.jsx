@@ -38,6 +38,7 @@ const RankingScreen = lazy(() => import('./components/RankingScreen.jsx'));
 import LoadingOverlay from './components/LoadingOverlay.jsx';
 import AchievementToast from './components/AchievementToast.jsx';
 import { useAchievements } from './hooks/useAchievements.js';
+import { coverUrl } from './lib/assets.js';
 import {
   computePlaystyle,
   countUpsets,
@@ -433,7 +434,7 @@ const handlePickerPreview = useCallback(
                   (albumMid
                     ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg`
                     : ''),
-                picLocal: albumMid ? `./covers/album_${albumMid}.jpg` : '',
+                picLocal: coverUrl(albumMid),
                 albumMid,
                 date: g.date,
                 songCount: g.songs.length,
@@ -481,7 +482,7 @@ const handlePickerPreview = useCallback(
                 (g.albumMid
                   ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${g.albumMid}.jpg`
                   : ''),
-              picLocal: g.albumMid ? `./covers/album_${g.albumMid}.jpg` : '',
+              picLocal: coverUrl(g.albumMid),
               albumMid: g.albumMid || '',
               date: g.date,
               songCount: g.songs.length,
@@ -1043,6 +1044,7 @@ const handlePickerPreview = useCallback(
           <ChampionScreen
             champion={selectedMode === 'wc' ? wcState.champion : gameState.champion}
             singerName={singerData.name}
+            scope={gameSingerId}
             history={
               selectedMode === 'wc'
                 ? (wcState.wc?.history || []).map((h) => {

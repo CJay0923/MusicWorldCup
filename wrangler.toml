@@ -5,16 +5,16 @@ pages_build_output_dir = "dist"
 # Cloudflare Pages 部署配置
 # 用法: npx wrangler pages deploy dist --project-name=music-world-cup
 
-# ---------- 后端绑定 ----------
+# ---------- 后端绑定（路径 A 部署时未启用；走路径 B 时取消注释并填真实 id）----------
 # 封面托管在 R2（见 scripts/migrate-covers-to-r2.mjs）
-# bucket_name 改成你 `wrangler r2 bucket create` 实际创建的名字
-[[r2_buckets]]
-binding = "COVERS"
-bucket_name = "mwc-covers"
+# 取消注释并把 bucket_name 改成 `wrangler r2 bucket create` 实际创建的名字
+# [[r2_buckets]]
+# binding = "COVERS"
+# bucket_name = "mwc-covers"
 
 # 投票/榜单关系库（见 db/schema.sql）
-# database_id 改为 `wrangler d1 create mwc-db` 输出的值
-[[d1_databases]]
-binding = "DB"
-database_name = "mwc-db"
-database_id = "REPLACE_WITH_WRANGLER_D1_CREATE_OUTPUT"
+# 取消注释并把 database_id 改为 `wrangler d1 create mwc-db` 输出的值
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "mwc-db"
+# database_id = "REPLACE_WITH_WRANGLER_D1_CREATE_OUTPUT"

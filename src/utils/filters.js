@@ -34,6 +34,23 @@ export const JUNK_TRACK_PATTERN =
   /(\binstrumental\b|伴奏|卡拉OK|karaoke|off\s?vocal|纯音乐|純音樂|\bcommentary\b|\bvoice memo\b)/i;
 
 /**
+ * 串烧/翻唱/致敬曲目匹配正则
+ * 匹配 现场串烧、多曲拼接（"A+B"）、翻唱、致敬等
+ */
+export const MEDLEY_TRACK_PATTERN =
+  /(串烧|串燒|翻唱|致敬|\bmedley\b|\bmashup\b)/i;
+
+/**
+ * 判断歌曲名是否为串烧/翻唱
+ * 含 + 号拼接多曲、串烧/翻唱/致敬/medley/mashup 关键词
+ * @param {string} name - 歌曲名
+ * @returns {boolean}
+ */
+export function isMedleyTrack(name) {
+  return MEDLEY_TRACK_PATTERN.test(name) || /\+/.test(name);
+}
+
+/**
  * 判断歌曲名是否为 Live 版本
  * @param {string} name - 歌曲名
  * @returns {boolean}
@@ -61,7 +78,20 @@ export function isJunkTrack(name) {
 }
 
 /**
- * 无封面的曲目直接过滤掉（不显示）
- * 有封面的曲目，收藏量低于此阈值也过滤掉
+ * 未分类歌曲（无 albumMid 的独立单曲）的收藏量保留阈值
+ * 专辑内歌曲（有 albumMid 且归属正确）无论收藏量多低都保留，
+ * 只有未分类歌曲才按收藏量判断。
  */
-export const MIN_FAV_WITH_COVER = 50000;
+export const MIN_FAV_LOOSE = 20000;
+
+/**
+ * 判断歌曲是否保留：
+ * - 有 albumMid 的专辑内歌曲：始终保留（下载时已校验专辑归属）
+ * - 无 albumMid 的未分类歌曲：收藏量 >= MIN_FAV_LOOSE 才保留
+ * @param {{albumMid?: string, favCount?: number}} song
+ * @returns {boolean}
+ */
+export function shouldKeepByFavOrAlbum(song) {
+  if (song && song.albumMid) return true;
+  return (song && song.favCount || 0) >= MIN_FAV_LOOSE;
+}

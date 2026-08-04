@@ -51,6 +51,77 @@ describe('WC shuffleArr for draw', () => {
   });
 });
 
+// ---------- WC 选曲玩法 ----------
+describe('WC song selection modes', () => {
+  // 构造测试数据：4 张专辑，共 8 首
+  // seedRank 与 favCount 一致（真实数据中 seedRank 由收藏量排序而来）
+  const mkEntrants = () => {
+    const albums = ['A', 'A', 'B', 'B', 'B', 'C', 'D', 'D'];
+    const favs = [500, 100, 300, 50, 10, 200, 150, 80];
+    // 收藏量降序排名：song0(1) song2(2) song5(3) song6(4) song1(5) song7(6) song3(7) song4(8)
+    const rankOf = (i) =>
+      1 + favs.filter((f, j) => f > favs[i] || (f === favs[i] && j < i)).length;
+    return albums.map((albumMid, i) => ({
+      id: i,
+      name: `song${i}`,
+      albumMid,
+      albumName: albumMid,
+      favCount: favs[i],
+      seedRank: rankOf(i),
+    }));
+  };
+
+  it('hot 模式按收藏量取前 n 首并重新编号', async () => {
+    const mod = await import('../data/singers.js');
+    const out = mod.selectWCEntrants(mkEntrants(), 'hot', 5);
+    expect(out).toHaveLength(5);
+    // 收藏量最高的 5 首：song0(500), song2(300), song5(200), song6(150), song1(100)
+    expect(out.map((e) => e.name)).toEqual(['song0', 'song2', 'song5', 'song6', 'song1']);
+    // 重新编号：id 0..4, seedRank 1..5
+    expect(out.map((e) => e.seedRank)).toEqual([1, 2, 3, 4, 5]);
+    expect(out.map((e) => e.id)).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it('all 模式保证每个专辑至少 1 首（n 足够时）', async () => {
+    const mod = await import('../data/singers.js');
+    const out = mod.selectAllSongsWithAlbums(mkEntrants(), 8);
+    expect(out).toHaveLength(8);
+    const albums = new Set(out.map((e) => e.albumMid));
+    expect(albums).toEqual(new Set(['A', 'B', 'C', 'D']));
+  });
+
+  it('all 模式在 n 不足时仍保证每个专辑至少 1 首', async () => {
+    const mod = await import('../data/singers.js');
+    const out = mod.selectAllSongsWithAlbums(mkEntrants(), 5);
+    expect(out).toHaveLength(5);
+    const albums = new Set(out.map((e) => e.albumMid));
+    expect(albums).toEqual(new Set(['A', 'B', 'C', 'D']));
+  });
+
+  it('all 模式每张专辑优先取收藏量最高的一首', async () => {
+    const mod = await import('../data/singers.js');
+    const out = mod.selectAllSongsWithAlbums(mkEntrants(), 4);
+    // 每张专辑各取 1 首，且是该专辑收藏量最高的
+    const byAlbum = {};
+    for (const e of out) byAlbum[e.albumMid] = e.favCount;
+    expect(byAlbum.A).toBe(500); // song0
+    expect(byAlbum.B).toBe(300); // song2
+    expect(byAlbum.C).toBe(200); // song5
+    expect(byAlbum.D).toBe(150); // song6
+  });
+
+  it('selectWCEntrants all 模式输出重新编号的参赛者', async () => {
+    const mod = await import('../data/singers.js');
+    const out = mod.selectWCEntrants(mkEntrants(), 'all', 8);
+    expect(out).toHaveLength(8);
+    expect(out.map((e) => e.seedRank)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(new Set(out.map((e) => e.id))).toEqual(new Set([0, 1, 2, 3, 4, 5, 6, 7]));
+    // 每张专辑至少 1 首
+    const albums = new Set(out.map((e) => e.albumMid));
+    expect(albums).toEqual(new Set(['A', 'B', 'C', 'D']));
+  });
+});
+
 // ---------- WC 常量验证 ----------
 describe('WC constants consistency', () => {
   it('WC_KO_TEAMS = 32', async () => {
@@ -104,6 +175,7 @@ describe('entrant serialization roundtrip', () => {
       seedRank: 6,
       isSeed: true,
       itunesPreviewUrl: 'https://example.com/preview.m4a',
+      miguPreviewUrl: 'https://example.com/migu.mp3',
       type: undefined,
       songCount: undefined,
       singerName: '',
@@ -125,6 +197,7 @@ describe('entrant serialization roundtrip', () => {
     expect(restored.seedRank).toBe(original.seedRank);
     expect(restored.isSeed).toBe(original.isSeed);
     expect(restored.itunesPreviewUrl).toBe(original.itunesPreviewUrl);
+    expect(restored.miguPreviewUrl).toBe(original.miguPreviewUrl);
   });
 
   it('slimE(null) 返回 null', async () => {
@@ -200,9 +273,30 @@ describe('track filtering', () => {
     expect(mod.isJunkTrack('遇见')).toBe(false);
   });
 
-  it('MIN_FAV_WITH_COVER = 50000', async () => {
+  it('MIN_FAV_LOOSE = 20000', async () => {
     const mod = await import('./filters.js');
-    expect(mod.MIN_FAV_WITH_COVER).toBe(50000);
+    expect(mod.MIN_FAV_LOOSE).toBe(20000);
+  });
+
+  it('识别串烧/翻唱', async () => {
+    const mod = await import('./filters.js');
+    expect(mod.isMedleyTrack('明明就+淘汰')).toBe(true);
+    expect(mod.isMedleyTrack('经典国语金曲串烧')).toBe(true);
+    expect(mod.isMedleyTrack('翻唱经典情歌')).toBe(true);
+    expect(mod.isMedleyTrack('晴天')).toBe(false);
+  });
+
+  it('专辑内歌曲无论收藏量都保留', async () => {
+    const mod = await import('./filters.js');
+    expect(mod.shouldKeepByFavOrAlbum({ albumMid: '001', favCount: 0 })).toBe(true);
+    expect(mod.shouldKeepByFavOrAlbum({ albumMid: '001', favCount: 5 })).toBe(true);
+  });
+
+  it('未分类歌曲按收藏量阈值过滤', async () => {
+    const mod = await import('./filters.js');
+    expect(mod.shouldKeepByFavOrAlbum({ albumMid: '', favCount: 20000 })).toBe(true);
+    expect(mod.shouldKeepByFavOrAlbum({ albumMid: '', favCount: 19999 })).toBe(false);
+    expect(mod.shouldKeepByFavOrAlbum({ albumMid: '', favCount: 0 })).toBe(false);
   });
 });
 

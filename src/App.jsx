@@ -21,7 +21,7 @@ import { useGameState } from './hooks/useGameState.js';
 import { useWorldCup } from './hooks/useWorldCup.js';
 import { useAudioPlayer } from './hooks/useAudioPlayer.js';
 import { useKeyboardControls } from './hooks/useKeyboardControls.js';
-import { MIN_FAV_WITH_COVER } from './utils/filters.js';
+import { shouldKeepByFavOrAlbum } from './utils/filters.js';
 import StartScreen from './components/StartScreen.jsx';
 import MatchStage from './components/MatchStage.jsx';
 import ChampionScreen from './components/ChampionScreen.jsx';
@@ -46,7 +46,7 @@ import {
   updateStats,
   saveStats,
 } from './utils/playstyle.js';
-import { WC_TOTAL_MATCHES, WC_KO_TEAMS } from './data/singers.js';
+import { WC_TOTAL_MATCHES, WC_KO_TEAMS, WC_GROUPS, WC_GROUP_SIZE, selectWCEntrants } from './data/singers.js';
 
 const KO_ROUND_NAMES = ['32强', '16强', '8强', '4强', '决赛'];
 const KO_ROUND_ICONS = ['🔥', '⚡', '💪', '💪', '🏆'];
@@ -57,6 +57,8 @@ function App() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [customSelectedIds, setCustomSelectedIds] = useState(new Set());
+  // 世界杯选曲玩法：'hot' 热门歌曲 / 'all' 全部歌曲(每专辑至少1首)
+  const [wcSongMode, setWcSongMode] = useState('hot');
   const confettiRef = useRef(null);
 
   // 成就系统：追踪回退使用、游戏开始时间、战绩更新
@@ -205,13 +207,8 @@ const customEntrants = useMemo(() => {
   if (!isCustom || !baseSingerData) return [];
   return baseSingerData.entrants.filter((e) => {
     if (!customSelectedIds.has(e.id)) return false;
-    // 强制过滤无封面歌曲
-    const hasCover = !!(e.albumMid || e.pic);
-    if (!hasCover) return false;
-    // 过滤低收藏量歌曲
-    const fav = e.favCount || 0;
-    if (fav < MIN_FAV_WITH_COVER) return false;
-    return true;
+    // 专辑内歌曲无论收藏量都保留；未分类歌曲按收藏量阈值过滤
+    return shouldKeepByFavOrAlbum(e);
   });
 }, [isCustom, baseSingerData, customSelectedIds]);
 
@@ -251,12 +248,32 @@ const customEntrants = useMemo(() => {
   const availableSizes = classicOptions(maxBracket);
   const classicSize = selectedSize || availableSizes[0] || maxBracket;
 
+  // 世界杯参赛歌曲池：按选曲玩法构建（热门/全部歌曲），重新编号 0..n-1
+  const wcEntrantCount = WC_GROUPS * WC_GROUP_SIZE; // 48
+  const wcSingerData = useMemo(() => {
+    if (!baseSingerData?.entrants?.length) return baseSingerData;
+    const entrants = selectWCEntrants(
+      baseSingerData.entrants,
+      wcSongMode,
+      wcEntrantCount,
+    );
+    if (!entrants.length) return baseSingerData;
+    return {
+      ...baseSingerData,
+      bracketSize: entrants.length,
+      entrants,
+      seeds: entrants.map((_, i) => i),
+      seedRank: Object.fromEntries(entrants.map((e, i) => [i, e.seedRank])),
+    };
+  }, [baseSingerData, wcSongMode, wcEntrantCount]);
+  const wcCanStart = (wcSingerData?.entrants?.length || 0) >= wcEntrantCount;
+
   const gameState = useGameState(
     effectiveSingerId,
     singerData,
     isCrossBattle ? crossBracketSize : isCustom ? customBracketSize : classicSize,
   );
-  const wcState = useWorldCup(gameSingerId, baseSingerData);
+  const wcState = useWorldCup(gameSingerId, wcSingerData, wcSongMode);
   const audio = useAudioPlayer();
 
   // ---------- 是否处于冠军界面 ----------
@@ -876,6 +893,9 @@ const handlePickerPreview = useCallback(
           hasSaved={gameState.hasSaved()}
           hasSavedWC={wcState.hasSavedWC()}
           onResume={handleResume}
+          wcSongMode={wcSongMode}
+          onWcSongModeChange={setWcSongMode}
+          wcCanStart={wcCanStart}
           singers={SINGERS}
           currentSinger={dynamicSinger ? null : currentSinger}
           onSelectSinger={handleSelectSinger}
@@ -883,15 +903,7 @@ const handlePickerPreview = useCallback(
           onSelectSize={handleSelectSize}
           customSelectedIds={customSelectedIds}
           onCustomSelectedChange={setCustomSelectedIds}
-          customEntrants={baseSingerData?.entrants?.filter((e) => {
-  // 强制过滤无封面歌曲
-  const hasCover = !!(e.albumMid || e.pic);
-  if (!hasCover) return false;
-  // 过滤低收藏量歌曲
-  const fav = e.favCount || 0;
-  if (fav < MIN_FAV_WITH_COVER) return false;
-  return true;
-})}
+          customEntrants={baseSingerData?.entrants?.filter(shouldKeepByFavOrAlbum)}
           classicMaxSize={maxBracket}
           singerLoading={singerLoading && !dynamicSinger}
           onPreview={handlePickerPreview}
@@ -982,7 +994,7 @@ const handlePickerPreview = useCallback(
           {selectedMode === 'wc' && wcState.wc?.phase === 'group' && (
             <GroupPickStage
               group={wcState.wc.groups[wcState.wc.curGroup]}
-              entrants={singerData.entrants}
+              entrants={wcSingerData?.entrants || []}
               onToggle={handleGroupToggle}
               onConfirm={handleGroupConfirm}
               onPreview={handleGroupPreview}
@@ -1100,8 +1112,8 @@ const handlePickerPreview = useCallback(
         <DrawScreen
           show
           groups={wcState.wc.groups}
-          entrants={singerData.entrants}
-          seedRank={singerData.seedRank}
+          entrants={wcSingerData?.entrants || []}
+          seedRank={wcSingerData?.seedRank || {}}
           onContinue={wcState.proceedFromDraw}
         />
       )}

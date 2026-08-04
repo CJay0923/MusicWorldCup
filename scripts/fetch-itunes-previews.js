@@ -8,7 +8,7 @@
 // 输出：在 singerData/{id}.json 的每首 entrant 上追加：
 //   itunesPreviewUrl, itunesTrackUrl, itunesTrackId
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as OpenCC from 'opencc-js';
@@ -16,7 +16,9 @@ import { baseKey } from '../src/utils/text.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, '..');
-const DATA_DIR = join(PROJECT_ROOT, 'public', 'singerData');
+const DATA_DIR = join(PROJECT_ROOT, 'src', 'data', 'singerData');
+// iTunes 全量歌曲缓存：只拉一次，之后反复调匹配逻辑直接读缓存（避免 4 商店 × 分页 × 20 位歌手重复请求）
+const ITUNES_CACHE_DIR = join(PROJECT_ROOT, '.itunes-cache');
 
 const ITUNES_BASE = 'https://itunes.apple.com';
 
@@ -32,12 +34,48 @@ function toTraditional(s) {
   return s2t(String(s || ''));
 }
 
+// 同音异体词归一：iTunes/酷狗歌名写法差异（如 印地安/印第安），opencc 不处理同音异义字
+// 仅对「整词」做映射，避免误伤正常用字（如「我的地盘」里的「地」）
+const VARIANT_WORDS = [
+  ['印地安', '印第安'],
+  ['长髮', '长发'],
+  ['公佈', '公布'],
+  ['山峯', '山峰'],
+  ['並且', '并且'],
+  ['夜裏', '夜里'],
+  ['象徵', '象征'],
+  ['聽著', '听着'],
+  ['佔據', '占据'],
+  ['唸唸', '念念'],
+  ['餵養', '喂养'],
+  ['潮溼', '潮湿'],
+  ['冷凍', '冷冻'],
+  ['卡農', '卡农'],
+  // opencc 简繁转换盲区：麼→幺（应为么）、甚麼→甚么（应为什么）、粧→妆（应为妆）
+  ['甚麼', '什么'],
+  ['甚么', '什么'],
+  ['麼', '么'],
+  ['幺', '么'],
+  ['後', '后'],
+  ['爲', '为'],
+  ['凂', '美'],
+  ['化粧', '化妆'],
+  ['粧', '妆'],
+];
+function normalizeVariants(s) {
+  let out = String(s || '');
+  for (const [from, to] of VARIANT_WORDS) {
+    out = out.split(from).join(to);
+  }
+  return out;
+}
+
 function cleanAlbum(a) {
   return String(a || '').replace(/ - (Single|EP)$/i, '');
 }
 
 const LIVE_TRACK = [
-  /[(\[（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
+  /[(（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
   /\blive\s+(at|from|in|on|@)\b/i,
   /[-–—~]\s*live\b/i,
   /\blive\s*(version|ver\.?|session|sessions|edit|recording|album)\b/i,
@@ -45,7 +83,7 @@ const LIVE_TRACK = [
   /(现场|現場|演唱会|演唱會|音乐会|音樂會|音乐节|音樂節|live版|巡回|巡迴|巡演|不插电|不插電|演奏会|演奏會)/i,
 ];
 const LIVE_ALBUM = [
-  /[(\[（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
+  /[(（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
   /\blive\s+(at|from|in|on|@)\b/i,
   /^live\b/i, /\blive!?$/i,
   /\b(in concert|unplugged|world tour)\b/i,
@@ -118,10 +156,11 @@ async function searchArtist(artistName) {
   return candidates[0] || null;
 }
 
-// Step 2: 拉取该歌手在 iTunes 上的全部歌曲（跨 cn+tw+us 商店，分页拉取）
+// Step 2: 拉取该歌手在 iTunes 上的全部歌曲（跨 cn+tw+us+hk 商店，分页拉取）
+// 多商店覆盖不同地区发行版：HK 含大量粤语歌（对 eason/sandy 等粤语歌手尤为重要）
 // iTunes API limit=200，歌手歌曲数超过 200 时需用 offset 分页
 async function fetchArtistSongs(artist) {
-  const stores = ['cn', 'tw', 'us'];
+  const stores = ['cn', 'tw', 'us', 'hk'];
   const seenId = new Set();
   const all = [];
   const LIMIT = 200;
@@ -171,6 +210,27 @@ async function fetchArtistSongs(artist) {
   return all;
 }
 
+// 缓存 iTunes 全量歌曲：首次拉取后写入 .itunes-cache/{artistId}.json，
+// 之后直接读缓存，不再请求 iTunes（全量拉取耗时，只需跑一次）
+async function fetchArtistSongsCached(artist) {
+  const cachePath = join(ITUNES_CACHE_DIR, `${artist.id}.json`);
+  try {
+    const cached = await readFile(cachePath, 'utf-8');
+    const tracks = JSON.parse(cached);
+    if (Array.isArray(tracks) && tracks.length > 0) {
+      console.log(`  📦 命中缓存: ${cachePath} (${tracks.length} 首)`);
+      return tracks;
+    }
+  } catch {
+    /* 无缓存，走网络 */
+  }
+
+  const tracks = await fetchArtistSongs(artist);
+  await mkdir(ITUNES_CACHE_DIR, { recursive: true });
+  await writeFile(cachePath, JSON.stringify(tracks));
+  return tracks;
+}
+
 // Step 3: 构建 baseKey → iTunes track 映射（过滤 Live/伴奏，简繁统一后去重）
 function buildITunesIndex(tracks) {
   const index = new Map();
@@ -180,7 +240,7 @@ function buildITunesIndex(tracks) {
     if (isJunk(t.trackName)) continue;
 
     // 统一转简体后再算 baseKey，确保简繁一致的歌名能匹配
-    const key = baseKey(toSimplified(t.trackName));
+    const key = baseKey(normalizeVariants(toSimplified(t.trackName)));
 
     // 优先保留有 previewUrl 的
     if (!index.has(key) || (t.previewUrl && !index.get(key).previewUrl)) {
@@ -198,10 +258,16 @@ function buildITunesIndex(tracks) {
 
 // ---------- 主流程 ----------
 
-const SINGERS = ['stefanie', 'jj', 'jay', 'jolin', 'david', 'she', 'eason', 'amei', 'angela', 'cyndi', 'elva', 'fish', 'gem', 'khalil', 'lala', 'leehom', 'lironghao', 'mayday', 'rainie', 'sandy'];
+const ALL_SINGERS = ['stefanie', 'jj', 'jay', 'jolin', 'david', 'she', 'eason', 'amei', 'angela', 'cyndi', 'elva', 'fish', 'gem', 'khalil', 'lala', 'leehom', 'lironghao', 'mayday', 'rainie', 'sandy'];
+
+// 支持 CLI 参数过滤：node scripts/fetch-itunes-previews.js amei angela cyndi
+const SINGERS = process.argv.slice(2).filter(Boolean).length
+  ? process.argv.slice(2).filter(Boolean)
+  : ALL_SINGERS;
 
 async function main() {
   console.log('🎵 开始预取 iTunes 试听数据（含简繁转换）...\n');
+  console.log(`  本次处理 ${SINGERS.length} 位歌手: ${SINGERS.join(', ')}\n`);
 
   for (const singerId of SINGERS) {
     const jsonPath = join(DATA_DIR, `${singerId}.json`);
@@ -220,9 +286,9 @@ async function main() {
     }
     console.log(`  ✅ 找到: ${artist.name} (id=${artist.id}, store=${artist.store})`);
 
-    // Step 2: 拉取全部歌曲（跨商店）
+    // Step 2: 拉取全部歌曲（跨商店，带全量缓存）
     console.log(`  📥 拉取 iTunes 歌曲列表...`);
-    const tracks = await fetchArtistSongs(artist);
+    const tracks = await fetchArtistSongsCached(artist);
     console.log(`  ✅ 获取到 ${tracks.length} 首 iTunes 歌曲`);
 
     // Step 3: 构建索引
@@ -236,7 +302,7 @@ async function main() {
 
     for (const song of raw.entrants) {
       // 本地歌名也统一转简体后算 baseKey
-      const key = baseKey(toSimplified(song.name));
+      const key = baseKey(normalizeVariants(toSimplified(song.name)));
       const hit = index.get(key);
       if (hit) {
         song.itunesPreviewUrl = hit.preview;
@@ -262,7 +328,7 @@ async function main() {
 
     // 保存（紧凑格式，与优化后的 JSON 保持一致）
     await writeFile(jsonPath, JSON.stringify(raw));
-    console.log(`  💾 已保存: public/singerData/${singerId}.json`);
+    console.log(`  💾 已保存: src/data/singerData/${singerId}.json`);
 
     await sleep(500);
   }

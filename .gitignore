@@ -6,6 +6,7 @@ dist/
 
 # Cache
 .vite/
+.itunes-cache/
 
 # Environment
 .env
@@ -31,3 +32,4 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+docs/

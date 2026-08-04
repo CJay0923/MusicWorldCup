@@ -31,6 +31,7 @@ export function slimE(s) {
     sP: s.singerPhoto, // 歌手头像 URL
     aD: s.albumDate, // 专辑发行日期
     iu: s.itunesPreviewUrl || null, // iTunes 预取试听 URL
+    mg: s.miguPreviewUrl || null, // Migu 整曲试听 URL
   };
 }
 
@@ -56,5 +57,6 @@ export function restoreE(s) {
     singerPhoto: s.sP || '',
     albumDate: s.aD || '',
     itunesPreviewUrl: s.iu || '', // 旧存档无此字段 → 空字符串（依赖运行时搜索）
+    miguPreviewUrl: s.mg || '', // 旧存档无此字段 → 空字符串
   };
 }

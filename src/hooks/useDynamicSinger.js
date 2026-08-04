@@ -16,9 +16,10 @@ import {
   searchSingers,
   fetchSingerSongs,
   fetchAlbumDetail,
+  fetchKugouHeatBatch,
 } from '../lib/qqMusic.js';
 import { baseKey } from '../utils/text.js';
-import { isLiveTrack, isLiveAlbum, isJunkTrack } from '../utils/filters.js';
+import { isLiveTrack, isLiveAlbum, isJunkTrack, isMedleyTrack, shouldKeepByFavOrAlbum } from '../utils/filters.js';
 
 /**
  * 根据可用歌曲数计算经典模式最大淘汰赛规模（2 的幂，4~128）
@@ -48,11 +49,10 @@ export function transformDynamicSingerData(raw, albumDetails, favMap) {
     if (isJunkTrack(name)) continue;
     if (isLiveTrack(name)) continue;
     if (isLiveAlbum(song.albumName)) continue;
-    // 无封面的直接过滤掉；有封面但收藏量低于 1w 的也过滤
-    const hasCover = !!(song.albumMid || song.pic);
-    if (!hasCover) continue;
-    const fav = favMap?.get(song.songmid) || song.favCount || 0;
-    if (fav < 50000) continue;
+    if (isMedleyTrack(name)) continue;
+    // 专辑内歌曲（有 albumMid）无论收藏量都保留；未分类歌曲按收藏量阈值过滤
+    const fav = favMap?.[song.songid] || song.favCount || 0;
+    if (!shouldKeepByFavOrAlbum({ albumMid: song.albumMid, favCount: fav })) continue;
     const key = baseKey(name);
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);
@@ -123,6 +123,42 @@ const SEARCH_DEBOUNCE_MS = 300;
 const ALBUM_FETCH_CONCURRENCY = 4;
 const ALBUM_FETCH_BATCH = 5;
 const ALBUM_FETCH_CAP = 60;
+
+// 酷狗热度：最多查询前 KUGOU_FETCH_CAP 首（128 强 + 余量），避免几百首歌耗时过长
+const KUGOU_FETCH_CAP = 160;
+
+/**
+ * 按酷狗热度对 entrants 重新排序并重建种子结构。
+ * 已查到热度的歌曲按 owner 降序排在前面；未查到（含未查询的）按原 API 顺序靠后保持稳定。
+ * @param {Array} entrants
+ * @param {Map<string, {owner: number, heat: number}>} heatMap - songmid -> 热度
+ * @param {Map<string, number>} origIdx - songmid -> 原数组索引（稳定 tiebreaker）
+ * @returns {Array} 新 entrants（已重排并更新 seed/seedRank/isSeed/side）
+ */
+function resortByKugouHeat(entrants, heatMap, origIdx) {
+  const ranked = entrants.map((e) => {
+    const heat = e.songmid ? heatMap.get(e.songmid) : null;
+    return { e, owner: heat ? heat.owner : -1, orig: origIdx.get(e.songmid) ?? 0 };
+  });
+  ranked.sort((a, b) => {
+    // 有热度的在前（owner 降序），无热度的按原顺序沉底
+    if (a.owner >= 0 && b.owner >= 0) return b.owner - a.owner || a.orig - b.orig;
+    if (a.owner >= 0) return -1;
+    if (b.owner >= 0) return 1;
+    return a.orig - b.orig;
+  });
+  return ranked.map(({ e }, i) => {
+    const sr = i + 1;
+    return {
+      ...e,
+      seedRank: sr,
+      isSeed: sr <= Math.min(32, entrants.length),
+      side: i < entrants.length / 2 ? 'L' : 'R',
+      kugouOwnerCount: e.songmid ? (heatMap.get(e.songmid)?.owner || 0) : 0,
+      kugouHeatLevel: e.songmid ? (heatMap.get(e.songmid)?.heat || 0) : 0,
+    };
+  });
+}
 
 /**
  * 动态歌手搜索与加载 hook。
@@ -257,6 +293,63 @@ export function useDynamicSinger() {
     [],
   );
 
+  // ---------- 后台拉取酷狗热度，渐进式重排种子位 ----------
+  const fetchKugouHeatInBackground = useCallback((data, myToken) => {
+    if (!data.entrants.length) return;
+
+    const songmids = Array.from(
+      new Set(data.entrants.map((e) => e.songmid).filter(Boolean)),
+    );
+    if (songmids.length === 0) return;
+
+    // 稳定 tiebreaker：原 API 索引（已按热度排序）
+    const origIdx = new Map();
+    data.entrants.forEach((e, i) => {
+      if (e.songmid) origIdx.set(e.songmid, i);
+    });
+
+    const heatMap = new Map();
+    const songByMid = new Map();
+    data.entrants.forEach((e) => {
+      if (e.songmid) songByMid.set(e.songmid, e);
+    });
+
+    const flush = () => {
+      if (loadTokenRef.current !== myToken) return;
+      setDynamicSingerData((prev) => {
+        if (!prev) return prev;
+        const next = resortByKugouHeat(prev.entrants, heatMap, origIdx);
+        return {
+          ...prev,
+          entrants: next,
+          seeds: next.map((_, i) => i),
+          seedRank: Object.fromEntries(next.map((e, i) => [i, e.seedRank])),
+        };
+      });
+    };
+
+    const entries = songmids
+      .slice(0, KUGOU_FETCH_CAP)
+      .map((mid) => songByMid.get(mid));
+
+    fetchKugouHeatBatch(data.name, entries, {
+      max: KUGOU_FETCH_CAP,
+      onEntry: (song, heat) => {
+        if (song.songmid) heatMap.set(song.songmid, heat);
+      },
+      onProgress: (done, total) => {
+        if (loadTokenRef.current !== myToken) return;
+        if (done % 10 === 0 || done === total) flush();
+      },
+    })
+      .then(() => {
+        if (loadTokenRef.current === myToken) flush();
+      })
+      .catch(() => {
+        if (loadTokenRef.current === myToken) flush();
+      });
+  }, []);
+
   // ---------- 加载歌手歌曲 ----------
   const loadSinger = useCallback(
     async (singer) => {
@@ -298,6 +391,8 @@ export function useDynamicSinger() {
 
         // 后台异步拉取专辑详情，到位后渐进式更新
         fetchAlbumDetailsInBackground(data, myToken);
+        // 后台异步拉取酷狗热度，到位后渐进式重排种子位
+        fetchKugouHeatInBackground(data, myToken);
       } catch {
         if (loadTokenRef.current === myToken) {
           setIsLoadingSinger(false);
@@ -305,7 +400,7 @@ export function useDynamicSinger() {
         }
       }
     },
-    [dynamicSinger, dynamicSingerData, fetchAlbumDetailsInBackground],
+    [dynamicSinger, dynamicSingerData, fetchAlbumDetailsInBackground, fetchKugouHeatInBackground],
   );
 
   // ---------- 清除动态歌手 ----------

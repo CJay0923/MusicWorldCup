@@ -25,7 +25,7 @@ import { shuffleArr, bracketOrder } from '../utils/bracket.js';
 import { slimE, restoreE } from '../utils/format.js';
 
 const PICK_DELAY = 750;
-const storageKey = (id) => 'song_cup_' + id + '_wc';
+const storageKey = (id, mode) => 'song_cup_' + id + '_wc_' + (mode || 'hot');
 const KO_PHASES = ['r32', 'r16', 'qf', 'sf', 'final'];
 const KO_ROUNDS = 6; // rounds[0..5]，比赛轮次为 0..4，rounds[5] 存放冠军
 
@@ -212,9 +212,10 @@ function deserializeWC(d) {
 
 /**
  * @param {string} singerId - 歌手ID
- * @param {object} singerData - SINGERS[singerId]
+ * @param {object} singerData - SINGERS[singerId]（世界杯参赛数据，含已选曲 entrants）
+ * @param {'hot'|'all'} [wcSongMode] - 选曲玩法：hot=热门歌曲，all=全部歌曲(每专辑至少1首)
  */
-export function useWorldCup(singerId, singerData) {
+export function useWorldCup(singerId, singerData, wcSongMode = 'hot') {
   const [wc, setWc] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
@@ -223,11 +224,15 @@ export function useWorldCup(singerId, singerData) {
 
   const timerRef = useRef(null);
   const prevSingerRef = useRef(singerId);
+  const prevModeRef = useRef(wcSongMode);
 
-  // 歌手切换时重置
+  // 歌手切换或选曲玩法切换时重置
   useEffect(() => {
-    if (singerId === prevSingerRef.current) return;
+    if (singerId === prevSingerRef.current && wcSongMode === prevModeRef.current) {
+      return;
+    }
     prevSingerRef.current = singerId;
+    prevModeRef.current = wcSongMode;
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -236,7 +241,7 @@ export function useWorldCup(singerId, singerData) {
     setBusy(false);
     setShowTransition(false);
     setLastPick(null);
-  }, [singerId]);
+  }, [singerId, wcSongMode]);
 
   // 卸载时清理定时器
   useEffect(
@@ -250,31 +255,31 @@ export function useWorldCup(singerId, singerData) {
   const saveWC = useCallback(
     (wcVal) => {
       try {
-        localStorage.setItem(storageKey(singerId), JSON.stringify(serializeWC(wcVal)));
+        localStorage.setItem(storageKey(singerId, wcSongMode), JSON.stringify(serializeWC(wcVal)));
       } catch {
         /* ignore */
       }
     },
-    [singerId],
+    [singerId, wcSongMode],
   );
 
   const loadSavedWC = useCallback(() => {
     try {
-      const raw = localStorage.getItem(storageKey(singerId));
+      const raw = localStorage.getItem(storageKey(singerId, wcSongMode));
       if (!raw) return null;
       return deserializeWC(JSON.parse(raw));
     } catch {
       return null;
     }
-  }, [singerId]);
+  }, [singerId, wcSongMode]);
 
   const hasSavedWC = useCallback(() => {
     try {
-      return !!localStorage.getItem(storageKey(singerId));
+      return !!localStorage.getItem(storageKey(singerId, wcSongMode));
     } catch {
       return false;
     }
-  }, [singerId]);
+  }, [singerId, wcSongMode]);
 
   // ---------- 控制 ----------
   const startWorldCup = useCallback(
@@ -307,7 +312,7 @@ const resetWC = useCallback(() => {
     timerRef.current = null;
   }
   try {
-    localStorage.removeItem(storageKey(singerId));
+    localStorage.removeItem(storageKey(singerId, wcSongMode));
   } catch {
     /* ignore */
   }
@@ -319,7 +324,7 @@ const resetWC = useCallback(() => {
   setBusy(false);
   setShowTransition(false);
   setLastPick(null);
-}, [singerId, singerData, saveWC]);
+}, [singerId, wcSongMode, singerData, saveWC]);
 
   // 从抽签结果进入小组赛
   const proceedFromDraw = useCallback(() => {

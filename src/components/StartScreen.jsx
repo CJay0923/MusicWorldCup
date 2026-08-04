@@ -6,7 +6,7 @@ import ModeSelector from './ModeSelector.jsx';
 import SongPicker from './SongPicker.jsx';
 import CrossSingerSelector from './CrossSingerSelector.jsx';
 import PillButton from './ui/PillButton.jsx';
-import { classicOptions } from '../data/singers.js';
+import { classicOptions, WC_SONG_MODES } from '../data/singers.js';
 import AchievementWall from './AchievementWall.jsx';
 
 /**
@@ -18,6 +18,9 @@ import AchievementWall from './AchievementWall.jsx';
  * @param {boolean} hasSaved - whether there is a saved classic game
  * @param {boolean} hasSavedWC - whether there is a saved WC game
  * @param {() => void} onResume - called when the resume button is clicked
+ * @param {'hot'|'all'} [wcSongMode] - 世界杯选曲玩法
+ * @param {(mode: 'hot'|'all') => void} [onWcSongModeChange] - 切换选曲玩法
+ * @param {boolean} [wcCanStart] - 世界杯是否可开始（歌曲数是否充足）
  * @param {object} singers - SINGERS object
  * @param {string} currentSinger - current singer id
  * @param {(id: string) => void} onSelectSinger - singer selection callback
@@ -50,6 +53,9 @@ export default function StartScreen({
   hasSaved,
   hasSavedWC,
   onResume,
+  wcSongMode,
+  onWcSongModeChange,
+  wcCanStart,
   singers,
   currentSinger,
   onSelectSinger,
@@ -211,7 +217,7 @@ return (
             歌手/歌曲/专辑 · <b>分层排名</b> · 从最夯到最拉
           </>
         ) : (
-          <>48 首歌曲 · 四选二小组赛+淘汰赛 · 决出终极冠军</>
+          <>48 首歌曲 · 四选二小组赛+淘汰赛 · 决出终极冠军 · {wcSongMode === 'all' ? '全曲混战' : '热门出征'}</>
         )}
       </p>
 
@@ -301,8 +307,13 @@ return (
         </h3>
         <ul className={clsx('m-0 pl-[18px] [&_b]:text-ink [&_li]:my-[7px] [&_li]:text-[13.5px] [&_li]:text-muted [&_li]:[text-wrap:pretty]', rulesCollapsed.wc && 'hidden')}>
           <li>
-            <b>小组赛</b>：取 QQ 音乐收藏量前 <b>48 首</b>，按收藏量分 4 档抽签，分入{' '}
-            <b>12 个小组</b>（A–L），每组 4 首，每组 1 个种子选手。
+            <b>参赛歌曲</b>：可选两种玩法——<b>热门歌曲</b>取收藏量最高的{' '}
+            <b>48 首</b>；<b>全部歌曲</b>随机选 48 首，<b>保证每张专辑至少 1 首</b>
+            ，冷门佳作也有机会登场。
+          </li>
+          <li>
+            <b>小组赛</b>：48 首按收藏量分 4 档抽签，分入 <b>12 个小组</b>
+            （A–L），每组 4 首，每组 1 个种子选手。
           </li>
           <li>
             每组进行 <b>四选二</b>：从 4 首中直接选 2 首晋级，无需两两对决。选中的 2
@@ -435,6 +446,29 @@ return (
           <li>纯娱乐性质，不具有任何官方性。</li>
         </ul>
       </div>
+
+      {/* 世界杯：选曲玩法 */}
+      {selectedMode === 'wc' && (
+        <div className="mb-5 flex flex-wrap justify-center gap-2.5">
+          <span className="mb-2 block w-full text-center text-[13px] font-semibold text-muted">
+            参赛歌曲
+          </span>
+          {Object.entries(WC_SONG_MODES).map(([value, info]) => (
+            <PillButton
+              key={value}
+              active={wcSongMode === value}
+              onClick={() => onWcSongModeChange?.(value)}
+            >
+              {info.label}
+            </PillButton>
+          ))}
+          <span className="mt-1 w-full text-center text-xs text-muted">
+            {wcSongMode === 'all'
+              ? '随机选歌，每张专辑至少 1 首 · 冷门佳作也有机会登场'
+              : '取收藏量最高的歌曲参赛'}
+          </span>
+        </div>
+      )}
 
       {/* 歌手选择（仅经典/世界杯/自选模式显示，排名和混战完全隐藏） */}
       {!isCrossBattle && !isRanking && (
@@ -747,7 +781,11 @@ return (
         className="relative inline-flex w-full max-w-[320px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-2xl border-2 border-accent bg-accent px-8 py-4 font-display text-lg font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] active:translate-y-0.5 active:shadow-[0_2px_8px_rgba(0,0,0,0.15)] disabled:cursor-default disabled:opacity-50 sm:w-auto sm:px-12"
         onClick={onStart}
         type="button"
-        disabled={(isCustom && !canStartCustom) || (isCrossBattle && !canStartCross)}
+        disabled={
+          (isCustom && !canStartCustom) ||
+          (isCrossBattle && !canStartCross) ||
+          (selectedMode === 'wc' && !wcCanStart)
+        }
       >
         {isCustom
           ? `开始 ${customBracketSize} 强`

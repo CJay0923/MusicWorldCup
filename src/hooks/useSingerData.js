@@ -14,7 +14,8 @@ import {
   isLiveTrack,
   isLiveAlbum,
   isJunkTrack,
-  MIN_FAV_WITH_COVER,
+  isMedleyTrack,
+  shouldKeepByFavOrAlbum,
 } from '../utils/filters.js';
 
 // ---------- 预打包的歌手数据（通过 import.meta.glob 懒加载）----------
@@ -69,16 +70,10 @@ function transformToSingerData(raw, registry, singerId) {
   const albumDescs = raw.albumDescs || {};
 
   // ===== 快速路径：已预处理的数据 =====
-  // 即使数据标记为预处理，仍需强制过滤无封面和低收藏量歌曲（防止数据文件未完全过滤）
+  // 信任下载脚本的预处理（已做专辑归属、Live/伴奏/串烧、收藏量阈值与补足过滤），
+  // 运行时不再二次过滤，避免与下载时的"放宽补足到 128"逻辑冲突。
   if (raw.preprocessed === true) {
-    // 强制应用过滤：无封面 + 收藏量 < 5万
-    const prefilteredEntrants = raw.entrants.filter((song) => {
-      const hasCover = !!(song.albumMid || song.pic);
-      if (!hasCover) return false;
-      const fav = song.favCount || 0;
-      if (fav < MIN_FAV_WITH_COVER) return false;
-      return true;
-    });
+    const prefilteredEntrants = raw.entrants;
 
     const half = prefilteredEntrants.length / 2;
     const seedThreshold = Math.min(32, prefilteredEntrants.length);
@@ -115,6 +110,7 @@ function transformToSingerData(raw, registry, singerId) {
         isSeed: sr <= seedThreshold,
         itunesPreviewUrl: song.itunesPreviewUrl || '',
         itunesTrackUrl: song.itunesTrackUrl || '',
+        miguPreviewUrl: song.miguPreviewUrl || '',
         favCount: song.favCount || 0,  // 保留收藏量字段
       };
     });
@@ -143,11 +139,9 @@ function transformToSingerData(raw, registry, singerId) {
     if (isJunkTrack(name)) continue;
     if (isLiveTrack(name)) continue;
     if (isLiveAlbum(song.albumName)) continue;
-    // 无封面的直接过滤掉；有封面但收藏量低于 1w 的也过滤
-    const hasCover = !!(song.albumMid || song.pic);
-    if (!hasCover) continue;
-    const fav = song.favCount || 0;
-    if (fav < MIN_FAV_WITH_COVER) continue;
+    if (isMedleyTrack(name)) continue;
+    // 专辑内歌曲（有 albumMid）无论收藏量都保留；未分类歌曲按收藏量阈值过滤
+    if (!shouldKeepByFavOrAlbum(song)) continue;
     const key = baseKey(name);
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);
@@ -196,6 +190,7 @@ function transformToSingerData(raw, registry, singerId) {
       isSeed: sr <= seedThreshold2,
       itunesPreviewUrl: song.itunesPreviewUrl || '',
       itunesTrackUrl: song.itunesTrackUrl || '',
+      miguPreviewUrl: song.miguPreviewUrl || '',
       favCount: song.favCount || 0,  // 保留收藏量字段
     };
   });

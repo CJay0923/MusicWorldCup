@@ -2,6 +2,8 @@
 // 歌曲数据已迁移到 public/singerData/{id}.json，由 useSingerData.js 按需 fetch
 // 本文件不再包含静态歌曲数组（LEFT/RIGHT/NIDS/PICS/CHORUS），大幅减少打包体积
 
+import { shuffleArr } from '../utils/bracket.js';
+
 // ---------- 歌手元数据（仅用于初始 UI 显示，歌曲数据懒加载）----------
 export const SINGERS = {
   // 男歌手：周王陶林 + 方大同 + 陈奕迅 + 五月天 + 李荣浩
@@ -77,6 +79,88 @@ export function pickTournamentSize(avail) {
  */
 export function classicOptions(avail) {
   return CLASSIC_BRACKETS.filter((b) => b <= avail);
+}
+
+/**
+ * 世界杯模式选曲玩法常量
+ * 'hot' - 热门歌曲：收藏量最高的前 N 首
+ * 'all' - 全部歌曲：随机选择，保证每个专辑至少 1 首
+ */
+export const WC_SONG_MODES = {
+  hot: { label: '热门歌曲', desc: '取收藏量最高的参赛歌曲' },
+  all: { label: '全部歌曲', desc: '随机选择，每张专辑至少 1 首' },
+};
+
+/**
+ * 全部歌曲玩法选曲：随机选择歌曲，保证每个专辑（含未分类组）至少 1 首
+ * 每张专辑先取收藏量最高的一首作为保底，再从剩余歌曲中随机补齐到 n 首
+ * @param {object[]} entrants - 完整 entrant 数组
+ * @param {number} n - 需要选择的歌曲数
+ * @returns {object[]} 选中的 entrant 数组
+ */
+export function selectAllSongsWithAlbums(entrants, n) {
+  const groups = new Map();
+  for (const e of entrants) {
+    const key = e.albumMid || e.albumName || '__misc__';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(e);
+  }
+
+  const picks = [];
+  const rest = [];
+  for (const songs of groups.values()) {
+    const sorted = [...songs].sort((a, b) => (b.favCount || 0) - (a.favCount || 0));
+    picks.push(sorted[0]);
+    rest.push(...sorted.slice(1));
+  }
+
+  shuffleArr(rest);
+  for (const s of rest) {
+    if (picks.length >= n) break;
+    picks.push(s);
+  }
+
+  return picks.slice(0, n);
+}
+
+/**
+ * 世界杯模式选曲：根据玩法选择参赛歌曲并重新编号
+ * 返回的 entrant 数组 id 为 0..n-1，seedRank/seed 为 1..n，
+ * 供 makeDraw 抽签与小组排名直接使用。
+ *
+ * @param {object[]} entrants - 完整 entrant 数组
+ * @param {'hot'|'all'} mode - 选曲玩法
+ * @param {number} n - 参赛歌曲数（世界杯标准 48）
+ * @returns {object[]} 重新编号后的参赛者数组
+ */
+export function selectWCEntrants(entrants, mode, n) {
+  const list = entrants || [];
+  let selected;
+  if (mode === 'all') {
+    selected = selectAllSongsWithAlbums(list, n);
+  } else {
+    // 热门：按收藏量 seedRank 升序取前 n 首
+    selected = [...list]
+      .sort((a, b) => (a.seedRank || 999) - (b.seedRank || 999))
+      .slice(0, n);
+  }
+  if (selected.length < 2) return [];
+
+  // 统一按原收藏量排名升序排位，保证种子档位（pot 划分）与热度一致
+  selected = [...selected].sort(
+    (a, b) => (a.seedRank || 999) - (b.seedRank || 999),
+  );
+
+  const half = selected.length / 2;
+  const seedThreshold = Math.min(32, selected.length);
+  return selected.map((src, i) => ({
+    ...src,
+    id: i,
+    side: i < half ? 'L' : 'R',
+    seed: i + 1,
+    seedRank: i + 1,
+    isSeed: i < seedThreshold,
+  }));
 }
 
 // Audio API constants
@@ -451,6 +535,7 @@ export function buildCustomSingerData(selected, bracketSize, singerName) {
     isSeed: i < Math.min(32, bs),
     itunesPreviewUrl: src.itunesPreviewUrl || '',
     itunesTrackUrl: src.itunesTrackUrl || '',
+    miguPreviewUrl: src.miguPreviewUrl || '',
   }));
 
   // seeds = [0, 1, ..., N-1] 表示按热度排序后的索引。
@@ -522,7 +607,11 @@ export function getAlbumGroups(entrants) {
   const PERSONAL_ALBUM_TYPES = new Set(['录音室专辑', 'EP', 'Single', '单曲']);
 
   for (const [key, g] of rawGroups) {
-    const isPersonalType = PERSONAL_ALBUM_TYPES.has(g.albumType);
+    // 个人专辑判断：酷狗数据无 albumType（空字符串），此时依赖专辑名正则 + 歌曲数门槛
+    // QQ 数据有 albumType（录音室专辑/EP/Single/单曲），仍优先用类型判断
+    const isPersonalType = g.albumType
+      ? PERSONAL_ALBUM_TYPES.has(g.albumType)
+      : true;
     const hasEnoughSongs = g.songs.length >= MIN_SONGS_FOR_ALBUM;
     const isNotCompilation = !EXCLUDE_NAME_PATTERNS.test(g.name);
 

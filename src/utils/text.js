@@ -40,14 +40,32 @@ function convertChineseNumerals(str) {
   });
 }
 
+// 同音异体字归一表（简繁转换之外的历史写法差异）
+// 仅含「同字不同写法」的安全映射（如 长髮/长发），不含同音异义字（如 地/第 需按词处理）
+const HOMOPHONE_VARIANTS = {
+  '髮': '发',   // 长髮/长发
+  '佈': '布',   // 公佈/公布
+  '峯': '峰',   // 山峯/山峰
+  '並': '并',   // 並且/并且
+  '裏': '里',   // 夜裏/夜里
+  '徵': '征',   // 象徵/象征
+  '著': '着',   // 聽著/听着
+  '佔': '占',   // 佔據/占据
+  '唸': '念',   // 唸唸不忘/念念不忘
+  '餵': '喂',   // 餵養/喂养
+  '溼': '湿',   // 潮溼/潮湿
+  '凍': '冻',   // 冷凍/冷冻
+};
+
 /**
  * 歌曲名归一化为去重 key：
- * NFKC 归一化 + 中文数字转换 + 去括号注记 + 去 " - xxx" 后缀 + 去空格标点
+ * NFKC 归一化 + 同音异体字归一 + 中文数字转换 + 去括号注记 + 去 " - xxx" 后缀 + 去空格标点
  * @param {string} name - 歌曲名
  * @returns {string} 归一化后的 key
  */
 export function baseKey(name) {
   let s = String(name).normalize('NFKC').toLowerCase();
+  s = s.replace(/[髮佈峯並裏徵著佔唸餵溼凍]/g, (ch) => HOMOPHONE_VARIANTS[ch] || ch);
   s = convertChineseNumerals(s);
   s = s.replace(/[([（【][^)\]）】]*[)\]）】]/g, ' '); // 去括号注记
   s = s.split(/\s+[-–—]\s+/)[0]; // 去 " - xxx" 后缀

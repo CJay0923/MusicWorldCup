@@ -406,3 +406,93 @@ export async function fetchSongFavCounts(songIds) {
   }
   return result;
 }
+
+// ==================== 酷狗热度（动态歌手种子排位补充） ====================
+
+import { baseKey } from '../utils/text.js';
+
+const KUGOU_BAD = /live|现场|演唱|翻唱|伴奏|钢琴|纯音乐|remix|dj版|demo|串烧|乐器|演奏/i;
+
+/**
+ * 请求酷狗 song_search_v2（歌手名+歌名搜索，用于动态歌手热度）
+ * 策略 0: 后端代理（Cloudflare Pages Functions /api/kugou/search，同域无 CORS）
+ * 策略 1: CORS 代理 + fetch（纯静态环境 fallback）
+ * @param {string} keyword - 搜索词（歌手名 + 空格 + 歌名）
+ * @returns {Promise<Array<{name, singer, owner, heat}>>}
+ */
+async function requestKugouSearch(keyword) {
+  // 策略 0: 后端代理
+  if (await checkBackend()) {
+    try {
+      const res = await fetch(`/api/kugou/search?s=${encodeURIComponent(keyword)}&n=5`);
+      if (res.ok) {
+        const data = await res.json();
+        return (data?.data?.lists || []).map(normalizeKugouTrack);
+      }
+    } catch {
+      markBackendUnavailable();
+    }
+  }
+
+  // 策略 1: CORS 代理 + fetch（酷狗直连无 CORS 头）
+  const jsonUrl =
+    `https://songsearch.kugou.com/song_search_v2?keyword=${encodeURIComponent(keyword)}` +
+    `&page=1&pagesize=5&platform=Android&userid=-1&clientver=2000` +
+    `&tag=em&filter=2&iscorrection=1&privilege_filter=0`;
+  try {
+    const data = await fetchWithProxy(jsonUrl);
+    return (data?.data?.lists || []).map(normalizeKugouTrack);
+  } catch {
+    return [];
+  }
+}
+
+function normalizeKugouTrack(t) {
+  return {
+    name: (t.SongName || '').replace(/<[^>]+>/g, '').trim(),
+    singer: (t.SingerName || '').replace(/<[^>]+>/g, '').trim(),
+    owner: t.OwnerCount || 0,
+    heat: t.HeatLevel || 0,
+  };
+}
+
+/**
+ * 批量查询酷狗热度（逐首搜索，串行限速避免被限流）
+ * 匹配规则：过滤 Live/翻唱/DJ → 歌手名包含目标歌手 → 歌名 baseKey 归一化一致
+ * @param {string} artistName - 歌手名
+ * @param {Array<{name: string, songmid?: string}>} songs - 待查询歌曲
+ * @param {{onProgress?: (done: number, total: number) => void, onEntry?: (song: object, heat: {owner: number, heat: number}) => void, max?: number}} [opts]
+ * @param {number} [opts.max] - 最多查询前 N 首（按传入顺序），避免动态歌手几百首歌耗时过长
+ * @returns {Promise<Map<string, {owner: number, heat: number}>>} songmid（缺省用 name）-> 热度
+ */
+export async function fetchKugouHeatBatch(artistName, songs, { onProgress, onEntry, max } = {}) {
+  const result = new Map();
+  if (!artistName || !songs?.length) return result;
+
+  const list = max ? songs.slice(0, max) : songs;
+
+  for (let i = 0; i < list.length; i++) {
+    const song = list[i];
+    const keyword = `${artistName} ${song.name}`;
+    const lists = await requestKugouSearch(keyword);
+
+    const targetKey = baseKey(song.name);
+    let best = null;
+    for (const t of lists) {
+      if (KUGOU_BAD.test(t.name)) continue;
+      if (!t.singer.includes(artistName)) continue;
+      if (baseKey(t.name) !== targetKey) continue;
+      if (!best || t.owner > best.owner) best = t;
+    }
+    if (best) {
+      const heat = { owner: best.owner, heat: best.heat };
+      result.set(song.songmid || song.name, heat);
+      if (onEntry) onEntry(song, heat);
+    }
+
+    if (onProgress) onProgress(i + 1, list.length);
+    await new Promise((r) => setTimeout(r, 80));
+  }
+
+  return result;
+}

@@ -77,8 +77,12 @@ src/
     └── text.js              # 歌曲名归一化、去重 key
 scripts/
 ├── add_singer.py           # 新增歌手标准化流水线
-├── download-singer-data.js # 预取歌手数据到 JSON
-├── fetch-itunes-previews.js # 预取 iTunes 试听 URL
+├── add-album-track.js      # 回填专辑曲序 albumTrack 并重排
+├── download-singer-data.js # 预取歌手数据到 JSON（QQ 管线）
+├── download-kugou-singer-data.js # 预取歌手数据到 JSON（酷狗管线，当前数据源，主用）
+├── fetch-itunes-previews.js # 预取 iTunes 试听 URL（输出到 src/data/singerData，支持 CLI 传 id 增量跑）
+├── fetch-migu-previews.js   # 预取咪咕整曲 URL（回填 miguPreviewUrl，仅处理 iTunes 未覆盖歌曲）
+├── fetch-kugou-heat.js     # 回填酷狗真实热度（kugouOwnerCount/kugouHeatLevel）
 └── README.md
 ```
 
@@ -99,9 +103,44 @@ npm run lint         # ESLint 检查
 - 无 TypeScript，纯 JavaScript + JSX
 - 不使用外部 UI 库，所有组件手写
 - 样式写在 `src/index.css` 中
-- 新增歌手数据通过 `scripts/download-singer-data.js` 预取到 `src/data/singerData/{id}.json`
+- 新增歌手数据通过 `scripts/download-kugou-singer-data.js` 预取到 `src/data/singerData/{id}.json`（酷狗数据源，主用；`scripts/download-singer-data.js` 为 QQ 旧管线备用）
 - 状态逻辑按功能拆分到对应 hook 中
 - 共享的过滤/归一化逻辑放在 `utils/filters.js` / `utils/text.js`
+
+### 数据字段与热度
+
+- `src/data/singerData/{id}.json` 的 `entrants` 数组**已按热度预排序**（运行时不再排序）
+- 当前数据源为**酷狗**（`scripts/download-kugou-singer-data.js`），排序即酷狗 `singer/song?sorttype=0` 热度序（晴天第一），字段：
+  - `songmid` = 酷狗 hash（32 位十六进制），`songid` = 酷狗 audio_id
+  - `albumMid` = 酷狗 album_id（数字），`albumName`/`albumDate`/`pic`（本地封面路径）
+  - `picKugou`：酷狗封面 CDN 直链（`union_cover` 的 `{size}` 已替换为 400），下载到 `public/covers/album_{album_id}.jpg`
+  - `kugouOwnerCount` / `kugouHeatLevel`：由 `scripts/fetch-kugou-heat.js` 回填（`singer/song` 接口**无**此字段，需 song_search_v2）
+  - `favCount`：酷狗数据中为 0（排序不依赖它，酷狗列表已带热度序）
+  - `albumType`：空字符串（酷狗无此字段）；`albumTrack`：null（酷狗无专辑内曲序字段）
+  - `nid`：null
+- **酷狗过滤规则**（download-kugou-singer-data.js）：
+  - `is_original=1` 保底原唱（缺失时不拦截）；`trans_param.is_original` 是 UGC 污染关键信号
+  - `album_id` 非 0 且 `album_name` 非空（剔除单曲/无归属混入）
+  - `UGC_ALBUM` 正则（歌单/精选/合集/榜单/风云榜/100首/镇站之宝/晚会/春晚/总决赛/好声音/也许该懂事了等）剔除 UGC 合辑专辑
+  - `UGC_NAME` 正则（3D环绕/Demo/饭制/剪辑/片段/钢琴版/四手联弹/组曲等）剔除再创作版本
+  - `JUNK_TRACK` 加 DJ版/慢摇/嗨曲/音乐频道等（剔除 DJ 混音、电视节目现场版）
+  - Live/现场/伴奏/串烧正则 + baseKey 去重
+  - is_original 语义复杂（1/2/4/10 可为正式版，5/6/9 多为现场/影视版），仅对 5/6/9 且非 Live 歌名拦截，正式专辑歌不受影响
+  - 多歌手合唱（如珊瑚海/千里之外/屋顶）是合法歌，保留；他人主唱误挂（如周民航、周杰伦 - 爱情不是毒药）靠 UGC 专辑名拦截
+- **专辑信息补全**（download-kugou-singer-data.js 内建）：
+  - `album/song?albumid=` 列表顺序即专辑曲序（trans_param.sort）→ 回填 `albumTrack`
+  - `album/info?albumid=` 的 `intro` → 回填 `albumDescs`；`publishtime` → 回填更准的 `albumDate`
+  - 20 位歌手 4118 首歌 100% 有曲序，1030 张专辑有简介
+  - `albumType` 酷狗无此概念（空字符串）；前端 `singers.js` 在 albumType 为空时靠专辑名正则 + 歌曲数门槛判断个人专辑
+- 网易云 nid 覆盖率低（~2%，web 搜索被翻唱淹没），`fetchNeteaseNid` 的 fallback `songs[0]?.id` 会错挂，勿依赖
+- `itunesPreviewUrl` / `itunesTrackUrl` / `itunesTrackId`：由 `scripts/fetch-itunes-previews.js` 预取回填（输出到 `src/data/singerData/{id}.json`，支持 CLI 传歌手 id 增量跑），覆盖约 79%（3267/4118，2026-08 酷狗数据源 + cn/tw/us/hk 四商店跑）；热门主打全命中；粤语/台语歌多覆盖低（eason 52%、sandy 65%、leehom 70%、mayday 72%）
+- `miguPreviewUrl`：由 `scripts/fetch-migu-previews.js` 预取回填（`migu-api-enhanced` 搜索 + `getUrlH5V24(contentId,'LQ')`），处理**全部歌曲**（跳过已有 miguPreviewUrl），命中 2776/3648（76.1%，2026-08 全量跑）；源为咪咕免费 CDN `freetyst.nf.migu.cn` 整曲 MP3，取 base 路径（去掉 `Tim/Key/msisdn` 等签名参数）后稳定可长期播放、无需登录/VIP、国内可达；全量后 Migu 整曲覆盖 **3246/4118 (78.8%)**；iTunes 未覆盖 + Migu 未命中共 381 首（多为合集/Live/OST/纯音乐）
+- 试听降级链（useAudioPlayer）：**预取 Migu 整曲（优先，可整曲试听+自动定位高潮）→ 预取 iTunes 30s 预览 → 运行时 iTunes 搜索 → 网易云 → QQ 流媒体 → 搜索页**；无 chorus 数据时对 >35s 的歌自动 seek 到 40% 位置（副歌通常在 35%-45%）；iTunes+Migu 双预取总覆盖 **90.7%**（3737/4118）
+- **新增播放源字段必须同步到数据流**：`transformToSingerData`（useSingerData.js 快速/慢速两路径）、`buildCustomSingerData`（singers.js 自选模式）、`slimE/restoreE`（format.js 存档续玩）都要带上新字段，否则运行时 entrant 缺字段、试听仍走 30s 预览
+- iTunes 匹配归一要点（fetch-itunes-previews.js 内建）：歌名统一 `baseKey(t2s(normalizeVariants()))`，含 opencc 简繁转换盲区修复（甚麼→什么、麼/幺→么、後→后、化粧→化妆）与同音异体词表（印地安→印第安等）；拉歌覆盖 **cn+tw+us+hk** 四商店（HK 含大量粤语歌，对 eason/sandy 提升明显），`seenId` 去重
+- 酷狗数据源探测结论：`mobilecdn.kugou.com/api/v3/singer/song?singerid=` 可拿全量列表（含 album/hash/封面，自带 `sorttype` 热度序），但**无 OwnerCount**；`song_search_v2` 有 OwnerCount 但按歌手搜不全量。酷狗 `pay_type=3` VIP 歌播放流为空，**不能作播放源**，播放统一走 iTunes 试听
+- 旧 QQ 数据备份：`C:\Users\Cjay\AppData\Local\Temp\opencode\singerData-qq-full-backup\`（含 iTunes 字段，回滚备用）
+- `public/covers/` 现有 2661 张酷狗封面 + 20 张歌手头像
 
 ## 功能说明
 
@@ -115,7 +154,7 @@ npm run lint         # ESLint 检查
 ### 核心功能
 - 世界杯小组赛采用「四选二」：每组 4 首直接选 2 首晋级（键盘 1/2/3/4 切换）
 - 淘汰赛阶段为二选一对投票决定晋级（← 选左，→ 选右）
-- 支持歌曲试听（iTunes 30s 预览优先，QQ 音乐流媒体降级，搜索页兜底）
+- 支持歌曲试听（iTunes 30s 预览优先，预取缺失时运行时 iTunes 搜索，网易云/QQ 流媒体仅作次要回退）
 - 键盘操作（Esc 关闭播放器，Enter 处理浮层，A/L 也可选择）
 - 存档/续玩（localStorage 持久化，按歌手ID + 模式隔离）
 - 动态歌手搜索（运行时 QQ Music JSONP 搜索任意歌手并加载歌曲）

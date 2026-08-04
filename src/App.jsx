@@ -856,7 +856,11 @@ const handlePickerPreview = useCallback(
       {/* 顶栏 */}
       <div className="mb-[18px] flex flex-wrap items-center gap-3.5">
         <div className="flex items-center gap-2.5 font-display font-extrabold tracking-wide">
-          <span className="text-[22px]">🏆</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 4h10v3a5 5 0 0 1-10 0V4z" stroke="var(--accent)" strokeWidth="1.8" strokeLinejoin="round" />
+            <path d="M12 12v4M9 20h6M10 16h4v4h-4z" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M17 5h2.5a2 2 0 0 1 0 4H17M7 5H4.5a2 2 0 0 0 0 4H7" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
           <span>
             {singerData.name}歌曲世界杯
             <small className="text-xs font-semibold tracking-wider text-muted">

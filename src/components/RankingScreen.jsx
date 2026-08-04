@@ -31,7 +31,7 @@ const TIER_DESCRIPTIONS = [
 
 // 每个等级的颜色 — 同色相(accent红)明度递减阶梯
 const TIER_COLORS = [
-  { bg: '#E63946', labelBg: 'rgba(230,57,70,0.10)', text: '#E63946' },   // 夯 - 全饱和红
+  { bg: '#ff5470', labelBg: 'rgba(255,84,112,0.10)', text: '#ff5470' },   // 夯 - 全饱和莓红
   { bg: '#C9444F', labelBg: 'rgba(201,68,79,0.10)', text: '#D05862' },    // 顶级 - 中红
   { bg: '#B05660', labelBg: 'rgba(176,86,96,0.08)', text: '#C0707A' },    // 人上人 - 浅红
   { bg: '#8E7A80', labelBg: 'rgba(142,122,128,0.06)', text: '#9A8A90' },   // NPC - 红灰

@@ -1,0 +1,122 @@
+{
+  "jay": {
+    "name": "周杰伦",
+    "nameEn": "JAY",
+    "surname": "周",
+    "cover": "./covers/album_000MkMni19ClKG.jpg"
+  },
+  "leehom": {
+    "name": "王力宏",
+    "nameEn": "LEEHOM",
+    "surname": "王",
+    "cover": "./covers/album_002ElVxf43rOue.jpg"
+  },
+  "david": {
+    "name": "陶喆",
+    "nameEn": "DAVID",
+    "surname": "陶",
+    "cover": "./covers/album_003ofGzS3C23Ow.jpg"
+  },
+  "jj": {
+    "name": "林俊杰",
+    "nameEn": "JJ",
+    "surname": "林",
+    "cover": "./covers/album_002g6zv02X7SNi.jpg"
+  },
+  "khalil": {
+    "name": "方大同",
+    "nameEn": "KHALIL",
+    "surname": "方",
+    "cover": "./covers/album_000GvdTR0qcKh8.jpg"
+  },
+  "eason": {
+    "name": "陈奕迅",
+    "nameEn": "EASON",
+    "surname": "陈",
+    "cover": "./covers/album_004Z85XP1c25b7.jpg"
+  },
+  "mayday": {
+    "name": "五月天",
+    "nameEn": "MAYDAY",
+    "surname": "五",
+    "cover": "./covers/album_002fRO0N4FftzY.jpg"
+  },
+  "lironghao": {
+    "name": "李荣浩",
+    "nameEn": "LI",
+    "surname": "李",
+    "cover": "./covers/album_004HaG7p4ZkhXA.jpg"
+  },
+  "stefanie": {
+    "name": "孙燕姿",
+    "nameEn": "SUN",
+    "surname": "孙",
+    "cover": "./covers/album_000P3l050Olt27.jpg"
+  },
+  "jolin": {
+    "name": "蔡依林",
+    "nameEn": "JOLIN",
+    "surname": "蔡",
+    "cover": "./covers/album_0022ANm11dQfRY.jpg"
+  },
+  "fish": {
+    "name": "梁静茹",
+    "nameEn": "FISH",
+    "surname": "梁",
+    "cover": "./covers/album_002E4IXe1ESUij.jpg"
+  },
+  "elva": {
+    "name": "萧亚轩",
+    "nameEn": "ELVA",
+    "surname": "萧",
+    "cover": "./covers/album_000BR3b52Rd506.jpg"
+  },
+  "angela": {
+    "name": "张韶涵",
+    "nameEn": "ANGELA",
+    "surname": "张",
+    "cover": "./covers/album_002cBXbw3DXd3s.jpg"
+  },
+  "cyndi": {
+    "name": "王心凌",
+    "nameEn": "CYNDI",
+    "surname": "王",
+    "cover": "./covers/album_002FVfzB0jzfKi.jpg"
+  },
+  "rainie": {
+    "name": "杨丞琳",
+    "nameEn": "RAINIE",
+    "surname": "杨",
+    "cover": "./covers/album_000jcKFG0sQrD0.jpg"
+  },
+  "she": {
+    "name": "S.H.E",
+    "nameEn": "SHE",
+    "surname": "S",
+    "cover": "./covers/album_004czGdq3MzC1l.jpg"
+  },
+  "amei": {
+    "name": "张惠妹",
+    "nameEn": "AMEI",
+    "surname": "张",
+    "cover": "./covers/album_003RMaRI1iFoYd.jpg"
+  },
+  "gem": {
+    "name": "邓紫棋",
+    "nameEn": "GEM",
+    "surname": "邓",
+    "cover": "./covers/album_002d6m7k0xCbSv.jpg"
+  },
+  "sandy": {
+    "name": "林忆莲",
+    "nameEn": "SANDY",
+    "surname": "林",
+    "cover": "./covers/album_001JqgRv0mRHEQ.jpg"
+  },
+  "lala": {
+    "name": "徐佳莹",
+    "nameEn": "LALA",
+    "surname": "徐",
+    "cover": "./covers/album_000cchEp2CGNEf.jpg"
+  }
+}

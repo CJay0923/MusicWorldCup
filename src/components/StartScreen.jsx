@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { clsx } from 'clsx';
-import TrophySvg from './TrophySvg.jsx';
-import SingerSelector from './SingerSelector.jsx';
+import BrandMark from './BrandMark.jsx';
+import CoverWallSelector from './CoverWallSelector.jsx';
 import ModeSelector from './ModeSelector.jsx';
 import SongPicker from './SongPicker.jsx';
 import CrossSingerSelector from './CrossSingerSelector.jsx';
@@ -9,6 +9,27 @@ import PillButton from './ui/PillButton.jsx';
 import { coverUrl, jsDelivrCoverUrl, qqCoverUrl } from '../lib/assets';
 import { classicOptions, WC_SONG_MODES } from '../data/singers.js';
 import AchievementWall from './AchievementWall.jsx';
+
+// 频谱刊头装饰条
+const SPECTRUM = [
+  { h: 12 }, { h: 26, on: true }, { h: 18 }, { h: 34 }, { h: 22 }, { h: 40, on: true },
+  { h: 16 }, { h: 28 }, { h: 12 }, { h: 30 }, { h: 20 }, { h: 36, on: true }, { h: 14 },
+  { h: 24 }, { h: 10 }, { h: 32 }, { h: 18 }, { h: 38, on: true }, { h: 22 }, { h: 16 },
+  { h: 28 }, { h: 12 }, { h: 34 }, { h: 20 }, { h: 26, on: true }, { h: 14 },
+];
+function SpectrumBar() {
+  return (
+    <div className="spectrum mt-3" aria-hidden="true">
+      {SPECTRUM.map((b, i) => (
+        <span
+          key={i}
+          className={b.on ? 'on' : ''}
+          style={{ height: `${b.h}px`, animationDelay: `${(i % 6) * 0.11}s` }}
+        />
+      ))}
+    </div>
+  );
+}
 
 /**
  * Start / hero screen.
@@ -172,7 +193,7 @@ export default function StartScreen({
   })();
 
 return (
-  <section className="relative px-2.5 pb-2.5 pt-14 text-center">
+  <section className="relative px-2.5 pb-2.5 pt-9 text-center">
     {/* 主题切换按钮 - 右上角 */}
     <button
       className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border-2 border-side-left/30 bg-bg2 text-sm transition-all hover:scale-110 hover:border-side-left/50"
@@ -190,37 +211,42 @@ return (
       {theme === 'light' ? '🌙' : '☀️'}
     </button>
 
-      <TrophySvg size={120} />
-      <h1 className="mx-0 mb-1.5 mt-[18px] font-display text-[clamp(30px,6vw,52px)] font-black leading-[1.15] tracking-tight text-ink text-balance">
-        {isCustom
-          ? '自选歌曲世界杯'
-          : isCrossBattle
-            ? '多歌手混战世界杯'
-            : isRanking
-              ? '夯到拉排名'
-              : `${singer?.name}歌曲世界杯`}
-      </h1>
-      <p className="mb-8 text-[15px] tracking-wide text-muted">
-        {isCustom ? (
-          <>
-            {customBracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军
-          </>
-        ) : isClassic ? (
-          <>
-            {bracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军
-          </>
-        ) : isCrossBattle ? (
-          <>
-            多位歌手 · <b>公平分配</b> · 跨歌手对决决出终极冠军
-          </>
-        ) : isRanking ? (
-          <>
-            歌手/歌曲/专辑 · <b>分层排名</b> · 从最夯到最拉
-          </>
-        ) : (
-          <>48 首歌曲 · 四选二小组赛+淘汰赛 · 决出终极冠军 · {wcSongMode === 'all' ? '全曲混战' : '热门出征'}</>
-        )}
-      </p>
+      {/* 方案5 · 频谱刊头 + 艺术字标 */}
+      <div className="mx-auto flex max-w-[1100px] flex-col items-center">
+        <BrandMark className="mx-auto block" />
+        <SpectrumBar />
+        <div className="my-3 h-px w-[min(440px,82%)] bg-white/10" />
+        <h1 className="mb-1.5 font-display text-[clamp(26px,5.2vw,42px)] font-black leading-[1.1] tracking-tight text-ink text-balance">
+          {isCustom
+            ? '自选歌曲世界杯'
+            : isCrossBattle
+              ? '多歌手混战世界杯'
+              : isRanking
+                ? '夯到拉排名'
+                : `${singer?.name}歌曲世界杯`}
+        </h1>
+        <p className="text-[14px] tracking-wide text-muted">
+          {isCustom ? (
+            <>
+              {customBracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军
+            </>
+          ) : isClassic ? (
+            <>
+              {bracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军
+            </>
+          ) : isCrossBattle ? (
+            <>
+              多位歌手 · <b>公平分配</b> · 跨歌手对决决出终极冠军
+            </>
+          ) : isRanking ? (
+            <>
+              歌手/歌曲/专辑 · <b>分层排名</b> · 从最夯到最拉
+            </>
+          ) : (
+            <>48 首歌曲 · 四选二小组赛+淘汰赛 · 决出终极冠军 · {wcSongMode === 'all' ? '全曲混战' : '热门出征'}</>
+          )}
+        </p>
+      </div>
 
       <ModeSelector
         selected={selectedMode}
@@ -231,7 +257,7 @@ return (
       {/* Classic rules */}
       <div
         className={clsx(
-          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
           rulesCollapsed.classic ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isClassic ? 'block' : 'none' }}
@@ -294,7 +320,7 @@ return (
       {/* WC rules */}
       <div
         className={clsx(
-          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
           rulesCollapsed.wc ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: selectedMode === 'wc' ? 'block' : 'none' }}
@@ -338,7 +364,7 @@ return (
       {/* Custom rules */}
       <div
         className={clsx(
-          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
           rulesCollapsed.custom ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isCustom ? 'block' : 'none' }}
@@ -377,7 +403,7 @@ return (
       {/* Cross-battle rules */}
       <div
         className={clsx(
-          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
           rulesCollapsed.cross ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isCrossBattle ? 'block' : 'none' }}
@@ -410,7 +436,7 @@ return (
       {/* Ranking rules */}
       <div
         className={clsx(
-          'mx-auto mb-8 max-w-[680px] rounded-2xl border border-white/[0.08] bg-white/[0.03] text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
+          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
           rulesCollapsed.ranking ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isRanking ? 'block' : 'none' }}
@@ -473,7 +499,7 @@ return (
 
       {/* 歌手选择（仅经典/世界杯/自选模式显示，排名和混战完全隐藏） */}
       {!isCrossBattle && !isRanking && (
-        <SingerSelector
+        <CoverWallSelector
           singers={singers}
           current={currentSinger}
           onSelect={onSelectSinger}

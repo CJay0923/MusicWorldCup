@@ -43,11 +43,11 @@ const MODE_COLORS = {
 // ---- 极简线性 SVG 图标（24×24, stroke-based, currentColor） ----
 
 const ICON_PROPS = {
-  width: 28,
-  height: 28,
+  width: 22,
+  height: 22,
   viewBox: '0 0 24 24',
   fill: 'none',
-  strokeWidth: 2,
+  strokeWidth: 1.8,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
 };
@@ -105,66 +105,67 @@ const MODE_ICONS = {
   ranking: IconRanking,
 };
 
+const MODE_SUBS = {
+  classic: '单败淘汰 · 二选一',
+  wc: '小组 + 淘汰赛',
+  custom: '自选歌曲 · 随心对战',
+  'cross-battle': '跨歌手 · 公平分配',
+  ranking: '分层 · 从夯到拉',
+};
+
 export default function ModeSelector({ selected, onSelect, bracketSize }) {
-  const modeBtnBase = [
-    'relative flex w-[150px] cursor-pointer flex-col items-center gap-2',
-    'rounded-xl border px-4 py-5 text-center',
-    'transition-all duration-250 ease-out',
-    'hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.25)]',
-    'active:translate-y-0 active:scale-[0.98]',
-    'sm:w-[170px] sm:px-6',
+  const modes = [
+    { id: 'classic', title: `经典 ${bracketSize} 强` },
+    { id: 'wc', title: '世界杯模式' },
+    { id: 'custom', title: '自选模式' },
+    { id: 'cross-battle', title: '多歌手混战' },
+    { id: 'ranking', title: '夯到拉排名' },
   ];
 
-  const item = (mode, title, desc) => {
-    const isSelected = selected === mode;
-    const colors = MODE_COLORS[mode] || MODE_COLORS.classic;
-    const Icon = MODE_ICONS[mode] || IconClassic;
-    const baseCls = clsx(
-      ...modeBtnBase,
-      isSelected
-        ? colors.selected
-        : 'border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.06]',
-    );
-    return (
-      <div className={baseCls} onClick={() => onSelect(mode)}>
-        {/* SVG 线性图标 — 选中时品牌色，未选时灰色 */}
-        <Icon
-          className={clsx(
-            'transition-colors duration-250',
-            isSelected ? colors.stroke : 'stroke-white/30',
-          )}
-        />
-        <span
-          className={clsx(
-            'text-[15px] font-bold',
-            isSelected ? colors.text : 'text-white/55',
-          )}
-        >
-          {title}
-        </span>
-        <span className="mt-0.5 block text-[11px] leading-relaxed text-muted">
-          {desc}
-        </span>
-        {/* 选中指示器 */}
-        {isSelected && (
-          <div
-            className={clsx(
-              'absolute -bottom-2 left-1/2 h-0.75 w-8 -translate-x-1/2 rounded-full',
-              colors.dot,
-            )}
-          />
-        )}
-      </div>
-    );
-  };
-
   return (
-    <div className="mb-6 flex flex-wrap justify-center gap-3 sm:gap-4">
-      {item('classic', `经典 ${bracketSize} 强`, '单败淘汰 · 二选一')}
-      {item('wc', '世界杯模式', '小组赛 + 淘汰赛')}
-      {item('custom', '自选模式', '自定义歌曲 · 随心对战')}
-      {item('cross-battle', '多歌手混战', '跨歌手对决 · 公平分配')}
-      {item('ranking', '夯到拉排名', '分层排名 · 曲线递增')}
+    <div className="mx-auto mb-6 w-full max-w-[1100px] px-3">
+      <div className="grid w-full grid-cols-2 gap-1 rounded-2xl border border-white/[0.08] bg-black/[0.28] p-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)] backdrop-blur-sm sm:grid-cols-3 md:grid-cols-5 md:gap-2 md:p-2">
+        {modes.map(({ id, title }) => {
+          const isSelected = selected === id;
+          const colors = MODE_COLORS[id] || MODE_COLORS.classic;
+          const Icon = MODE_ICONS[id] || IconClassic;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onSelect(id)}
+              className={clsx(
+                'group relative flex min-w-0 cursor-pointer items-center gap-2 rounded-xl px-2.5 py-2.5 text-left',
+                'transition-all duration-250 ease-out',
+                'md:gap-3 md:px-4 md:py-3',
+                isSelected
+                  ? clsx(colors.selected, 'shadow-[0_8px_24px_rgba(0,0,0,0.35)]')
+                  : 'hover:bg-white/[0.04]',
+              )}
+            >
+              <Icon
+                className={clsx(
+                  'shrink-0 transition-colors duration-200',
+                  isSelected ? colors.stroke : 'stroke-white/35 group-hover:stroke-white/55',
+                )}
+              />
+              <div className="flex min-w-0 flex-col">
+                <span
+                  className={clsx(
+                    'truncate text-[13px] font-extrabold leading-tight md:text-[15px]',
+                    isSelected ? colors.text : 'text-white/75 group-hover:text-white/90',
+                  )}
+                >
+                  {title}
+                </span>
+                <span className="hidden truncate text-[11px] font-medium text-white/35 sm:block">
+                  {MODE_SUBS[id]}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

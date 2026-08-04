@@ -1,4 +1,4 @@
-/* 首屏加载样式 — 漫画涂鸦风（内联进 <head>，保证 React 挂载前可见） */
+/* 首屏加载样式 — 暗色赛事风（内联进 <head>，保证 React 挂载前可见） */
 #initial-loader {
   position: fixed;
   inset: 0;
@@ -7,41 +7,80 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  background: #f4ede0;
-  color: #1a1a1a;
+  gap: 20px;
+  background: #0e0f12;
+  color: #ece8e1;
   font-family:
     'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', system-ui, sans-serif;
+  user-select: none;
 }
-#initial-loader .il-trophy {
-  font-size: 56px;
-  filter: drop-shadow(3px 3px 0 #1a1a1a);
-  animation: il-bounce 1.6s ease-in-out infinite;
+
+#initial-loader .il-ring {
+  width: 56px;
+  height: 56px;
+  color: #ff5470;
 }
-#initial-loader .il-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid rgba(26, 26, 26, 0.15);
-  border-top-color: #e63946;
-  border-radius: 50%;
-  animation: il-spin 0.7s linear infinite;
+#initial-loader .il-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
 }
+#initial-loader .il-ring-track {
+  opacity: 0.18;
+}
+#initial-loader .il-ring-head {
+  stroke-dasharray: 76;
+  stroke-dashoffset: 70;
+  animation: il-ring-draw 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+#initial-loader .il-wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+#initial-loader .il-title {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+}
+#initial-loader .il-sub {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #6b6862;
+}
+
 #initial-loader .il-text {
-  font-size: 15px;
+  font-size: 13px;
   letter-spacing: 1px;
-  color: #6b6560;
+  color: #7d7972;
+  animation: il-pulse 2s ease-in-out infinite;
 }
-@keyframes il-spin {
-  to {
+
+@keyframes il-ring-draw {
+  0% {
+    stroke-dashoffset: 76;
+    transform: rotate(0deg);
+  }
+  50% {
+    stroke-dashoffset: 18;
+    transform: rotate(180deg);
+  }
+  100% {
+    stroke-dashoffset: 76;
     transform: rotate(360deg);
   }
 }
-@keyframes il-bounce {
+
+@keyframes il-pulse {
   0%,
   100% {
-    transform: translateY(0);
+    opacity: 0.55;
   }
   50% {
-    transform: translateY(-8px);
+    opacity: 1;
   }
 }

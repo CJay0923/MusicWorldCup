@@ -39,3 +39,7 @@ docs/
 
 # Build backup
 dist_bak/
+
+# Local font backups / temp artifacts
+.font-backup/
+_vinyl_uri.txt

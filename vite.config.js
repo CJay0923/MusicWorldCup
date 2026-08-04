@@ -23,11 +23,15 @@ function slimPublic() {
     name: 'slim-public',
     apply: 'build',
     buildStart() {
-      for (const d of ['covers', 'singers', 'singerData', 'assets']) {
+      for (const d of ['covers', 'singers', 'singerData', 'assets', 'fonts']) {
         const p = path.resolve(root, 'dist', d);
         if (fs.existsSync(p)) {
-          fs.rmSync(p, { recursive: true, force: true });
-          console.log(`[slim-public] 清除残留 dist/${d}`);
+          try {
+            fs.rmSync(p, { recursive: true, force: true });
+            console.log(`[slim-public] 清除残留 dist/${d}`);
+          } catch (e) {
+            console.warn(`[slim-public] 无法清除 dist/${d}: ${e.message}`);
+          }
         }
       }
     },
@@ -57,15 +61,24 @@ function slimPublic() {
         const n = fs.readdirSync(singersDst).filter((f) => f.endsWith('.jpg')).length;
         console.log(`[slim-public] 复制 singers -> dist/singers (${n} 张)`);
       }
+      // 自托管 web 字体（Permanent Marker 等）：同源托管，不走 Google Fonts CDN
+      const fontsSrc = path.resolve(root, 'public', 'fonts');
+      const fontsDst = path.resolve(root, 'dist', 'fonts');
+      if (fs.existsSync(fontsSrc)) {
+        fs.cpSync(fontsSrc, fontsDst, { recursive: true });
+        const n = fs.readdirSync(fontsDst).filter((f) => /\.(woff2?|ttf|otf)$/.test(f)).length;
+        console.log(`[slim-public] 复制 fonts -> dist/fonts (${n} 个)`);
+      }
     },
   };
 }
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), slimPublic()],
-  // 关闭 publicDir 自动复制：singerData（改走 /api/singer）不进包体；
-  // covers + singers 由 slimPublic 插件手动复制进 dist（同源托管，不走外部 CDN）。
-  publicDir: false,
+  // 开发时启用 publicDir，让 dev server 能 serve public/covers 和 public/singers；
+  // 生产构建时关闭 publicDir，避免 singerData 被复制进包体，
+  // covers + singers 改由 slimPublic 插件手动复制进 dist（同源托管，不走外部 CDN）。
+  publicDir: process.env.NODE_ENV === 'production' ? false : 'public',
   base: './',
   build: {
     assetsInlineLimit: 4096,

@@ -51,7 +51,7 @@ export default function AchievementToast({ newAchievements, onDismiss }) {
       <div
         className={clsx(
           'flex items-center gap-3 rounded-2xl border-2 border-accent/50',
-          'bg-bg2/95 px-5 py-3.5 shadow-[0_8px_32px_rgba(230,57,70,0.2),0_0_60px_rgba(230,57,70,0.08)]',
+          'bg-bg2/95 px-5 py-3.5 shadow-[0_8px_32px_rgba(255,84,112,0.2),0_0_60px_rgba(255,84,112,0.08)]',
           'backdrop-blur-[12px]',
         )}
       >

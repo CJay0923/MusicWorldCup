@@ -20,7 +20,7 @@ import {
 } from '../lib/qqMusic.js';
 import { baseKey } from '../utils/text.js';
 import { isLiveTrack, isLiveAlbum, isJunkTrack, isMedleyTrack, shouldKeepByFavOrAlbum } from '../utils/filters.js';
-import { coverUrl, singerPhotoUrl } from '../lib/assets.js';
+import { qqCoverUrl, singerPhotoUrl } from '../lib/assets.js';
 
 /**
  * 根据可用歌曲数计算经典模式最大淘汰赛规模（2 的幂，4~128）
@@ -70,7 +70,9 @@ export function transformDynamicSingerData(raw, albumDetails, favMap) {
 
   const allEntrants = filteredSongs.map((song, i) => {
     const sr = seedRankByMid.get(song.songmid) || i + 1;
-    const jsDelivrPic = song.albumMid ? coverUrl(song.albumMid) : '';
+    // 动态搜索歌手：专辑封面必定不在本地库，直接采用 QQ 音乐 T002 CDN，
+    // 避免先 404 同源/jsDelivr 再回退的无效请求链（其他展示组件均读 picLocal 取首图）。
+    const qqCover = song.albumMid ? qqCoverUrl(song.albumMid) : '';
 
     // 从 albumDetails 映射中获取专辑类型和简介
     const albumDetail = albumDetails?.get(song.albumMid);
@@ -85,9 +87,9 @@ export function transformDynamicSingerData(raw, albumDetails, favMap) {
       nid: null,
       songmid: song.songmid,
       songid: song.songid,
-      pic: jsDelivrPic,
-      picLocal: coverUrl(song.albumMid),
-      songPic: jsDelivrPic,
+      pic: qqCover,
+      picLocal: qqCover,
+      songPic: qqCover,
       albumMid: song.albumMid,
       albumName: song.albumName,
       albumDate: song.albumDate || '',

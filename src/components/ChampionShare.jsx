@@ -100,6 +100,11 @@ function corsProxyUrl(url) {
     const stripped = url.replace(/^https?:\/\//, '');
     return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}`;
   }
+  // jsDelivr 封面：自带 CORS，但经 weserv 代理双保险确保 canvas 不污染
+  if (url.includes('cdn.jsdelivr.net')) {
+    const stripped = url.replace(/^https?:\/\//, '');
+    return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}`;
+  }
   // 本地路径转 CDN URL（用于分享链接场景）
   if (url.startsWith('./covers/album_') || url.startsWith('/covers/album_')) {
     const m = url.match(/album_([^.]+)/);

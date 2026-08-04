@@ -5,22 +5,30 @@
 --   npx wrangler d1 execute mwc-db --remote --file=db/singer-data-schema.sql
 --
 -- 设计原则:
---   1. 标量字段 → 列；数组(entrants) → 子表；映射(albumDescs) → 子表/JSON
+--   1. 标量字段 → 列；数组(entrants) → 子表；映射(albumDescs) → 子表
 --   2. 歌曲级字段是关系化的真正价值点: 可与 song_stat 按 song_mid JOIN 富化榜单
---   3. Hybrid: 关系表供查询/扩展, singer_snapshot 整包 JSON 供"加载赛事"快路径
---   4. 命名: snake_case, 表名单数, 外键 _mid, 时间戳 INTEGER(Unix秒), 布尔用 0/1
+--   3. 不存整包 JSON: D1 单语句上限 100KB，歌手 payload 可达数百 KB 会超限。
+--      改为由关系表在 /api/singer/[mid] 重组为前端所需的 raw 形状（见该 Function）。
+--   4. singer_songs.ord 保留原始 entrants 顺序，重组时 ORDER BY 保序，
+--      确保对阵树 L/R 分组与历史部署一致。
+--   5. 命名: snake_case, 表名单数, 外键 _mid, 时间戳 INTEGER(Unix秒), 布尔用 0/1
 -- ============================================================
+
+DROP TABLE IF EXISTS singer_snapshot;
+DROP TABLE IF EXISTS singer_album_descriptions;
+DROP TABLE IF EXISTS singer_songs;
+DROP TABLE IF EXISTS singers;
 
 -- ------------------------------------------------------------
 -- 1) singers —— 歌手级标量字段 (原 JSON 顶层标量)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS singers (
-  singer_mid        TEXT    PRIMARY KEY,   -- 原 singermid (QQ/酷狗歌手ID)
+  singer_mid        TEXT    PRIMARY KEY,   -- 歌手 key (jay/stefanie...)，即文件名
   name              TEXT    NOT NULL,      -- 原 singerName
   photo             TEXT,                  -- 原 singerPhoto (封面URL)
-  source_total_song INTEGER DEFAULT 0,     -- 原 totalSong (来源总曲数, 仅展示用)
-  source_album_count INTEGER DEFAULT 0,    -- 原 albumCount
-  entrant_count     INTEGER NOT NULL DEFAULT 0, -- entrants 实际条数(参赛池, 非 totalSong)
+  source_total_song INTEGER DEFAULT 0,     -- 来源总曲数(仅展示)
+  source_album_count INTEGER DEFAULT 0,    -- albumDescs 条数
+  entrant_count     INTEGER NOT NULL DEFAULT 0, -- entrants 实际条数(参赛池)
   data_source       TEXT    DEFAULT 'kugou',   -- 数据来源 (kugou/qq/...)
   preprocessed      INTEGER NOT NULL DEFAULT 0, -- 原 preprocessed (布尔 → 0/1)
   created_at        INTEGER NOT NULL,
@@ -29,37 +37,39 @@ CREATE TABLE IF NOT EXISTS singers (
 
 -- ------------------------------------------------------------
 -- 2) singer_songs —— entrants 数组 → 子表 (一对多, 核心表)
---    原 entrants[].* 每个字段一列; song_mid 是跨歌手/投票 JOIN 的钥匙
+--    ord 保留原始顺序; song_mid 是跨歌手/投票 JOIN 的钥匙
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS singer_songs (
   id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  ord               INTEGER NOT NULL DEFAULT 0,  -- 原始 entrants 下标，重组保序
   singer_mid        TEXT    NOT NULL,
   song_mid          TEXT    NOT NULL,      -- 原 songmid  (JOIN 键!)
   song_id           INTEGER,               -- 原 songid
   name              TEXT    NOT NULL,      -- 原 name
   album_mid         TEXT,                  -- 原 albumMid
   album_name        TEXT,                  -- 原 albumName
-  album_date        TEXT,                  -- 原 albumDate (YYYY-MM-DD, 可范围查询)
-  album_type        TEXT,                  -- 原 albumType (录音室专辑/单曲...)
+  album_date        TEXT,                  -- 原 albumDate (YYYY-MM-DD)
+  album_type        TEXT,                  -- 原 albumType
   fav_count         INTEGER DEFAULT 0,     -- 原 favCount (热度, 可排序)
   seed_rank         INTEGER DEFAULT 0,     -- 原 seedRank (抽签种子序)
   itunes_preview_url TEXT,                 -- 原 itunesPreviewUrl
   itunes_track_url  TEXT,                  -- 原 itunesTrackUrl
   itunes_track_id   INTEGER,               -- 原 itunesTrackId
+  pic               TEXT,                  -- 原 pic (本地封面路径/URL，UI 的 pic 字段)
+  migu_preview_url  TEXT,                  -- 原 miguPreviewUrl (咪咕试听)
   created_at        INTEGER NOT NULL,
   FOREIGN KEY (singer_mid) REFERENCES singers(singer_mid) ON DELETE CASCADE,
   UNIQUE (singer_mid, song_mid)
 );
 
--- 索引: 加载某歌手全部歌曲 / 跨歌手按 song_mid 查询 / 按专辑 / 按种子序
-CREATE INDEX IF NOT EXISTS idx_song_singer ON singer_songs(singer_mid);
+-- 索引: 加载某歌手全部歌曲(按序) / 跨歌手按 song_mid 查询 / 按专辑 / 按种子序
+CREATE INDEX IF NOT EXISTS idx_song_singer ON singer_songs(singer_mid, ord);
 CREATE INDEX IF NOT EXISTS idx_song_mid    ON singer_songs(song_mid);
 CREATE INDEX IF NOT EXISTS idx_song_album  ON singer_songs(album_mid);
-CREATE INDEX IF NOT EXISTS idx_song_seed   ON singer_songs(singer_mid, seed_rank);
 
 -- ------------------------------------------------------------
 -- 3) singer_album_descriptions —— albumDescs 映射 → 子表
---    原 albumDescs 是 { albumMid: 描述文本 } 的 object, 非数组
+--    原 albumDescs 是 { albumMid: 描述文本 } 的 object
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS singer_album_descriptions (
   singer_mid   TEXT NOT NULL,
@@ -70,21 +80,11 @@ CREATE TABLE IF NOT EXISTS singer_album_descriptions (
 );
 
 -- ------------------------------------------------------------
--- 4) singer_snapshot —— Hybrid 快路径: 整包 JSON 缓存
---    组装好的完整 payload (同原 public/singerData/{id}.json)
---    前端"加载赛事"读这一列即可, 免 JOIN 重组
--- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS singer_snapshot (
-  singer_mid  TEXT PRIMARY KEY,
-  payload     TEXT NOT NULL,
-  updated_at  INTEGER NOT NULL
-);
-
--- ------------------------------------------------------------
--- 5) 视图: 榜单富化 (体现关系化最大优势)
+-- 4) 视图: 榜单富化 (体现关系化最大优势)
 --    song_stat (投票表) 按 item_mid=song_mid JOIN singer_songs
 --    → 榜单直接带出 歌名/专辑/歌手, 无需在 stat 冗余 title
 -- ------------------------------------------------------------
+DROP VIEW IF EXISTS leaderboard_enriched;
 CREATE VIEW IF NOT EXISTS leaderboard_enriched AS
 SELECT
   s.scope,

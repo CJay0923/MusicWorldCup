@@ -1,7 +1,11 @@
 // src/hooks/useSingerData.js — 歌手数据加载 hook
-// 方案B：歌手数据通过 Vite import.meta.glob 预打包为 JS 模块
-// 不再从 public/ fetch JSON，而是通过 ES module import 加载
-// 优点：无独立 HTTP 请求，Vite build 自动 minify + gzip，切换歌手零延迟
+//
+// 数据来源优先级（生产构建已把歌手 JSON 移出包体，改走后端 D1）：
+//   1. 生产：fetch /api/singer/[mid]（D1 关系表重组的 raw JSON）
+//   2. 开发：直接 fetch Vite dev server 的 /src/data/singerData/{id}.json
+//   3. 线上兜底：jsDelivr 上仓库内的原始 src/data/singerData/{id}.json
+//   4. 最终兜底：STATIC_SINGERS 元数据（无 entrants，仅保证不崩）
+// 任意一层失败都有回退，详见 loadSingerData()。
 //
 // 合并静态数据中的 nid/chorus 字段，修复图片路径
 // 运行时应用 Live/伴奏过滤 + baseKey 去重（兼容旧数据）
@@ -18,14 +22,6 @@ import {
   isMedleyTrack,
   shouldKeepByFavOrAlbum,
 } from '../utils/filters.js';
-
-// ---------- 预打包的歌手数据（通过 import.meta.glob 懒加载）----------
-// eager: false → 每个 JSON 成为独立 chunk，按需加载（不内联到主 bundle）
-// Vite 自动处理 chunk 分割和命名，配合 manualChunks 进一步优化
-const singerDataLoaders = import.meta.glob(
-  '../data/singerData/*.json',
-  { eager: false, import: 'default' },
-);
 
 // ---------- 数据缓存（模块级，跨组件复用）----------
 // LRU 缓存：最多保留 4 位歌手的已 transform 数据，避免长会话内存无限增长
@@ -44,14 +40,6 @@ function cacheSingerData(singerId, data) {
   if (dataCache.has(singerId)) dataCache.delete(singerId); // 重新插入到末尾
   dataCache.set(singerId, data);
   evictIfNeeded();
-}
-
-/**
- * 从预打包的模块中获取懒加载器
- */
-function getSingerDataLoader(singerId) {
-  const key = `../data/singerData/${singerId}.json`;
-  return singerDataLoaders[key] || null;
 }
 
 /**
@@ -125,7 +113,7 @@ function transformToSingerData(raw, registry, singerId) {
       seedRank: Object.fromEntries(allEntrants.map((e, i) => [i, e.seedRank])),
       singerPhoto: raw.singerPhoto
         ? (raw.singerPhoto.startsWith('/') ? '.' + raw.singerPhoto : raw.singerPhoto)
-        : `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid}.jpg`,
+        : `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid || singerId}.jpg`,
       source: 'local',
     };
   }
@@ -203,15 +191,21 @@ function transformToSingerData(raw, registry, singerId) {
     entrants: allEntrants,
     seeds: allEntrants.map((_, i) => i),
     seedRank: Object.fromEntries(allEntrants.map((e, i) => [i, e.seedRank])),
-    singerPhoto: `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid}.jpg`,
+    singerPhoto: `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid || singerId}.jpg`,
     source: 'local',
   };
 }
 
 /**
- * 加载歌手数据（从 Vite chunk 异步加载，带缓存和去重）
- * 数据通过 import.meta.glob 懒加载，每个歌手的数据是独立 JS chunk
- * 相比 fetch JSON：无 CORS 问题、Vite 自动 minify、可被浏览器缓存
+ * 加载歌手数据（带缓存和去重）
+ *
+ * 数据来源优先级（生产构建把歌手 JSON 完全移出包体，改走后端 D1）：
+ *   1. 生产环境 / 已绑 D1：fetch /api/singer/[mid]（D1 关系表重组的 raw JSON）
+ *   2. 开发环境：直接 fetch Vite dev server 的源码 JSON（/src/data/singerData/{id}.json）
+ *   3. 线上兜底：jsDelivr 上仓库内的原始 src/data/singerData/{mid}.json
+ *   4. 最终兜底：STATIC_SINGERS 元数据（无 entrants，仅保证不崩）
+ *
+ * 这样生产包体不再包含 6MB 歌手 JSON，且任意一层失败都有回退。
  * @param {string} singerId
  * @returns {Promise<object|null>}
  */
@@ -230,26 +224,32 @@ export async function loadSingerData(singerId) {
     const registry = SINGER_REGISTRY[singerId];
     if (!registry) return null;
 
-    try {
-      const loader = getSingerDataLoader(singerId);
-      if (!loader) {
-        // 预打包数据中没有 → 降级到静态数据
-        const fallback = STATIC_SINGERS[singerId] || null;
-        if (fallback) cacheSingerData(singerId, fallback);
-        return fallback;
-      }
+    let raw = null;
 
-      // 动态 import 加载歌手数据 chunk
-      const raw = await loader();
-      const data = transformToSingerData(raw, registry, singerId);
-      cacheSingerData(singerId, data);
-      return data;
-    } catch (err) {
-      // chunk 加载失败 → 降级到静态数据
+    // ① 生产优先：后端 D1 API（dev 下 /api/singer 不存在，自动跳过）
+    if (!import.meta.env.DEV) {
+      raw = await fetchSingerFromApi(singerId);
+    }
+
+    // ② 开发期兜底：直接 fetch Vite dev server 的源码 JSON（生产构建不存在该路径，自动跳过）
+    if (!raw && import.meta.env.DEV) {
+      raw = await loadBundledSinger(singerId);
+    }
+
+    // ③ 线上兜底：jsDelivr 原始仓库 JSON（生产环境 API 故障时的离线降级）
+    if (!raw) {
+      raw = await fetchSingerFromJsDelivr(singerId);
+    }
+
+    if (!raw) {
       const fallback = STATIC_SINGERS[singerId] || null;
       if (fallback) cacheSingerData(singerId, fallback);
       return fallback;
     }
+
+    const data = transformToSingerData(raw, registry, singerId);
+    cacheSingerData(singerId, data);
+    return data;
   })();
 
   fetchPromiseCache.set(singerId, promise);
@@ -260,9 +260,50 @@ export async function loadSingerData(singerId) {
   }
 }
 
+/** 从后端 D1 API 拉取 raw JSON；任何非 200 / 业务错误都返回 null 触发兜底 */
+async function fetchSingerFromApi(singerId) {
+  try {
+    const res = await fetch(`/api/singer/${encodeURIComponent(singerId)}`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json || json.error) return null;
+    if (!Array.isArray(json.entrants) || json.entrants.length === 0) return null;
+    return json;
+  } catch {
+    return null;
+  }
+}
+
+/** 开发期：直接从 Vite dev server 拉取源码内的歌手 JSON（零打包，不进生产包） */
+async function loadBundledSinger(singerId) {
+  try {
+    const res = await fetch(`/src/data/singerData/${encodeURIComponent(singerId)}.json`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/** 线上兜底：jsDelivr 上仓库内的原始歌手 JSON（与 src/data/singerData 同构） */
+async function fetchSingerFromJsDelivr(singerId) {
+  try {
+    const url = `https://cdn.jsdelivr.net/gh/CJay0923/MusicWorldCup@main/src/data/singerData/${encodeURIComponent(singerId)}.json`;
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json || !Array.isArray(json.entrants) || json.entrants.length === 0) return null;
+    return json;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * 加载歌手数据（懒加载版）
- * 通过 import.meta.glob 动态 import 加载，每位歌手的数据是独立 Vite chunk
+ * 实际数据获取见 loadSingerData()：生产走 /api/singer（D1），开发走 dev server 源码 JSON，兜底走 jsDelivr
  * @param {string} singerId - 歌手 ID（stefanie/jj/jay/jolin/david/she/eason）
  * @returns {{singerData: object|null, loading: boolean, error: string|null}}
  */

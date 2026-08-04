@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { buildRankingTiers } from '../data/singers.js';
+import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
 
 /**
  * 夯到拉排名模式 — 拖拉式 Tier List 交互
@@ -73,20 +74,14 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
   const allAssigned = state.pool.length === 0;
   const totalAssigned = items.length - state.pool.length;
 
-  // ---------- 封面图获取 ----------
+  // ---------- 封面图获取（jsDelivr 优先，不调外部音乐 API）----------
   const getItemArt = useCallback(
     (item) => {
       if (!item) return '';
       if (category === 'album') return item.pic || item.picLocal || '';
       if (category === 'singer') return item.photo || item.singerPhoto || '';
-      // song: 尝试所有可能的封面来源
-      const t062 = item.songmid
-        ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${item.songmid}.jpg`
-        : '';
-      const t002 = item.albumMid
-        ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${item.albumMid}.jpg`
-        : '';
-      return item.picLocal || item.songPic || item.pic || t062 || t002 || '';
+      // song: jsDelivr → pic → coverUrl 构建
+      return item.picLocal || item.pic || (item.albumMid ? coverUrl(item.albumMid) : '') || '';
     },
     [category],
   );
@@ -94,39 +89,10 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
   const handleArtError = useCallback((e, item) => {
     const img = e.currentTarget;
     const tried = img.dataset.tried || '';
-    const t062 = item.songmid
-      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${item.songmid}.jpg`
-      : '';
-    const t002 = item.albumMid
-      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${item.albumMid}.jpg`
-      : '';
-    // 依次尝试所有可能的封面来源
-    if (tried !== 'picLocal' && item.picLocal) {
-      img.dataset.tried = 'picLocal';
-      img.src = item.picLocal;
-      return;
-    }
-    if (tried !== 'songPic' && item.songPic) {
-      img.dataset.tried = 'songPic';
-      img.src = item.songPic;
-      return;
-    }
-    if (tried !== 'pic' && item.pic) {
-      img.dataset.tried = 'pic';
-      img.src = item.pic;
-      return;
-    }
-    if (tried !== 't062' && t062) {
-      img.dataset.tried = 't062';
-      img.src = t062;
-      return;
-    }
-    if (tried !== 't002' && t002) {
-      img.dataset.tried = 't002';
-      img.src = t002;
-      return;
-    }
-    img.style.display = 'none';
+    if (tried) { img.style.display = 'none'; return; }
+    img.dataset.tried = '1';
+    if (item?.albumMid) { img.src = jsDelivrCoverUrl(item.albumMid); }
+    else { img.style.display = 'none'; }
   }, []);
 
   // ---------- 移动项目 ----------

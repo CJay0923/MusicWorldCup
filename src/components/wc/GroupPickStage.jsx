@@ -1,6 +1,7 @@
 // 四选二小组赛舞台：4 张 GOAT 风格大图卡片，封面铺满
 import { useEffect, useRef } from 'react';
 import { clsx } from 'clsx';
+import { coverUrl, jsDelivrCoverUrl } from '../../lib/assets';
 
 /**
  * @param {object} group - 当前小组 { name, members[4], picks[], done }
@@ -42,25 +43,21 @@ export default function GroupPickStage({
   const pickedCount = group.picks.length;
   const isReady = pickedCount === 2;
 
-  // 图片优先级：picLocal > albumMid CDN > songmid CDN > pic > songPic
+  // 图片优先级：jsDelivr（picLocal/coverUrl）→ pic → GitHub raw（不调外部音乐 API）
   const getCoverSrc = (e) => {
     if (e.picLocal) return e.picLocal;
-    if (e.albumMid) return `https://y.gtimg.cn/music/photo_new/T002R400x400M000${e.albumMid}.jpg`;
-    if (e.songmid) return `https://y.gtimg.cn/music/photo_new/T062R400x400M000${e.songmid}.jpg`;
+    if (e.albumMid) return coverUrl(e.albumMid);
     if (e.pic) return e.pic;
-    if (e.songPic) return e.songPic;
     return '';
   };
 
-  // 图片加载错误处理
+  // 图片加载错误：jsDelivr → GitHub raw 直链 → 隐藏
   const handleImgError = (ev, e) => {
     const img = ev.currentTarget;
     const tried = img.dataset.tried;
     if (tried) { img.style.display = 'none'; return; }
     img.dataset.tried = '1';
-    if (e.songmid && !img.src.includes('T062')) img.src = `https://y.gtimg.cn/music/photo_new/T062R400x400M000${e.songmid}.jpg`;
-    else if (e.albumMid && !img.src.includes('T002')) img.src = `https://y.gtimg.cn/music/photo_new/T002R400x400M000${e.albumMid}.jpg`;
-    else if (e.pic && img.src !== e.pic) img.src = e.pic;
+    if (e.albumMid) img.src = jsDelivrCoverUrl(e.albumMid);
     else img.style.display = 'none';
   };
 

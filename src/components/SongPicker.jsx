@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { getAlbumGroups } from '../data/singers.js';
+import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
 
 /**
  * 按专辑分组的歌曲选择器（自选模式）
@@ -171,10 +172,9 @@ export default function SongPicker({
           const hasDesc = albumDesc.length > 0;
 
           const albumHeaderFallback =
-            alb.songs[0]?.picLocal || alb.songs[0]?.albumMid
-              ? alb.songs[0]?.picLocal ||
-                `https://y.gtimg.cn/music/photo_new/T002R300x300M000${alb.songs[0].albumMid}.jpg`
-              : '';
+            alb.songs[0]?.picLocal ||
+            (alb.songs[0]?.albumMid ? coverUrl(alb.songs[0].albumMid) : '') ||
+            '';
           const handleHeaderImgError = (e) => {
             const img = e.currentTarget;
             if (albumHeaderFallback && img.src !== albumHeaderFallback) {
@@ -283,72 +283,17 @@ export default function SongPicker({
                 <div className="grid grid-cols-3 gap-2.5 p-[10px_12px_14px]">
                   {alb.songs.map((song, k) => {
                     const isSelected = selectedIds.has(song.id);
-                    const t062Url = song.songmid
-                      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
-                      : '';
-                    const t002Url = song.albumMid
-                      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
-                      : '';
                     const songArt = alb.isMisc
-                      ? song.picLocal ||
-                        song.songPic ||
-                        song.pic ||
-                        t062Url ||
-                        t002Url ||
-                        ''
-                      : pic || song.picLocal || song.songPic || t062Url || t002Url || '';
+                      ? song.picLocal || song.pic || (song.albumMid ? coverUrl(song.albumMid) : '') || ''
+                      : pic || song.picLocal || song.pic || (song.albumMid ? coverUrl(song.albumMid) : '') || '';
                     const handleArtError = (e) => {
                       const img = e.currentTarget;
                       const tried = img.dataset.tried || '';
-                      if (alb.isMisc) {
-                        if (tried === '' && song.picLocal) {
-                          img.dataset.tried = 'picLocal';
-                          img.src = song.picLocal;
-                          return;
-                        }
-                        if (tried !== 'pic' && song.pic) {
-                          img.dataset.tried = 'pic';
-                          img.src = song.pic;
-                          return;
-                        }
-                        if (tried !== 'songPic' && song.songPic) {
-                          img.dataset.tried = 'songPic';
-                          img.src = song.songPic;
-                          return;
-                        }
-                        if (tried !== 't062' && t062Url) {
-                          img.dataset.tried = 't062';
-                          img.src = t062Url;
-                          return;
-                        }
-                        if (tried !== 't002' && t002Url) {
-                          img.dataset.tried = 't002';
-                          img.src = t002Url;
-                          return;
-                        }
-                      } else {
-                        if (tried !== 'picLocal' && song.picLocal) {
-                          img.dataset.tried = 'picLocal';
-                          img.src = song.picLocal;
-                          return;
-                        }
-                        if (tried !== 'songPic' && song.songPic) {
-                          img.dataset.tried = 'songPic';
-                          img.src = song.songPic;
-                          return;
-                        }
-                        if (tried !== 't062' && t062Url) {
-                          img.dataset.tried = 't062';
-                          img.src = t062Url;
-                          return;
-                        }
-                        if (tried !== 't002' && t002Url) {
-                          img.dataset.tried = 't002';
-                          img.src = t002Url;
-                          return;
-                        }
-                      }
-                      img.style.display = 'none';
+                      if (tried) { img.style.display = 'none'; return; }
+                      img.dataset.tried = '1';
+                      const mid = song.albumMid || alb.albumMid;
+                      if (mid) { img.src = jsDelivrCoverUrl(mid); }
+                      else { img.style.display = 'none'; }
                     };
                     const isThisPlaying = playingId === song.id;
                     const showPause = isThisPlaying && isPlaying && !previewLoading;

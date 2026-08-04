@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { clsx } from 'clsx';
 import TrophySvg from './TrophySvg.jsx';
 import Leaderboard from './Leaderboard.jsx';
+import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
 
 /**
  * Champion display screen.
@@ -30,49 +31,26 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
 
   const toggleRecap = () => setShowRecap((v) => !v);
 
-  // 封面图获取：本地 → pic → songPic → T062 CDN → T002 CDN
+  // 封面图获取：jsDelivr（picLocal）→ pic → GitHub raw（不调外部音乐 API）
   const getCover = (song) => {
     if (!song) return '';
-    const t062 = song.songmid
-      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
-      : '';
-    const t002 = song.albumMid
-      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
-      : '';
-    return song.picLocal || song.pic || song.songPic || t062 || t002 || '';
+    return song.picLocal || (song.albumMid ? coverUrl(song.albumMid) : '') || song.pic || '';
   };
 
-  // 图片 onError fallback
+  // 图片 onError：jsDelivr 失败 → GitHub raw 直链 → 隐藏
   const handleImgError = (e, song) => {
     const img = e.currentTarget;
     const tried = img.dataset.tried || '';
-    const t062 = song?.songmid
-      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
-      : '';
-    const t002 = song?.albumMid
-      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
-      : '';
-    if (tried !== 'pic' && song?.pic) {
-      img.dataset.tried = 'pic';
-      img.src = song.pic;
+    if (tried) {
+      img.style.display = 'none';
       return;
     }
-    if (tried !== 'songPic' && song?.songPic) {
-      img.dataset.tried = 'songPic';
-      img.src = song.songPic;
-      return;
+    img.dataset.tried = '1';
+    if (song?.albumMid) {
+      img.src = jsDelivrCoverUrl(song.albumMid);
+    } else {
+      img.style.display = 'none';
     }
-    if (tried !== 't062' && t062) {
-      img.dataset.tried = 't062';
-      img.src = t062;
-      return;
-    }
-    if (tried !== 't002' && t002) {
-      img.dataset.tried = 't002';
-      img.src = t002;
-      return;
-    }
-    img.style.display = 'none';
   };
 
   return (

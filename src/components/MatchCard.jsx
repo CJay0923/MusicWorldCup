@@ -1,5 +1,6 @@
 import React from 'react';
 import { clsx } from 'clsx';
+import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
 
 /**
  * A single battle card (supports songs, albums, and singers).
@@ -26,52 +27,34 @@ const MatchCard = React.memo(function MatchCard({
   const isSinger = entrantType === 'singer';
   const isSong = !isAlbum && !isSinger;
 
-// 图片加载优化：优先使用最可靠的来源，避免闪烁
-const t062Url = entrant?.songmid
-  ? `https://y.gtimg.cn/music/photo_new/T062R400x400M000${entrant.songmid}.jpg`
-  : '';
-const t002Url = entrant?.albumMid
-  ? `https://y.gtimg.cn/music/photo_new/T002R400x400M000${entrant.albumMid}.jpg`
-  : '';
-
-// 确定最佳图片源（优先级：本地 > CDN专辑 > CDN歌曲 > pic字段）
+// 图片加载：唯一来源是 jsDelivr（coverUrl/picLocal），不再降级到外部音乐 API
 const getBestCoverSrc = () => {
-  // 有本地封面优先
+  // 优先使用 jsDelivr CDN 封面
   if (entrant?.picLocal) return entrant.picLocal;
-  // 有专辑CDN优先
-  if (t002Url) return t002Url;
-  // 其次歌曲CDN
-  if (t062Url) return t062Url;
-  // 最后使用pic字段
-  if (entrant?.pic) return entrant.pic;
-  // songPic作为最后备选
-  if (entrant?.songPic) return entrant.songPic;
+  // 有 albumMid 则构建 jsDelivr URL
+  if (entrant?.albumMid) return coverUrl(entrant.albumMid);
+  // pic 字段（相对路径 /covers/xxx，作为最后兜底）
+  if (entrant?.pic && entrant.pic.startsWith('/')) return entrant.pic;
   return '';
 };
 
 const coverSrc = getBestCoverSrc();
 
-// 简化的错误处理：只尝试一次fallback
+// 错误处理：jsDelivr → GitHub raw 直链 → 隐藏图片（不调 QQ/酷狗）
 const handleImgError = (e) => {
   const img = e.currentTarget;
   const tried = img.dataset.tried;
-  
-  // 如果已经尝试过，直接隐藏
+
+  // 已经尝试过 raw GitHub，直接隐藏
   if (tried) {
     img.style.display = 'none';
     return;
   }
-  
-  // 标记已尝试
+
+  // 标记已尝试，降级到 GitHub raw 直链
   img.dataset.tried = '1';
-  
-  // 尝试唯一的备选方案
-  if (coverSrc !== t062Url && t062Url) {
-    img.src = t062Url;
-  } else if (coverSrc !== t002Url && t002Url) {
-    img.src = t002Url;
-  } else if (entrant?.pic && coverSrc !== entrant.pic) {
-    img.src = entrant.pic;
+  if (entrant?.albumMid) {
+    img.src = jsDelivrCoverUrl(entrant.albumMid);
   } else {
     img.style.display = 'none';
   }

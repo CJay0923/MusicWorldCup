@@ -9,11 +9,14 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('.', import.meta.url));
 
 /**
- * 瘦身插件：
+ * 瘦身 / 资源搬运插件：
  *  - buildStart：删除上一版本残留的 dist/covers、dist/singerData（旧构建通过 publicDir 复制过，
  *    本次改用 publicDir:false 不再复制，但 emptyOutDir:false 不会自动清，需手动清）。
- *  - closeBundle：仅把 _redirects 与 favicon.svg 这两个关键静态资源复制到 dist
- *    （SPA 路由与图标必需；封面改走 jsDelivr，歌手数据改走 /api/singer）。
+ *  - closeBundle：
+ *      · 复制 _redirects 与 favicon.svg（SPA 路由与图标必需）；
+ *      · 复制 public/covers -> dist/covers：封面改为同源托管（不走外部 CDN，
+ *        避免 jsDelivr→raw.githubusercontent.com 在部分区域被墙/限速）；
+ *      · singerData 仍不进包体（改走 /api/singer D1 接口）。
  */
 function slimPublic() {
   return {
@@ -29,6 +32,7 @@ function slimPublic() {
       }
     },
     closeBundle() {
+      // 关键静态资源（SPA 路由 + 图标）
       for (const f of ['_redirects', 'favicon.svg']) {
         const src = path.resolve(root, 'public', f);
         const dst = path.resolve(root, 'dist', f);
@@ -37,14 +41,22 @@ function slimPublic() {
           console.log(`[slim-public] 复制 ${f} -> dist/${f}`);
         }
       }
+      // 封面：同源托管，随站发布（不走外部 CDN）
+      const coversSrc = path.resolve(root, 'public', 'covers');
+      const coversDst = path.resolve(root, 'dist', 'covers');
+      if (fs.existsSync(coversSrc)) {
+        fs.cpSync(coversSrc, coversDst, { recursive: true });
+        const n = fs.readdirSync(coversDst).filter((f) => f.endsWith('.jpg')).length;
+        console.log(`[slim-public] 复制 covers -> dist/covers (${n} 张)`);
+      }
     },
   };
 }
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), slimPublic()],
-  // 关闭 publicDir 自动复制：covers（113MB，改走 jsDelivr）与 singerData（改走 /api/singer）
-  // 不再进包体；仅 _redirects / favicon.svg 由 slimPublic 插件手动复制。
+  // 关闭 publicDir 自动复制：singerData（改走 /api/singer）不进包体；
+  // covers 由 slimPublic 插件手动复制进 dist/covers（同源托管，不走外部 CDN）。
   publicDir: false,
   base: './',
   build: {

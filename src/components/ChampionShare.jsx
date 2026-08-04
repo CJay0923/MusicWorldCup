@@ -13,7 +13,7 @@
 //   bracketSize 128 / 64 / 32 ...
 
 import React, { useRef, useState } from 'react';
-import { getCoverBase } from '../lib/assets.js';
+import { getCoverBase, coverUrl, isJsDelivrCover } from '../lib/assets.js';
 
 // ---------------- 常量 ----------------
 const FONT =
@@ -90,7 +90,8 @@ function wrapText(ctx, text, maxWidth, maxLines = 2) {
   return lines.slice(0, maxLines);
 }
 
-// CORS 代理：将 QQ 音乐 CDN 图片 / 本地封面 / R2 封面转为可通过 CORS 的 URL
+// CORS 代理：将 R2 / jsDelivr 兜底封面转为可通过 CORS 的 URL。
+// 同源封面（./covers/...）无需代理，由 loadImage 直接加载（canvas 可读、不污染）。
 function corsProxyUrl(url) {
   if (!url) return '';
   if (url.startsWith('data:')) return url;
@@ -105,16 +106,15 @@ function corsProxyUrl(url) {
     const stripped = url.replace(/^https?:\/\//, '');
     return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}`;
   }
-  // 本地路径转 CDN URL（用于分享链接场景）
+  // 本地路径转 jsDelivr CDN URL（用于分享链接场景，jsDelivr 自带 CORS）
   if (url.startsWith('./covers/album_') || url.startsWith('/covers/album_')) {
     const m = url.match(/album_([^.]+)/);
-    if (m) {
-      const cdn = `y.gtimg.cn/music/photo_new/T002R300x300M000${m[1]}.jpg`;
-      return `https://images.weserv.nl/?url=${encodeURIComponent(cdn)}`;
-    }
+    if (m) return coverUrl(m[1]);
   }
-  // CDN URL 通过 weserv 代理获取 CORS 头
-  if (url.startsWith('https://y.gtimg.cn/') || url.startsWith('http://y.gtimg.cn/')) {
+  // jsDelivr URL 已有 CORS，直接使用
+  if (isJsDelivrCover(url)) return url;
+  // 其他远程 URL 通过 weserv 代理获取 CORS 头
+  if (url.startsWith('http://') || url.startsWith('https://')) {
     const stripped = url.replace(/^https?:\/\//, '');
     return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}`;
   }
@@ -122,33 +122,23 @@ function corsProxyUrl(url) {
 }
 
 // 根据 entrant 数据构建封面 URL 列表（多级 fallback）
-// 优先级：歌曲专属封面(T062) > 专辑封面(T002) > 本地专辑封面
+// 优先级：同源(picLocal/coverUrl) > pic（不调外部音乐 API；jsDelivr 仅作兜底）
 function buildCoverUrls(entrant, size = 300) {
   if (!entrant) return [];
   const urls = [];
   const dim = `${size}x${size}`;
-  // 1. 通过 songmid 构建歌曲专属封面 CDN URL（T062）— 最高优先级
-  if (entrant.songmid) {
-    const songCdn = `https://y.gtimg.cn/music/photo_new/T062R${dim}M000${entrant.songmid}.jpg`;
-    if (!urls.includes(songCdn)) urls.push(songCdn);
-  }
-  // 2. songPic（歌曲封面，可能与 #1 重复，去重跳过）
-  if (entrant.songPic && entrant.songPic !== entrant.pic) {
-    const u = entrant.songPic.replace(/R\d+x\d+M000/, `R${dim}M000`);
-    if (!urls.includes(u)) urls.push(u);
-  }
-  // 3. pic（CDN 封面，可能是 T002 专辑或 T062 歌曲）
-  if (entrant.pic) {
-    const u = entrant.pic.replace(/R\d+x\d+M000/, `R${dim}M000`);
-    if (!urls.includes(u)) urls.push(u);
-  }
-  // 4. 通过 albumMid 构建 CDN URL（T002 专辑封面）
-  if (entrant.albumMid) {
-    const cdn = `https://y.gtimg.cn/music/photo_new/T002R${dim}M000${entrant.albumMid}.jpg`;
-    if (!urls.includes(cdn)) urls.push(cdn);
-  }
-  // 5. picLocal（本地专辑封面）— 最后兜底
+  // 1. picLocal（同源封面）— 最高优先级
   if (entrant.picLocal) urls.push(entrant.picLocal);
+  // 2. 通过 albumMid 构建 jsDelivr URL
+  if (entrant.albumMid) {
+    const jsd = coverUrl(entrant.albumMid);
+    if (!urls.includes(jsd)) urls.push(jsd);
+  }
+  // 3. pic 字段（可能是相对路径 /covers/xxx 或已有 URL）
+  if (entrant.pic) {
+    const u = entrant.pic;
+    if (!urls.includes(u)) urls.push(u);
+  }
   return urls;
 }
 

@@ -6,6 +6,7 @@ import ModeSelector from './ModeSelector.jsx';
 import SongPicker from './SongPicker.jsx';
 import CrossSingerSelector from './CrossSingerSelector.jsx';
 import PillButton from './ui/PillButton.jsx';
+import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
 import { classicOptions, WC_SONG_MODES } from '../data/singers.js';
 import AchievementWall from './AchievementWall.jsx';
 
@@ -611,9 +612,7 @@ return (
                             pic:
                               e.picLocal ||
                               e.pic ||
-                              (e.albumMid
-                                ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${e.albumMid}.jpg`
-                                : ''),
+                              (e.albumMid ? coverUrl(e.albumMid) : ''),
                             date: e.albumDate || '',
                             count: 0,
                           });
@@ -643,12 +642,13 @@ return (
                                   className="h-full w-full object-cover"
                                   onError={(e) => {
                                     const img = e.currentTarget;
-                                    const t002 = `https://y.gtimg.cn/music/photo_new/T002R300x300M000${key}.jpg`;
-                                    if (img.src !== t002) {
-                                      img.src = t002;
-                                    } else {
-                                      img.style.display = 'none';
-                                    }
+                                    const tried = img.dataset.tried;
+                                    if (tried) { img.style.display = 'none'; return; }
+                                    img.dataset.tried = '1';
+                                    // key might be albumMid or albumName; try extracting numeric mid
+                                    const midMatch = String(key).match(/^(\d+)$/);
+                                    if (midMatch) { img.src = jsDelivrCoverUrl(midMatch[1]); }
+                                    else { img.style.display = 'none'; }
                                   }}
                                 />
                               ) : (

@@ -20,6 +20,7 @@ import {
 } from '../lib/qqMusic.js';
 import { baseKey } from '../utils/text.js';
 import { isLiveTrack, isLiveAlbum, isJunkTrack, isMedleyTrack, shouldKeepByFavOrAlbum } from '../utils/filters.js';
+import { coverUrl } from '../lib/assets.js';
 
 /**
  * 根据可用歌曲数计算经典模式最大淘汰赛规模（2 的幂，4~128）
@@ -69,13 +70,7 @@ export function transformDynamicSingerData(raw, albumDetails, favMap) {
 
   const allEntrants = filteredSongs.map((song, i) => {
     const sr = seedRankByMid.get(song.songmid) || i + 1;
-    const cdnPic = song.albumMid
-      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.albumMid}.jpg`
-      : '';
-    // 歌曲封面 fallback：当无专辑封面时使用歌曲封面
-    const songCdnPic = song.songmid
-      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
-      : '';
+    const jsDelivrPic = song.albumMid ? coverUrl(song.albumMid) : '';
 
     // 从 albumDetails 映射中获取专辑类型和简介
     const albumDetail = albumDetails?.get(song.albumMid);
@@ -90,9 +85,9 @@ export function transformDynamicSingerData(raw, albumDetails, favMap) {
       nid: null,
       songmid: song.songmid,
       songid: song.songid,
-      pic: cdnPic || songCdnPic,
-      picLocal: '',
-      songPic: songCdnPic,
+      pic: jsDelivrPic,
+      picLocal: coverUrl(song.albumMid),
+      songPic: jsDelivrPic,
       albumMid: song.albumMid,
       albumName: song.albumName,
       albumDate: song.albumDate || '',

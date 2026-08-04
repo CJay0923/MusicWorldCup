@@ -1,18 +1,21 @@
 // 资源 URL 解析中心
 //
-// 封面默认走 jsDelivr GitHub CDN（免卡、免费、CDN 加速）：
-//   https://cdn.jsdelivr.net/gh/<repo>@<ref>/public/covers/album_<mid>.jpg
-// 仓库的 public/covers/*.jpg 已随代码提交，jsDelivr 直接 serve，无需上传、无需绑卡。
+// 封面优先走「同源」（应用自身托管）：
+//   ./covers/album_<mid>.jpg
+// 仓库的 public/covers/*.jpg 随构建复制进 dist/covers/，由部署平台（Vercel / Cloudflare Pages）
+// 直接同源 serve。不走任何外部 CDN，避免 jsDelivr→raw.githubusercontent.com 在部分区域被墙/限速。
 //
 // 构建期开关（.env / vite 注入）：
-//  - VITE_COVER_BASE：设为 R2 / 自定义对象存储基址时，优先走它（覆盖 jsDelivr）。
+//  - VITE_COVER_BASE：设为 R2 / 自定义对象存储基址时，优先走它（覆盖同源）。
 //                      例如 VITE_COVER_BASE=https://<acct>.r2.cloudflarestorage.com/covers
-//  - VITE_COVER_REF ：jsDelivr 的 git ref，默认 main；生产建议打 release tag 锁定缓存。
+//  - VITE_COVER_REF ：jsDelivr 兜底用的 git ref，默认 v1.0.0。
 //
 // 设计要点：
-//  - 未配置 VITE_COVER_BASE 时默认 jsDelivr，dev / 未迁移环境零改动照常工作。
-//  - 各组件已有 onError 链路（pic → songPic → y.gtimg.cn CDN），jsDelivr 不可用时自动回退 QQ CDN。
-//  - localCoverUrl() 提供 dist 自带封面的最后兜底（构建未排除 public/covers 时有效）。
+//  - 封面主来源 = 同源（应用主机），不依赖任何外部音乐 API（QQ/酷狗）或外部 CDN。
+//  - onError 兜底链：同源 → jsDelivr → 隐藏图片显示占位背景。
+//  - 全部 927 个被引用的 album_mid 均有对应文件在 public/covers/（覆盖率 100%），
+//    并由 slimPublic 插件复制进 dist/covers/ 随站发布。
+//  - localCoverUrl() 与 coverUrl() 同源，提供 dist 自带封面的兜底。
 
 const REPO = 'CJay0923/MusicWorldCup';
 const DEFAULT_REF = 'v1.0.0';
@@ -30,7 +33,7 @@ const COVER_REF =
     ? String(import.meta.env.VITE_COVER_REF)
     : DEFAULT_REF;
 
-/** 当前生效的自定义封面基址；为空字符串表示走 jsDelivr */
+/** 当前生效的自定义封面基址；为空字符串表示走同源 */
 export function getCoverBase() {
   return COVER_BASE;
 }
@@ -45,19 +48,35 @@ export function isJsDelivrCover(url) {
   return typeof url === 'string' && url.includes('cdn.jsdelivr.net');
 }
 
+/** 封面是否同源（相对路径 / 应用主机），分享图可直接读取、无需 CORS 代理 */
+export function isSameOriginCover(url) {
+  return typeof url === 'string' && !/^https?:\/\//i.test(url);
+}
+
 /**
- * 专辑封面 URL。
+ * 专辑封面主 URL（同源优先）。
  * @param {string} albumMid 专辑 ID；空值返回 ''
- * @returns {string} 自定义基址路径 / jsDelivr CDN 地址
+ * @returns {string} 自定义基址路径（R2） / 同源相对路径
  */
 export function coverUrl(albumMid) {
   if (!albumMid) return '';
   if (COVER_BASE) return `${COVER_BASE}/covers/album_${albumMid}.jpg`;
-  return `https://cdn.jsdelivr.net/gh/${REPO}@${COVER_REF}/public/covers/album_${albumMid}.jpg`;
+  // 同源：由部署平台直接 serve dist/covers/，免外部 CDN（避免国内 raw.githubusercontent 被墙）
+  return `./covers/album_${albumMid}.jpg`;
 }
 
-/** 本地兜底封面（dist 自带，路径相对站点根） */
+/** 本地兜底封面（同源相对路径，与 coverUrl 一致） */
 export function localCoverUrl(albumMid) {
   if (!albumMid) return '';
   return `./covers/album_${albumMid}.jpg`;
+}
+
+/**
+ * jsDelivr GitHub CDN 兜底（同源封面失败时的降级方案）。
+ * 注意：jsDelivr 对 tag/branch 引用会 301 到 raw.githubusercontent.com，后者在部分区域不可达；
+ * 因此仅作为同源主来源的兜底，正常情况下不应触发。
+ */
+export function jsDelivrCoverUrl(albumMid) {
+  if (!albumMid) return '';
+  return `https://cdn.jsdelivr.net/gh/${REPO}@${COVER_REF}/public/covers/album_${albumMid}.jpg`;
 }

@@ -70,13 +70,8 @@ function transformToSingerData(raw, registry, singerId) {
       const albumMid = song.albumMid || '';
       const sr = song.seedRank || i + 1;
 
-      // pic: 优先用 JSON 中的值（旧格式），否则从 albumMid 重建 CDN URL
-      const cdnAlbumPic = albumMid
-        ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg`
-        : '';
-      const cdnSongPic = song.songmid
-        ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
-        : '';
+      // pic: 优先用 JSON 中的值（/covers/ 相对路径），否则从 albumMid 重建 jsDelivr URL
+      const jsDelivrPic = albumMid ? coverUrl(albumMid) : '';
 
       return {
         name: song.name,
@@ -86,9 +81,9 @@ function transformToSingerData(raw, registry, singerId) {
         nid: null,
         songmid: song.songmid,
         songid: song.songid,
-        pic: song.pic || cdnAlbumPic || cdnSongPic,
+        pic: song.pic || jsDelivrPic,
         picLocal: coverUrl(albumMid),
-        songPic: song.songPic || cdnSongPic,
+        songPic: song.songPic || jsDelivrPic,
         albumMid,
         albumName: song.albumName,
         albumDate: song.albumDate || '',
@@ -150,12 +145,7 @@ function transformToSingerData(raw, registry, singerId) {
   const seedThreshold2 = Math.min(32, filteredSongs.length);
   const allEntrants = filteredSongs.map((song, i) => {
     const albumMid = song.albumMid || '';
-    const cdnAlbumPic = albumMid
-      ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg`
-      : '';
-    const cdnSongPic = song.songmid
-      ? `https://y.gtimg.cn/music/photo_new/T062R300x300M000${song.songmid}.jpg`
-      : '';
+    const jsDelivrPic = albumMid ? coverUrl(albumMid) : '';
     const sr = seedRankByMid.get(song.songmid) || i + 1;
 
     return {
@@ -166,9 +156,9 @@ function transformToSingerData(raw, registry, singerId) {
       nid: null,
       songmid: song.songmid,
       songid: song.songid,
-      pic: cdnAlbumPic || cdnSongPic,
+      pic: song.pic || jsDelivrPic,
       picLocal: coverUrl(albumMid),
-      songPic: cdnSongPic,
+      songPic: jsDelivrPic,
       albumMid,
       albumName: song.albumName,
       albumDate: song.albumDate || '',

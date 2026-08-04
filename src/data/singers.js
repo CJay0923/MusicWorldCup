@@ -355,7 +355,7 @@ export function buildCrossSingerAlbumData(singerDataList, bracketSize) {
         merged.push({
           type: 'album',
           name: album.name,
-          pic: album.pic || (albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg` : ''),
+          pic: album.pic || coverUrl(albumMid),
           picLocal: coverUrl(albumMid),
           albumMid,
           singerName: c.singerName,

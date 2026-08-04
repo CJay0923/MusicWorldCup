@@ -429,12 +429,8 @@ const handlePickerPreview = useCallback(
               items.push({
                 type: 'album',
                 name: g.name,
-                pic:
-                  g.pic ||
-                  (albumMid
-                    ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg`
-                    : ''),
-                picLocal: coverUrl(albumMid),
+              pic: g.pic || coverUrl(albumMid),
+              picLocal: coverUrl(albumMid),
                 albumMid,
                 date: g.date,
                 songCount: g.songs.length,
@@ -477,11 +473,7 @@ const handlePickerPreview = useCallback(
             .map((g) => ({
               type: 'album',
               name: g.name,
-              pic:
-                g.pic ||
-                (g.albumMid
-                  ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${g.albumMid}.jpg`
-                  : ''),
+              pic: g.pic || coverUrl(g.albumMid),
               picLocal: coverUrl(g.albumMid),
               albumMid: g.albumMid || '',
               date: g.date,

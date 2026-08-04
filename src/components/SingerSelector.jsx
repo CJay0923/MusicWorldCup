@@ -2,6 +2,7 @@ import React from 'react';
 import { clsx } from 'clsx';
 import { SINGER_ICONS } from '../data/singers.js';
 import { SINGER_REGISTRY } from '../data/singerRegistry.js';
+import { jsDelivrSingerUrl, qqSingerPhotoUrl } from '../lib/assets';
 
 /**
  * Singer selection: built-in singer buttons + dynamic search box.
@@ -95,8 +96,20 @@ export default function SingerSelector({
               className="h-10 w-10 shrink-0 rounded-full border-2 border-accent object-cover"
               src={dynamicSinger.photo}
               alt=""
+              loading="lazy"
               onError={(e) => {
-                e.currentTarget.style.display = 'none';
+                const img = e.currentTarget;
+                const tried = img.dataset.tried || '';
+                if (tried === 'qq') { img.style.display = 'none'; return; }
+                if (!tried && dynamicSinger.mid) {
+                  img.dataset.tried = 'jsdelivr';
+                  img.src = jsDelivrSingerUrl(dynamicSinger.mid);
+                } else if (tried === 'jsdelivr' && dynamicSinger.mid) {
+                  img.dataset.tried = 'qq';
+                  img.src = qqSingerPhotoUrl(dynamicSinger.mid);
+                } else {
+                  img.style.display = 'none';
+                }
               }}
             />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">

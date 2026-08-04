@@ -101,6 +101,16 @@ export function jsDelivrSingerUrl(singermid) {
 }
 
 /**
+ * QQ 音乐 CDN 歌手头像（仅作动态歌手的最终兜底）。
+ * 预注册歌手头像全部本地化，不会走到这里；
+ * 仅运行时搜索的动态歌手才会触发。
+ */
+export function qqSingerPhotoUrl(singermid) {
+  if (!singermid) return '';
+  return `https://y.gtimg.cn/music/photo_new/T001R300x300M000${singermid}.jpg`;
+}
+
+/**
  * QQ 音乐 CDN 专辑封面（仅作动态歌手的最终兜底）。
  * 预注册歌手的封面全部本地化，不会走到这里；
  * 仅运行时搜索的动态歌手（其 album_mid 不在 public/covers/ 中）才会触发。

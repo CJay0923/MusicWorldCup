@@ -15,7 +15,7 @@
 //  - localCoverUrl() 提供 dist 自带封面的最后兜底（构建未排除 public/covers 时有效）。
 
 const REPO = 'CJay0923/MusicWorldCup';
-const DEFAULT_REF = 'main';
+const DEFAULT_REF = 'v1.0.0';
 
 const RAW_BASE =
   typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_COVER_BASE

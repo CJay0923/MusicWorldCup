@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { clsx } from 'clsx';
 import TrophySvg from './TrophySvg.jsx';
 import Leaderboard from './Leaderboard.jsx';
-import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
+import { coverUrl, jsDelivrCoverUrl, qqCoverUrl } from '../lib/assets';
 
 /**
  * Champion display screen.
@@ -37,20 +37,14 @@ export default function ChampionScreen({ champion, singerName, history, onAgain,
     return song.picLocal || (song.albumMid ? coverUrl(song.albumMid) : '') || song.pic || '';
   };
 
-  // 图片 onError：jsDelivr 失败 → GitHub raw 直链 → 隐藏
+  // 图片 onError：同源 → jsDelivr → QQ CDN（动态歌手兜底）→ 隐藏
   const handleImgError = (e, song) => {
     const img = e.currentTarget;
     const tried = img.dataset.tried || '';
-    if (tried) {
-      img.style.display = 'none';
-      return;
-    }
-    img.dataset.tried = '1';
-    if (song?.albumMid) {
-      img.src = jsDelivrCoverUrl(song.albumMid);
-    } else {
-      img.style.display = 'none';
-    }
+    if (tried.includes('qq')) { img.style.display = 'none'; return; }
+    if (tried === 'jsdelivr') { img.dataset.tried = 'jsdelivr,qq'; if (song?.albumMid) img.src = qqCoverUrl(song.albumMid); else img.style.display = 'none'; return; }
+    if (!tried) { img.dataset.tried = 'jsdelivr'; if (song?.albumMid) img.src = jsDelivrCoverUrl(song.albumMid); else img.style.display = 'none'; return; }
+    img.style.display = 'none';
   };
 
   return (

@@ -1,7 +1,7 @@
 // 四选二小组赛舞台：4 张 GOAT 风格大图卡片，封面铺满
 import { useEffect, useRef } from 'react';
 import { clsx } from 'clsx';
-import { coverUrl, jsDelivrCoverUrl } from '../../lib/assets';
+import { coverUrl, jsDelivrCoverUrl, qqCoverUrl } from '../../lib/assets';
 
 /**
  * @param {object} group - 当前小组 { name, members[4], picks[], done }
@@ -51,14 +51,14 @@ export default function GroupPickStage({
     return '';
   };
 
-  // 图片加载错误：jsDelivr → GitHub raw 直链 → 隐藏
+  // 图片加载错误：同源 → jsDelivr → QQ CDN（动态歌手兜底）→ 隐藏
   const handleImgError = (ev, e) => {
     const img = ev.currentTarget;
-    const tried = img.dataset.tried;
-    if (tried) { img.style.display = 'none'; return; }
-    img.dataset.tried = '1';
-    if (e.albumMid) img.src = jsDelivrCoverUrl(e.albumMid);
-    else img.style.display = 'none';
+    const tried = img.dataset.tried || '';
+    if (tried.includes('qq')) { img.style.display = 'none'; return; }
+    if (tried === 'jsdelivr') { img.dataset.tried = 'jsdelivr,qq'; img.src = qqCoverUrl(e.albumMid); return; }
+    if (!tried) { img.dataset.tried = 'jsdelivr'; img.src = jsDelivrCoverUrl(e.albumMid); return; }
+    img.style.display = 'none';
   };
 
   // 底部渐变遮罩

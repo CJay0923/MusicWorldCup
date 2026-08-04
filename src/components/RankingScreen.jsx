@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { buildRankingTiers } from '../data/singers.js';
-import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
+import { coverUrl, jsDelivrCoverUrl, qqCoverUrl } from '../lib/assets';
 
 /**
  * 夯到拉排名模式 — 拖拉式 Tier List 交互
@@ -89,10 +89,10 @@ export default function RankingScreen({ items, category, singerName, onReset }) 
   const handleArtError = useCallback((e, item) => {
     const img = e.currentTarget;
     const tried = img.dataset.tried || '';
-    if (tried) { img.style.display = 'none'; return; }
-    img.dataset.tried = '1';
-    if (item?.albumMid) { img.src = jsDelivrCoverUrl(item.albumMid); }
-    else { img.style.display = 'none'; }
+    if (tried.includes('qq')) { img.style.display = 'none'; return; }
+    if (tried === 'jsdelivr') { img.dataset.tried = 'jsdelivr,qq'; if (item?.albumMid) img.src = qqCoverUrl(item.albumMid); else img.style.display = 'none'; return; }
+    if (!tried) { img.dataset.tried = 'jsdelivr'; if (item?.albumMid) img.src = jsDelivrCoverUrl(item.albumMid); else img.style.display = 'none'; return; }
+    img.style.display = 'none';
   }, []);
 
   // ---------- 移动项目 ----------

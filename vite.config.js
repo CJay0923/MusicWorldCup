@@ -10,12 +10,12 @@ const root = fileURLToPath(new URL('.', import.meta.url));
 
 /**
  * 瘦身 / 资源搬运插件：
- *  - buildStart：删除上一版本残留的 dist/covers、dist/singerData（旧构建通过 publicDir 复制过，
+ *  - buildStart：删除上一版本残留的 dist/covers、dist/singers、dist/singerData（旧构建通过 publicDir 复制过，
  *    本次改用 publicDir:false 不再复制，但 emptyOutDir:false 不会自动清，需手动清）。
  *  - closeBundle：
  *      · 复制 _redirects 与 favicon.svg（SPA 路由与图标必需）；
- *      · 复制 public/covers -> dist/covers：封面改为同源托管（不走外部 CDN，
- *        避免 jsDelivr→raw.githubusercontent.com 在部分区域被墙/限速）；
+ *      · 复制 public/covers -> dist/covers：封面同源托管（不走外部 CDN）；
+ *      · 复制 public/singers -> dist/singers：歌手头像同源托管（不走 QQ CDN）；
  *      · singerData 仍不进包体（改走 /api/singer D1 接口）。
  */
 function slimPublic() {
@@ -23,7 +23,7 @@ function slimPublic() {
     name: 'slim-public',
     apply: 'build',
     buildStart() {
-      for (const d of ['covers', 'singerData']) {
+      for (const d of ['covers', 'singers', 'singerData', 'assets']) {
         const p = path.resolve(root, 'dist', d);
         if (fs.existsSync(p)) {
           fs.rmSync(p, { recursive: true, force: true });
@@ -49,6 +49,14 @@ function slimPublic() {
         const n = fs.readdirSync(coversDst).filter((f) => f.endsWith('.jpg')).length;
         console.log(`[slim-public] 复制 covers -> dist/covers (${n} 张)`);
       }
+      // 歌手头像：同源托管，随站发布（不走 QQ 音乐 CDN）
+      const singersSrc = path.resolve(root, 'public', 'singers');
+      const singersDst = path.resolve(root, 'dist', 'singers');
+      if (fs.existsSync(singersSrc)) {
+        fs.cpSync(singersSrc, singersDst, { recursive: true });
+        const n = fs.readdirSync(singersDst).filter((f) => f.endsWith('.jpg')).length;
+        console.log(`[slim-public] 复制 singers -> dist/singers (${n} 张)`);
+      }
     },
   };
 }
@@ -56,7 +64,7 @@ function slimPublic() {
 export default defineConfig({
   plugins: [react(), tailwindcss(), slimPublic()],
   // 关闭 publicDir 自动复制：singerData（改走 /api/singer）不进包体；
-  // covers 由 slimPublic 插件手动复制进 dist/covers（同源托管，不走外部 CDN）。
+  // covers + singers 由 slimPublic 插件手动复制进 dist（同源托管，不走外部 CDN）。
   publicDir: false,
   base: './',
   build: {

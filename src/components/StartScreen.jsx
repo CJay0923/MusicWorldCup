@@ -6,7 +6,7 @@ import ModeSelector from './ModeSelector.jsx';
 import SongPicker from './SongPicker.jsx';
 import CrossSingerSelector from './CrossSingerSelector.jsx';
 import PillButton from './ui/PillButton.jsx';
-import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
+import { coverUrl, jsDelivrCoverUrl, qqCoverUrl } from '../lib/assets';
 import { classicOptions, WC_SONG_MODES } from '../data/singers.js';
 import AchievementWall from './AchievementWall.jsx';
 
@@ -642,13 +642,11 @@ return (
                                   className="h-full w-full object-cover"
                                   onError={(e) => {
                                     const img = e.currentTarget;
-                                    const tried = img.dataset.tried;
-                                    if (tried) { img.style.display = 'none'; return; }
-                                    img.dataset.tried = '1';
-                                    // key might be albumMid or albumName; try extracting numeric mid
-                                    const midMatch = String(key).match(/^(\d+)$/);
-                                    if (midMatch) { img.src = jsDelivrCoverUrl(midMatch[1]); }
-                                    else { img.style.display = 'none'; }
+                                    const tried = img.dataset.tried || '';
+                                    if (tried.includes('qq')) { img.style.display = 'none'; return; }
+                                    if (tried === 'jsdelivr') { img.dataset.tried = 'jsdelivr,qq'; const midMatch = String(key).match(/^(\d+)$/); if (midMatch) img.src = qqCoverUrl(midMatch[1]); else img.style.display = 'none'; return; }
+                                    if (!tried) { img.dataset.tried = 'jsdelivr'; const midMatch = String(key).match(/^(\d+)$/); if (midMatch) img.src = jsDelivrCoverUrl(midMatch[1]); else img.style.display = 'none'; return; }
+                                    img.style.display = 'none';
                                   }}
                                 />
                               ) : (

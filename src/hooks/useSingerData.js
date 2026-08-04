@@ -14,7 +14,7 @@ import { useState, useEffect, useRef } from 'react';
 import { SINGER_REGISTRY } from '../data/singerRegistry.js';
 import { STATIC_SINGERS } from '../data/singers.js';
 import { baseKey } from '../utils/text.js';
-import { coverUrl } from '../lib/assets.js';
+import { coverUrl, singerPhotoUrl } from '../lib/assets.js';
 import {
   isLiveTrack,
   isLiveAlbum,
@@ -108,7 +108,7 @@ function transformToSingerData(raw, registry, singerId) {
       seedRank: Object.fromEntries(allEntrants.map((e, i) => [i, e.seedRank])),
       singerPhoto: raw.singerPhoto
         ? (raw.singerPhoto.startsWith('/') ? '.' + raw.singerPhoto : raw.singerPhoto)
-        : `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid || singerId}.jpg`,
+        : singerPhotoUrl(raw.singermid || singerId),
       source: 'local',
     };
   }
@@ -181,7 +181,7 @@ function transformToSingerData(raw, registry, singerId) {
     entrants: allEntrants,
     seeds: allEntrants.map((_, i) => i),
     seedRank: Object.fromEntries(allEntrants.map((e, i) => [i, e.seedRank])),
-    singerPhoto: `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid || singerId}.jpg`,
+    singerPhoto: singerPhotoUrl(raw.singermid || singerId),
     source: 'local',
   };
 }

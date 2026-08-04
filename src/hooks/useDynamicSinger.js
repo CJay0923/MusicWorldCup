@@ -20,7 +20,7 @@ import {
 } from '../lib/qqMusic.js';
 import { baseKey } from '../utils/text.js';
 import { isLiveTrack, isLiveAlbum, isJunkTrack, isMedleyTrack, shouldKeepByFavOrAlbum } from '../utils/filters.js';
-import { coverUrl } from '../lib/assets.js';
+import { coverUrl, singerPhotoUrl } from '../lib/assets.js';
 
 /**
  * 根据可用歌曲数计算经典模式最大淘汰赛规模（2 的幂，4~128）
@@ -109,7 +109,7 @@ export function transformDynamicSingerData(raw, albumDetails, favMap) {
     entrants: allEntrants,
     seeds: allEntrants.map((_, i) => i),
     seedRank: Object.fromEntries(allEntrants.map((e, i) => [i, e.seedRank])),
-    singerPhoto: `https://y.gtimg.cn/music/photo_new/T001R300x300M000${raw.singermid}.jpg`,
+    singerPhoto: singerPhotoUrl(raw.singermid),
     source: 'dynamic',
   };
 }

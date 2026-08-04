@@ -1,6 +1,6 @@
 import React from 'react';
 import { clsx } from 'clsx';
-import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
+import { coverUrl, jsDelivrCoverUrl, qqCoverUrl } from '../lib/assets';
 
 /**
  * A single battle card (supports songs, albums, and singers).
@@ -40,19 +40,27 @@ const getBestCoverSrc = () => {
 
 const coverSrc = getBestCoverSrc();
 
-// 错误处理：jsDelivr → GitHub raw 直链 → 隐藏图片（不调 QQ/酷狗）
+// 错误处理：同源 → jsDelivr → QQ CDN（动态歌手兜底）→ 隐藏图片
 const handleImgError = (e) => {
   const img = e.currentTarget;
-  const tried = img.dataset.tried;
+  const tried = img.dataset.tried || '';
 
-  // 已经尝试过 raw GitHub，直接隐藏
-  if (tried) {
+  // 已经尝试过 QQ CDN，直接隐藏
+  if (tried.includes('qq')) {
     img.style.display = 'none';
     return;
   }
 
-  // 标记已尝试，降级到 GitHub raw 直链
-  img.dataset.tried = '1';
+  // 第三级：jsDelivr 失败 → QQ CDN
+  if (tried === 'jsdelivr') {
+    img.dataset.tried = 'jsdelivr,qq';
+    if (entrant?.albumMid) img.src = qqCoverUrl(entrant.albumMid);
+    else img.style.display = 'none';
+    return;
+  }
+
+  // 第二级：同源失败 → jsDelivr
+  img.dataset.tried = 'jsdelivr';
   if (entrant?.albumMid) {
     img.src = jsDelivrCoverUrl(entrant.albumMid);
   } else {

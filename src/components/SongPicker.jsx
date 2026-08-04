@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { getAlbumGroups } from '../data/singers.js';
-import { coverUrl, jsDelivrCoverUrl } from '../lib/assets';
+import { coverUrl, jsDelivrCoverUrl, qqCoverUrl } from '../lib/assets';
 
 /**
  * 按专辑分组的歌曲选择器（自选模式）
@@ -173,12 +173,17 @@ export default function SongPicker({
 
           const albumHeaderFallback =
             alb.songs[0]?.picLocal ||
-            (alb.songs[0]?.albumMid ? coverUrl(alb.songs[0].albumMid) : '') ||
+            (alb.songs[0]?.albumMid ? jsDelivrCoverUrl(alb.songs[0].albumMid) : '') ||
             '';
+          const albumHeaderQQ =
+            alb.songs[0]?.albumMid ? qqCoverUrl(alb.songs[0].albumMid) : '';
           const handleHeaderImgError = (e) => {
             const img = e.currentTarget;
-            if (albumHeaderFallback && img.src !== albumHeaderFallback) {
+            if (albumHeaderFallback && img.src !== albumHeaderFallback && !img.dataset.triedQq) {
               img.src = albumHeaderFallback;
+              img.dataset.triedQq = '1';
+            } else if (albumHeaderQQ && img.src !== albumHeaderQQ) {
+              img.src = albumHeaderQQ;
             } else {
               img.style.display = 'none';
               const placeholder = img.parentElement.querySelector('[data-placeholder]');
@@ -289,11 +294,10 @@ export default function SongPicker({
                     const handleArtError = (e) => {
                       const img = e.currentTarget;
                       const tried = img.dataset.tried || '';
-                      if (tried) { img.style.display = 'none'; return; }
-                      img.dataset.tried = '1';
-                      const mid = song.albumMid || alb.albumMid;
-                      if (mid) { img.src = jsDelivrCoverUrl(mid); }
-                      else { img.style.display = 'none'; }
+                      if (tried.includes('qq')) { img.style.display = 'none'; return; }
+                      if (tried === 'jsdelivr') { img.dataset.tried = 'jsdelivr,qq'; const mid = song.albumMid || alb.albumMid; if (mid) img.src = qqCoverUrl(mid); else img.style.display = 'none'; return; }
+                      if (!tried) { img.dataset.tried = 'jsdelivr'; const mid = song.albumMid || alb.albumMid; if (mid) img.src = jsDelivrCoverUrl(mid); else img.style.display = 'none'; return; }
+                      img.style.display = 'none';
                     };
                     const isThisPlaying = playingId === song.id;
                     const showPause = isThisPlaying && isPlaying && !previewLoading;

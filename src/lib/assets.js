@@ -80,3 +80,32 @@ export function jsDelivrCoverUrl(albumMid) {
   if (!albumMid) return '';
   return `https://cdn.jsdelivr.net/gh/${REPO}@${COVER_REF}/public/covers/album_${albumMid}.jpg`;
 }
+
+// ── 歌手头像（与封面同策略：同源优先 → jsDelivr 兜底） ──────────────────────
+
+/**
+ * 歌手头像主 URL（同源优先）。
+ * @param {string} singermid QQ 音乐歌手 ID；空值返回 ''
+ * @returns {string} 同源相对路径 ./singers/singer_<mid>.jpg
+ */
+export function singerPhotoUrl(singermid) {
+  if (!singermid) return '';
+  if (COVER_BASE) return `${COVER_BASE}/singers/singer_${singermid}.jpg`;
+  return `./singers/singer_${singermid}.jpg`;
+}
+
+/** jsDelivr 歌手头像兜底 */
+export function jsDelivrSingerUrl(singermid) {
+  if (!singermid) return '';
+  return `https://cdn.jsdelivr.net/gh/${REPO}@${COVER_REF}/public/singers/singer_${singermid}.jpg`;
+}
+
+/**
+ * QQ 音乐 CDN 专辑封面（仅作动态歌手的最终兜底）。
+ * 预注册歌手的封面全部本地化，不会走到这里；
+ * 仅运行时搜索的动态歌手（其 album_mid 不在 public/covers/ 中）才会触发。
+ */
+export function qqCoverUrl(albumMid) {
+  if (!albumMid) return '';
+  return `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg`;
+}

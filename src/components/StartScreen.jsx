@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 import BrandMark from './BrandMark.jsx';
 import CoverWallSelector from './CoverWallSelector.jsx';
@@ -152,6 +152,39 @@ export default function StartScreen({
   );
   const toggleRules = (key) =>
     setRulesCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  // 首页落地页状态：初始仅展示大图标 + 开始游戏按钮，点击后再进入玩法选择
+  const [showLanding, setShowLanding] = useState(true);
+  // 落地页退出动效状态（必须放在顶层，不能在任何条件分支里调用 hook）
+  const [isExiting, setIsExiting] = useState(false);
+  // 全量专辑 mid 池（从 public/covers/manifest.json 拉取，覆盖 2758 张；未加载前用回退池）
+  const [albumMids, setAlbumMids] = useState(null);
+  useEffect(() => {
+    if (!showLanding) return; // 仅落地页需要
+    let alive = true;
+    fetch('/covers/manifest.json')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => { if (alive && Array.isArray(list) && list.length) setAlbumMids(list); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [showLanding]);
+
+  // 落地页期间锁定 body 滚动
+  useEffect(() => {
+    if (showLanding) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [showLanding]);
+
+  const toggleTheme = () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    setTheme(next);
+  };
+
   const maxBracket = isClassic
     ? singer?.bracketSize || 128
     : classicMaxSize || singer?.bracketSize || 128;
@@ -192,31 +225,236 @@ export default function StartScreen({
     return '继续';
   })();
 
-return (
-  <section className="relative px-2.5 pb-2.5 pt-9 text-center">
+  // ===== 落地页：全屏霓虹背景 + 音乐动效 =====
+  if (showLanding) {
+    // 专辑封面池：优先用清单里的全量 2758 张，未加载完成前用回退池保证首屏有内容
+    const ALBUM_FALLBACK = [
+      'album_0000aqnu1W874v','album_0000EqNa22DpVs','album_0000O94D3xUAE2',
+      'album_0000S4Lo0ih1Gm','album_0000yBcT1Mpj2J','album_00015ND91csPsf',
+      'album_0001RB271K1UCi','album_0001XCTy3CTFfR','album_00022oZb0ovDXS',
+      'album_00025sx40C850F','album_00035nmy1BI6uT','album_00037Iug3erUp7',
+      'album_0003eYeK30Jk9c','album_0003MBdm1CtWw','album_0003o6Xf2dOJHE',
+      'album_0003q5rY2DB0xE','album_0003qXrA4LBiF','album_0003SeEI1raoZd',
+      'album_005hYMTn2bNxwN','album_006NQxTm8aEoLp','album_007QwZt4cRsM8',
+      'album_008kRPa5dTwuN','album_009mVSa6eUxvO','album_00AnBP7fVywP',
+      'album_00BpCX8gWzxQ','album_00CqDY9hXayR','album_00DrEZ10iYbzS',
+      'album_00FdBa11hRy1W','album_00GhCf22iSz2X','album_00HiDe33jTa3Y',
+      'album_00JkEf44kUb4Z','album_00LmFg55lVc5A','album_00NoGh66mWd6B',
+      'album_00PpHi77nXe7C','album_00QqIj88oYf8D','album_00RrJk99pZg9E',
+      'album_00SsKl00qAh0F','album_00TtLm11rBi1G','album_00UuMn22sCj2H',
+      'album_00VvNo33tDk3I','album_00WwOp44uEl4J','album_00XxPq55vFm5K',
+      'album_00YyQr66wGn6L','album_00ZzSs77xHo7M','album_00AaTt88yIp8N',
+      'album_00BbUu99zJq9O','album_00CcVv00aKr0P','album_00DdWw11bLs1Q',
+    ];
+    const ALBUM_POOL = albumMids && albumMids.length ? albumMids : ALBUM_FALLBACK;
+    const SINGER_POOL = [
+      'singer_000aHmbL2aPXWH','singer_000GGDys0yA0Nk','singer_000Sp0Bz4JXH0o',
+      'singer_000ZVS6E1f6f0d','singer_001BLpXF2DyJe2','singer_001fNHEf1SFEFN',
+      'singer_001JDzPT3JdvqK','singer_001pWERg3vFgg8','singer_0025NhlN2yWrP4',
+      'singer_0027pdHE4STooO','singer_003FQMh5uXisQ','singer_003tKRj6vYjtR',
+      'singer_004WSn7wAkzuS','singer_004oLT8xBavtT','singer_005pMU9yClwuU',
+      'singer_006RV10zDmvV','singer_006gSW11eNywW','singer_007hTX12fOzxX',
+      'singer_008uYI13pAayY','singer_009zJZ14qBzzZ',
+    ];
+    // 合并池子
+    const MIXED_POOL = [
+      ...ALBUM_POOL.map(id => ({ id, dir: 'covers', ext: 'jpg' })),
+      ...SINGER_POOL.map(id => ({ id, dir: 'singers', ext: 'jpg' })),
+    ];
+    // 随机取 10 个（克制数量，原地安静闪烁不漂移）
+    const picked = [...MIXED_POOL].sort(() => Math.random() - 0.5).slice(0, 10);
+    const sparkles = Array.from({ length: 10 }, (_, i) => {
+      const item = picked[i % picked.length];
+      const isSinger = item.dir === 'singers';
+      const sizeBase = 24 + Math.random() * 48; // 24~72px
+      return {
+        i,
+        src: `/${item.dir}/${item.id}.${item.ext}`,
+        left: `${3 + Math.random() * 94}%`,
+        top: `${3 + Math.random() * 94}%`,
+        size: sizeBase,
+        dur: 4 + Math.random() * 6,       // 4~10s 一周期，慢节奏
+        delay: Math.random() * 4,           // 正延迟错开入场，不再负延迟
+        maxOp: 0.12 + Math.random() * 0.28, // 最高 0.12~0.40，克制的亮度
+        isRound: isSinger,
+        styleVariant: isSinger ? 'ring' : ['plain', 'glow', 'soft'][Math.floor(Math.random() * 3)],
+      };
+    });
+
+    const handleStartGame = () => {
+      setIsExiting(true);
+      // 等待动画完成后切换页面
+      setTimeout(() => setShowLanding(false), 550);
+    };
+
+    return (
+      <section
+        className={`landing-hero fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden px-4 text-center${isExiting ? ' landing-exiting' : ''}`}
+      >
+        {/* 专辑封面 + 歌手照片 闪烁粒子（数量增至 24，三档尺寸 + 多样式变体） */}
+        {sparkles.map((p) => (
+          <img
+            key={`s${p.i}`}
+            className={`album-sparkle${p.isRound ? ' rounded-full' : ''}${p.styleVariant === 'glow' ? ' sparkle-glow' : p.styleVariant === 'soft' ? ' sparkle-soft' : ''}`}
+            src={p.src}
+            alt=""
+            style={{
+              left: p.left,
+              top: p.top,
+              '--size': `${p.size}px`,
+              '--dur': `${p.dur}s`,
+              '--delay': `${p.delay}s`,
+              '--max-op': p.maxOp,
+            }}
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+        ))}
+
+        {/* 黑胶纹路圈（微妙的装饰圆） */}
+        <span className="glow-ring" style={{ width: '50vw', height: '50vw', top: '15%', left: '-15%', '--dur': '25s' }} aria-hidden="true" />
+        <span className="glow-ring" style={{ width: '60vw', height: '60vw', bottom: '10%', right: '-20%', '--dur': '30s', animationDirection: 'reverse' }} aria-hidden="true" />
+
+        {/* 大型半透明黑胶唱片（右上角背景装饰） */}
+        <svg
+          className="absolute pointer-events-none"
+          style={{ width: 'min(520px, 80vw)', height: 'min(520px, 80vw)', right: '-14%', top:'-6%', opacity: 0.12, animation: 'vinylSpin 35s linear infinite' }}
+          viewBox="0 0 400 400"
+          aria-hidden="true"
+        >
+          {/* 唱片填充（深色底） */}
+          <circle cx="200" cy="200" r="198" fill="rgba(18,10,30,0.7)" />
+          {/* 唱片外圈 */}
+          <circle cx="200" cy="200" r="196" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+          {/* 同心纹路 */}
+          {[185,170,155,140,125,110,95,80,65,50].map((r) => (
+            <circle key={r} cx="200" cy="200" r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.8" />
+          ))}
+          {/* 中心标签（紫红色，呼应品牌色） */}
+          <circle cx="200" cy="200" r="38" fill="rgba(124,58,237,0.3)" stroke="rgba(255,255,255,0.12)" strokeWidth="1.2" />
+          {/* 中心孔 */}
+          <circle cx="200" cy="200" r="4.5" fill="rgba(255,255,255,0.25)" />
+          {/* 高光反射 */}
+          <path d="M90 120 A 130 130 0 0 1 280 90" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" strokeLinecap="round" />
+        </svg>
+
+        {/* 第二张黑胶（左下角，更淡、反向旋转） */}
+        <svg
+          className="absolute pointer-events-none"
+          style={{ width: 'min(380px, 65vw)', height: 'min(380px, 65vw)', left: '-18%', bottom:'-12%', opacity: 0.08, animation: 'vinylSpin 50s linear infinite reverse' }}
+          viewBox="0 0 400 400"
+          aria-hidden="true"
+        >
+          <circle cx="200" cy="200" r="198" fill="rgba(18,10,30,0.6)" />
+          <circle cx="200" cy="200" r="196" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.2" />
+          {[180,160,140,120,100,80,60].map((r) => (
+            <circle key={r} cx="200" cy="200" r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.6" />
+          ))}
+          <circle cx="200" cy="200" r="34" fill="rgba(139,92,246,0.2)" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+          <circle cx="200" cy="200" r="4" fill="rgba(255,255,255,0.2)" />
+        </svg>
+
+        {/* 底部渐变遮罩：保证按钮/文字在亮色区域可读 */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 60% 50% at 50% 92%, rgba(8,6,15,0.55) 0%, transparent 70%), linear-gradient(to bottom, transparent 60%, rgba(8,6,15,0.45) 100%)',
+          }}
+          aria-hidden="true"
+        />
+
+        {/* 底部光晕 */}
+        <div className="bottom-glow" aria-hidden="true" />
+
+        {/* 主题切换按钮 */}
+        <button
+          className="absolute right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/20 text-base backdrop-blur-md transition-all duration-200 hover:scale-110 hover:border-white/30 hover:bg-black/30"
+          type="button"
+          onClick={toggleTheme}
+          title="切换主题"
+          aria-label="切换主题"
+        >
+          {theme === 'light' ? '🌙' : '☀️'}
+        </button>
+
+        {/* 浮动 UI 层 */}
+        <div className="relative z-10 flex flex-col items-center">
+          {/* 纯代码品牌字标：克制霓虹 + SVG 皇冠 */}
+          <div className="neon-brand" aria-label="SONG WORLD CUP">
+            <svg className="neon-crown" viewBox="0 0 120 84" role="img" aria-label="皇冠">
+              <defs>
+                <linearGradient id="crownGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fff3c8" />
+                  <stop offset="40%" stopColor="#ffd54f" />
+                  <stop offset="100%" stopColor="#e6a01f" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M8 72 L8 40 L30 56 L48 22 L60 50 L72 22 L90 56 L112 40 L112 72 Z"
+                fill="url(#crownGrad)"
+                stroke="rgba(255,245,200,0.5)"
+                strokeWidth="1.2"
+              />
+              <rect x="8" y="72" width="104" height="9" rx="3" fill="url(#crownGrad)" stroke="rgba(255,245,200,0.4)" strokeWidth="1" />
+              <circle cx="60" cy="22" r="4.5" fill="#8b5cf6" stroke="rgba(255,255,255,0.6)" strokeWidth="1" />
+            </svg>
+            <div className="neon-line neon-upper">SONG WORLD</div>
+            <div className="neon-line neon-lower">CUP</div>
+          </div>
+
+          {/* 副标题 */}
+          <p
+            className="mt-1 text-xs font-bold tracking-[0.5em] uppercase text-white/65 sm:text-sm"
+            style={{ animation: 'landingFadeUp 0.6s ease-out 0.15s both', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+          >
+            Music Tournament
+          </p>
+
+          {/* CTA 按钮 — 霓虹呼吸 */}
+          <div style={{ animation: 'landingFadeUp 0.55s ease-out 0.3s both' }}>
+            <button
+              type="button"
+              onClick={handleStartGame}
+              className="neon-btn group relative mt-8 inline-flex cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-white/95 px-12 py-3.5 font-display text-lg font-bold text-[#3a1a5c] shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_40px_rgba(0,0,0,0.45)] active:translate-y-0 active:shadow-[0_4px_16px_rgba(0,0,0,0.25)] sm:mt-10 sm:px-14 sm:py-4"
+            >
+              <span className="relative z-10">开始游戏</span>
+              <span className="relative z-10 text-base transition-transform duration-200 group-hover:translate-x-1">▶</span>
+              <span
+                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/40 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+
+          {/* 说明文字 */}
+          <p
+            className="mt-6 max-w-[280px] text-[13px] leading-relaxed text-white/50 sm:max-w-[320px]"
+            style={{ animation: 'landingFadeUp 0.5s ease-out 0.45s both', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}
+          >
+            选择一种玩法、挑选你喜欢的歌手，<br />在二选一中决出你的终极冠军
+          </p>
+
+        </div>
+      </section>
+    );
+  }
+
+  return (
+  <section className="relative px-2.5 pb-2.5 pt-9 text-center" style={{ animation: 'selectionRise 0.55s ease-out' }}>
     {/* 主题切换按钮 - 右上角 */}
     <button
       className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border-2 border-side-left/30 bg-bg2 text-sm transition-all hover:scale-110 hover:border-side-left/50"
       type="button"
-      onClick={() => {
-        const current = document.documentElement.getAttribute('data-theme');
-        const next = current === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        setTheme(next);
-      }}
+      onClick={toggleTheme}
       title="切换主题"
       aria-label="切换主题"
     >
       {theme === 'light' ? '🌙' : '☀️'}
     </button>
 
-      {/* 方案5 · 频谱刊头 + 艺术字标 */}
+      {/* Hero · 页面标题（已移除 BrandMark 大图 + 频谱条，更干净） */}
       <div className="mx-auto flex max-w-[1100px] flex-col items-center">
-        <BrandMark className="mx-auto block" />
-        <SpectrumBar />
-        <div className="my-3 h-px w-[min(440px,82%)] bg-white/10" />
-        <h1 className="mb-1.5 font-display text-[clamp(26px,5.2vw,42px)] font-black leading-[1.1] tracking-tight text-ink text-balance">
+        <h1 className="mt-2 mb-1 font-display text-[clamp(24px,4.8vw,40px)] font-black leading-[1.15] tracking-tight text-ink text-balance">
           {isCustom
             ? '自选歌曲世界杯'
             : isCrossBattle
@@ -225,7 +463,7 @@ return (
                 ? '夯到拉排名'
                 : `${singer?.name}歌曲世界杯`}
         </h1>
-        <p className="text-[14px] tracking-wide text-muted">
+        <p className="text-[13px] tracking-wide text-muted">
           {isCustom ? (
             <>
               {customBracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军

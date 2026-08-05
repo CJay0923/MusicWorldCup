@@ -36,8 +36,8 @@ function slimPublic() {
       }
     },
     closeBundle() {
-      // 关键静态资源（SPA 路由 + 图标）
-      for (const f of ['_redirects', 'favicon.svg']) {
+      // 关键静态资源（SPA 路由 + 图标 + 品牌标题图）
+      for (const f of ['_redirects', 'favicon.svg', 'brand-mark.png', 'icon.png']) {
         const src = path.resolve(root, 'public', f);
         const dst = path.resolve(root, 'dist', f);
         if (fs.existsSync(src)) {

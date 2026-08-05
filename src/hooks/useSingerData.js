@@ -45,11 +45,18 @@ function cacheSingerData(singerId, data) {
 /**
  * 将本地预取的 JSON 数据转换为 entrant 格式
  *
+ * ★ 现状：/api/singer 在 filter=1（默认）时已在服务端完成 Live/伴奏/串烧过滤
+ *   + baseKey 去重 + 收藏量排序，并标记 preprocessed=true。故生产路径走【快速路径】
+ *   仅做字段映射，前端不再跑正则。
+ *
  * 如果数据已预处理（raw.preprocessed === true），走快速路径：
- * - 跳过 Live/伴奏正则过滤（下载时已过滤）
- * - 跳过 favCount 排序（已预排序）
+ * - 跳过 Live/伴奏正则过滤（服务端已过滤）
+ * - 跳过 favCount 排序（服务端已按收藏量降序并回填 seedRank）
  * - 跳过 seedRank 映射构建（已预计算）
  * - 跳过 normalizeName/staticNameMap（STATIC_SINGERS 全为空，无 nid/chorus 可合并）
+ *
+ * 慢速路径仅作为 safety-net：当 raw.preprocessed !== true 时触发
+ * （如 dev 兜底异常、debug filter=0）。正常生产不会进入。
  *
  * 图片路径策略：
  * - picLocal → ./covers/album_{albumMid}.jpg（本地预下载封面，加载最快）
@@ -113,7 +120,13 @@ function transformToSingerData(raw, registry, singerId) {
     };
   }
 
-  // ===== 慢速路径：未预处理的数据（向后兼容）=====
+  // ===== 慢速路径：未预处理的数据（safety-net，正常生产不触发）=====
+  // 触发条件：raw.preprocessed !== true（dev 兜底异常 / debug filter=0）。
+  // 若在生产环境看到此 warn，说明后端未返回 preprocessed 数据，需排查 /api/singer。
+  console.warn('[useSingerData] 后端返回非 preprocessed 数据，启用前端兜底过滤', {
+    preprocessed: raw.preprocessed,
+    singerId: singerId,
+  });
   // 运行时过滤 Live/伴奏 + baseKey 去重 + 低收藏量无封面过滤
   const seenKeys = new Set();
   const filteredSongs = [];
@@ -248,6 +261,70 @@ export async function loadSingerData(singerId) {
   } finally {
     fetchPromiseCache.delete(singerId);
   }
+}
+
+/**
+ * 批量加载多位歌手数据（跨歌手对阵优化）
+ *
+ * 生产：一次 /api/singers/batch 拉取整组，把 N 次调用 + 3N 次 D1 读塌缩为
+ *       1 次调用 + 3 次 IN 子句查询；每位歌手经 transformToSingerData 转换后
+ *       写入模块级缓存，结果与逐位 loadSingerData 完全一致。
+ * dev：/api/singers/batch 不存在，退化为逐位 loadSingerData（读 dev server 源码 JSON）。
+ * 批量响应中缺失或无 entrants 的歌手，自动回退单接口 + jsDelivr 兜底。
+ *
+ * @param {string[]} singerIds
+ * @returns {Promise<Object<string, object>>} mid -> transformed data
+ */
+export async function loadSingersBatch(singerIds) {
+  const ids = (singerIds || []).filter(Boolean);
+  const result = {};
+  if (ids.length === 0) return result;
+
+  // dev 下批量接口不可用，直接逐位加载（保持现有行为）
+  if (import.meta.env.DEV) {
+    await Promise.all(
+      ids.map(async (id) => {
+        const data = await loadSingerData(id);
+        if (data) result[id] = data;
+      }),
+    );
+    return result;
+  }
+
+  try {
+    const res = await fetch(
+      `/api/singers/batch?mids=${encodeURIComponent(ids.join(','))}`,
+      { headers: { Accept: 'application/json' } },
+    );
+    if (!res.ok) throw new Error('batch_http_' + res.status);
+    const json = await res.json();
+    if (!json || json.error) throw new Error('batch_err_' + (json && json.error));
+
+    const singers = json.singers || {};
+    await Promise.all(
+      ids.map(async (id) => {
+        const raw = singers[id];
+        if (raw && Array.isArray(raw.entrants) && raw.entrants.length > 0) {
+          const data = transformToSingerData(raw, SINGER_REGISTRY[id], id);
+          cacheSingerData(id, data);
+          result[id] = data;
+        } else {
+          // 该歌手批量缺失 → 单接口兜底（含 jsDelivr / static）
+          const data = await loadSingerData(id);
+          if (data) result[id] = data;
+        }
+      }),
+    );
+  } catch {
+    // 批量整体失败 → 逐位兜底，保证跨歌手对阵仍可用
+    await Promise.all(
+      ids.map(async (id) => {
+        const data = await loadSingerData(id);
+        if (data) result[id] = data;
+      }),
+    );
+  }
+  return result;
 }
 
 /** 从后端 D1 API 拉取 raw JSON；任何非 200 / 业务错误都返回 null 触发兜底 */

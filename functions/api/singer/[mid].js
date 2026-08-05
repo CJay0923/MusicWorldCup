@@ -1,16 +1,22 @@
 // functions/api/singer/[mid].js
 //
-// GET /api/singer/:mid
+// GET /api/singer/:mid?[filter=1]&[dedupe=1]&[minFav=20000]
 //
 // 从 D1 关系表（singers / singer_songs / singer_album_descriptions）重组出与
-// src/data/singerData/{mid}.json 同构的 raw JSON，直接喂给前端的 transformToSingerData。
+// src/data/singerData/{mid}.json 同构的 raw JSON，并（默认）在服务端完成
+// Live/伴奏/串烧过滤 + baseKey 去重 + 收藏量排序，直接返回「已预处理」的数据，
+// 前端仅做字段映射，无需再跑正则。
 //
 // 设计要点：
 //  - 不存整包 JSON（D1 单语句 100KB 限制），改为运行时从关系表重组。
-//  - singer_songs 按 ord 保序重组 entrants，确保对阵树 L/R 分组与历史部署一致。
-//  - 缓存：CDN 边缘缓存 1h（歌手数据极少变动），降低 D1 读配额消耗。
+//  - 筛选规则来自 functions/_shared（与前端共用），修改一处全链路生效。
+//  - 缓存：CDN 边缘缓存 1h（过滤结果确定性高），降低 D1 读配额消耗。
+//         不同 filter/minFav 组合天然形成不同缓存键（URL 含 query），互不串扰。
 //  - DB 未绑 → 503 {error:'db_unbound'}，前端自动回退本地/静态数据。
 //  - 404 not_found：歌手不存在（mid 拼写错误或尚未迁移）。
+//  - filter=0 返回未过滤 raw（排障/兼容旧前端慢路径）。
+
+import { applyServerFilter } from '../../_shared/server-filter.mjs';
 
 const SINGER_MID_RE = /[^a-zA-Z0-9_-]/g;
 
@@ -29,6 +35,13 @@ export async function onRequestGet({ request, env, params }) {
       headers: { 'Content-Type': 'application/json' },
     });
   }
+
+  // 可选查询参数
+  const url = new URL(request.url);
+  const doFilter = url.searchParams.get('filter') !== '0';
+  const dedupe = url.searchParams.get('dedupe') !== '0';
+  const minFavParam = Number(url.searchParams.get('minFav'));
+  const minFav = Number.isFinite(minFavParam) && minFavParam > 0 ? minFavParam : MIN_FAV_LOOSE;
 
   try {
     const singer = await env.DB.prepare(
@@ -66,7 +79,7 @@ export async function onRequestGet({ request, env, params }) {
       albumDescs[d.album_mid] = d.description;
     }
 
-    const entrants = (songs.results || []).map((s) => ({
+    let entrants = (songs.results || []).map((s) => ({
       name: s.name,
       songmid: s.song_mid,
       songid: s.song_id,
@@ -83,11 +96,19 @@ export async function onRequestGet({ request, env, params }) {
       miguPreviewUrl: s.migu_preview_url || '',
     }));
 
+    // 服务端筛选（默认开启）：过滤 + 去重 + 排序后强制 preprocessed=true，
+    // 前端走快路径仅做字段映射，无需再跑正则。
+    let preprocessed = singer.preprocessed === 1;
+    if (doFilter) {
+      entrants = applyServerFilter(entrants, { dedupe, minFav });
+      preprocessed = true;
+    }
+
     const raw = {
       singerName: singer.name,
       singerPhoto: singer.photo || '',
       source: singer.data_source || 'kugou',
-      preprocessed: singer.preprocessed === 1,
+      preprocessed,
       albumDescs,
       entrants,
     };

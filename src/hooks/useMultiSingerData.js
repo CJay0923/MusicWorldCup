@@ -2,8 +2,7 @@
 // 跨歌手模式：并行加载多位内置歌手数据，复用 useSingerData 的模块级缓存
 
 import { useState, useEffect, useRef } from 'react';
-import { loadSingerData } from './useSingerData.js';
-import { STATIC_SINGERS } from '../data/singers.js';
+import { loadSingersBatch } from './useSingerData.js';
 
 /**
  * 并行加载多位歌手数据
@@ -33,24 +32,13 @@ export function useMultiSingerData(singerIds) {
     setLoading(true);
     setLoadingCount(ids.length);
 
-    // 并行 fetch + transform（loadSingerData 内部有缓存和去重）
-    // 每位歌手加载完即增量更新 dataMap
+    // 一次性批量拉取整组（后端 IN 子句，3N 次 D1 读塌缩为 3 次）
     (async () => {
-      const map = {};
-      const promises = ids.map(async (id) => {
-        const data = await loadSingerData(id);
-        if (cancelled) return;
-        if (data) {
-          map[id] = data;
-          setLoadingCount(ids.length - Object.keys(map).length);
-          setDataMap({ ...map });
-        }
-      });
-      await Promise.all(promises);
-      if (!cancelled) {
-        setLoading(false);
-        setLoadingCount(0);
-      }
+      const map = await loadSingersBatch(ids);
+      if (cancelled) return;
+      setDataMap(map);
+      setLoading(false);
+      setLoadingCount(0);
     })();
 
     return () => {

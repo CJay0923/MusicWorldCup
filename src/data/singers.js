@@ -29,6 +29,16 @@ export const SINGERS = {
   gem: { name: '邓紫棋', nameEn: 'GEM', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
   sandy: { name: '林忆莲', nameEn: 'SANDY', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
   lala: { name: '徐佳莹', nameEn: 'LALA', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  // 新增 9 位（2026-08-06，按热门度降序插入对应位置）
+  jacky: { name: '张学友', nameEn: 'JACKY', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  faye: { name: '王菲', nameEn: 'FAYE', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  vae: { name: '许嵩', nameEn: 'VAE', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  yoga: { name: '林宥嘉', nameEn: 'YOGA', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  'a-yue': { name: '张震岳', nameEn: 'A-YUE', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  crowd: { name: '卢广仲', nameEn: 'CROWD', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  karen: { name: '莫文蔚', nameEn: 'KAREN', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  tanya: { name: '蔡健雅', nameEn: 'TANYA', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  claire: { name: '郭静', nameEn: 'CLAIRE', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
 };
 
 export const STATIC_SINGERS = SINGERS;
@@ -40,6 +50,9 @@ export const SINGER_ICONS = {
   angela: '🌈', cyndi: '💝', rainie: '🌺',
   she: '👯', amei: '🔥', gem: '💎',
   sandy: '🌙', lala: '⭐',
+  // 新增 9 位
+  jacky: '👑', faye: '🦋', vae: '✍️', yoga: '🎤',
+  'a-yue': '🏄', crowd: '☀️', karen: '💃', tanya: '🎸', claire: '🌸',
 };
 
 // World Cup constants

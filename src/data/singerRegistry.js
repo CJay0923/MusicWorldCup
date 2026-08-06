@@ -71,6 +71,14 @@ export const SINGER_REGISTRY = {
     bracketSize: 128,
     photo: './singers/singer_000aHmbL2aPXWH.jpg',
   },
+  // 团体
+  mayday: {
+    name: '五月天',
+    nameEn: 'MAYDAY',
+    singermid: '000Sp0Bz4JXH0o',
+    bracketSize: 128,
+    photo: './singers/singer_000Sp0Bz4JXH0o.jpg',
+  },
 
   // ===== 唱作人 / 实力派男声 =====
   vae: {

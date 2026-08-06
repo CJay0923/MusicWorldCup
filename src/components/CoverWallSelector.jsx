@@ -211,7 +211,7 @@ function SingerCard({ name, surname, photo, selected, onClick }) {
       className={clsx(
         'group relative aspect-square min-w-0 cursor-pointer overflow-hidden rounded-2xl border-2 text-left sm:min-w-[160px] lg:min-w-[220px]',
         'transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-        'hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(255,84,112,0.32)] active:scale-[0.97]',
+        'hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(167,139,250,0.28)] active:scale-[0.97]',
         selected
           ? 'border-accent ring-2 ring-accent/60'
           : 'border-white/[0.08] hover:border-accent/40',

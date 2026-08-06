@@ -17,6 +17,7 @@
 //  - filter=0 返回未过滤 raw（排障/兼容旧前端慢路径）。
 
 import { applyServerFilter } from '../../_shared/server-filter.mjs';
+import { MIN_FAV_LOOSE } from '../../_shared/filters.mjs';
 
 const SINGER_MID_RE = /[^a-zA-Z0-9_-]/g;
 
@@ -45,7 +46,7 @@ export async function onRequestGet({ request, env, params }) {
 
   try {
     const singer = await env.DB.prepare(
-      'SELECT name, photo, data_source, preprocessed FROM singers WHERE singer_mid = ?',
+      'SELECT name, photo, bio, data_source, preprocessed FROM singers WHERE singer_mid = ?',
     )
       .bind(mid)
       .first();
@@ -60,7 +61,7 @@ export async function onRequestGet({ request, env, params }) {
     const songs = await env.DB.prepare(
       `SELECT ord, song_mid, song_id, name, album_mid, album_name, album_date,
               album_type, fav_count, seed_rank, itunes_preview_url, itunes_track_url,
-              itunes_track_id, pic, migu_preview_url
+              itunes_track_id, pic, migu_preview_url, is_representative
          FROM singer_songs
         WHERE singer_mid = ?
         ORDER BY ord ASC`,
@@ -94,6 +95,7 @@ export async function onRequestGet({ request, env, params }) {
       itunesTrackUrl: s.itunes_track_url || '',
       itunesTrackId: s.itunes_track_id ?? null,
       miguPreviewUrl: s.migu_preview_url || '',
+      representative: s.is_representative === 1,
     }));
 
     // 服务端筛选（默认开启）：过滤 + 去重 + 排序后强制 preprocessed=true，
@@ -107,6 +109,7 @@ export async function onRequestGet({ request, env, params }) {
     const raw = {
       singerName: singer.name,
       singerPhoto: singer.photo || '',
+      bio: singer.bio || '',
       source: singer.data_source || 'kugou',
       preprocessed,
       albumDescs,

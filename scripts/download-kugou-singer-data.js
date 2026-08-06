@@ -53,6 +53,16 @@ const SINGERIDS = {
   gem: 4490,
   sandy: 5088,
   lala: 6335,
+  // 新增 9 位
+  jacky: 3521,    // 张学友
+  faye: 6076,     // 王菲
+  vae: 3047,      // 许嵩
+  crowd: 1582,    // 卢广仲
+  yoga: 1579,     // 林宥嘉
+  'a-yue': 3522,  // 张震岳
+  karen: 5546,    // 莫文蔚
+  tanya: 4247,    // 蔡健雅
+  claire: 4663,   // 郭静
 };
 
 const SINGERS = {
@@ -61,6 +71,10 @@ const SINGERS = {
   stefanie: '孙燕姿', jolin: '蔡依林', fish: '梁静茹', elva: '萧亚轩',
   angela: '张韶涵', cyndi: '王心凌', rainie: '杨丞琳', she: 'S.H.E',
   amei: '张惠妹', gem: '邓紫棋', sandy: '林忆莲', lala: '徐佳莹',
+  // 新增 9 位
+  jacky: '张学友', faye: '王菲', vae: '许嵩', crowd: '卢广仲',
+  yoga: '林宥嘉', 'a-yue': '张震岳', karen: '莫文蔚', tanya: '蔡健雅',
+  claire: '郭静',
 };
 
 // ---------- 工具函数 ----------

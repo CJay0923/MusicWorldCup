@@ -15,89 +15,18 @@
       href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap"
       rel="stylesheet"
     />
-    <style>
-      #initial-loader {
-        position: fixed;
-        inset: 0;
-        z-index: 99999;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 18px;
-        background: #0e0f12;
-        color: #ece8e1;
-        font-family:
-          'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', system-ui,
-          sans-serif;
-        user-select: none;
-      }
-      #initial-loader .il-ring {
-        width: 48px;
-        height: 48px;
-        color: #a78bfa;
-        animation: il-spin 1s linear infinite;
-      }
-      #initial-loader .il-ring svg {
-        display: block;
-        width: 100%;
-        height: 100%;
-      }
-      #initial-loader .il-wordmark {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 3px;
-      }
-      #initial-loader .il-title {
-        font-size: 20px;
-        font-weight: 900;
-        letter-spacing: 2px;
-        color: #ffffff;
-      }
-      #initial-loader .il-sub {
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: 4px;
-        color: #6b6862;
-      }
-      #initial-loader .il-text {
-        font-size: 12px;
-        letter-spacing: 1px;
-        color: #7d7972;
-        animation: il-pulse 2s ease-in-out infinite;
-      }
-      @keyframes il-spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      @keyframes il-pulse {
-        0%,
-        100% {
-          opacity: 0.55;
-        }
-        50% {
-          opacity: 1;
-        }
-      }
-    </style>
+    <!-- 首屏 loader 关键样式：外置为 /src/loader.css 并由 Vite 打包，
+         避免内联 <style> 触发 Vite 6.4.x html-inline-proxy 虚拟模块解析 bug，
+         同时保持 head 渲染阻塞，首屏 loader 无样式闪烁。 -->
+    <link rel="stylesheet" href="/src/loader.css" />
   </head>
   <body>
     <div id="root">
       <div id="initial-loader">
         <div class="il-ring" aria-hidden="true">
           <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle
-              cx="24"
-              cy="24"
-              r="20"
-              stroke="currentColor"
-              stroke-width="5"
-              stroke-linecap="round"
-              stroke-dasharray="90 125"
-              opacity="1"
-            />
+            <circle class="il-ring-track" cx="24" cy="24" r="20" stroke="currentColor" stroke-width="5" />
+            <circle class="il-ring-head" cx="24" cy="24" r="20" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
           </svg>
         </div>
         <div class="il-wordmark">

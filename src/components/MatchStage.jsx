@@ -48,29 +48,29 @@ export default function MatchStage({
     <>
       {/* 张力条 */}
       {leftEntrant && rightEntrant && (
-        <div className="mb-3 flex items-center gap-2.5">
-          <span className="text-[11px] font-bold tracking-wide text-muted">
+        <div className="mb-4 flex items-center gap-3">
+          <span className="text-[12px] font-black tracking-widest text-muted uppercase">
             张力
           </span>
-          <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/10">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
             <div
               className="h-full rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
               style={{
                 width: `${tension}%`,
                 background: isExtremeTension
-                  ? 'var(--accent)'
+                  ? 'linear-gradient(90deg, var(--accent), #c084fc)'
                   : isHighTension
-                    ? 'var(--color-side-right)'
+                    ? 'linear-gradient(90deg, var(--color-side-right), #86efac)'
                     : 'var(--muted)',
               }}
             />
           </div>
           {isExtremeTension ? (
-            <span className="animate-[pulse_1.5s_ease-in-out_infinite] text-[11px] font-extrabold text-accent">
-              悬念拉满!
+            <span className="animate-[pulse_1.5s_ease-in-out_infinite] text-[12px] font-extrabold text-accent tracking-wider">
+              悬疑!
             </span>
           ) : isHighTension ? (
-            <span className="text-[11px] font-bold text-side-right">
+            <span className="text-[12px] font-bold text-side-right tracking-wide">
               势均力敌
             </span>
           ) : null}
@@ -103,14 +103,14 @@ export default function MatchStage({
           onPick={onPickLeft}
           onPreview={onPreviewLeft}
         />
-        {/* VS 徽章 — 居中发光，高张力时加强脉冲 */}
-        <div className="flex min-w-[70px] flex-col items-center justify-center gap-2.5 max-md:flex-row max-md:min-w-0 max-md:py-4">
+        {/* VS 徽章 — 居中发光，高张力时加强脉冲（更大更醒目） */}
+        <div className="flex min-w-[80px] flex-col items-center justify-center gap-2 max-md:flex-row max-md:min-w-0 max-md:py-4">
           <div
             className={clsx(
-              'flex h-16 w-16 items-center justify-center rounded-full border-2 text-xl font-black tracking-wider',
+              'flex h-20 w-20 items-center justify-center rounded-full border-[3px] text-2xl font-black tracking-wider',
               isHighTension
-                ? 'border-accent bg-bg2 text-accent shadow-[0_4px_16px_rgba(0,0,0,0.25)]'
-                : 'border-accent/60 bg-bg2 text-accent shadow-[0_4px_12px_rgba(0,0,0,0.2)]',
+                ? 'border-accent bg-bg2 text-accent shadow-[0_0_24px_rgba(124,58,237,0.35),0_6px_16px_rgba(0,0,0,0.3)]'
+                : 'border-accent/70 bg-bg2 text-accent shadow-[0_0_16px_rgba(124,58,237,0.2),0_4px_12px_rgba(0,0,0,0.25)]',
             )}
           >
             VS

@@ -10,6 +10,84 @@ import { coverUrl, jsDelivrCoverUrl, qqCoverUrl } from '../lib/assets';
 import { classicOptions, WC_SONG_MODES } from '../data/singers.js';
 import AchievementWall from './AchievementWall.jsx';
 
+// ===== 落地页闪烁粒子的图池（移到组件外，避免每次 render 重建） =====
+const ALBUM_FALLBACK = [
+  'album_0000aqnu1W874v','album_0000EqNa22DpVs','album_0000O94D3xUAE2',
+  'album_0000S4Lo0ih1Gm','album_0000yBcT1Mpj2J','album_00015ND91csPsf',
+  'album_0001RB271K1UCi','album_0001XCTy3CTFfR','album_00022oZb0ovDXS',
+  'album_00025sx40C850F','album_00035nmy1BI6uT','album_00037Iug3erUp7',
+  'album_0003eYeK30Jk9c','album_0003MBdm1CtWw','album_0003o6Xf2dOJHE',
+  'album_0003q5rY2DB0xE','album_0003qXrA4LBiF','album_0003SeEI1raoZd',
+  'album_005hYMTn2bNxwN','album_006NQxTm8aEoLp','album_007QwZt4cRsM8',
+  'album_008kRPa5dTwuN','album_009mVSa6eUxvO','album_00AnBP7fVywP',
+  'album_00BpCX8gWzxQ','album_00CqDY9hXayR','album_00DrEZ10iYbzS',
+  'album_00FdBa11hRy1W','album_00GhCf22iSz2X','album_00HiDe33jTa3Y',
+  'album_00JkEf44kUb4Z','album_00LmFg55lVc5A','album_00NoGh66mWd6B',
+  'album_00PpHi77nXe7C','album_00QqIj88oYf8D','album_00RrJk99pZg9E',
+  'album_00SsKl00qAh0F','album_00TtLm11rBi1G','album_00UuMn22sCj2H',
+  'album_00VvNo33tDk3I','album_00WwOp44uEl4J','album_00XxPq55vFm5K',
+  'album_00YyQr66wGn6L','album_00ZzSs77xHo7M','album_00AaTt88yIp8N',
+  'album_00BbUu99zJq9O','album_00CcVv00aKr0P','album_00DdWw11bLs1Q',
+];
+const SINGER_POOL = [
+  'singer_000aHmbL2aPXWH','singer_000GGDys0yA0Nk','singer_000Sp0Bz4JXH0o',
+  'singer_000ZVS6E1f6f0d','singer_001BLpXF2DyJe2','singer_001fNHEf1SFEFN',
+  'singer_001JDzPT3JdvqK','singer_001pWERg3vFgg8','singer_0025NhlN2yWrP4',
+  'singer_0027pdHE4STooO','singer_003FQMh5uXisQ','singer_003tKRj6vYjtR',
+  'singer_004WSn7wAkzuS','singer_004oLT8xBavtT','singer_005pMU9yClwuU',
+  'singer_006RV10zDmvV','singer_006gSW11eNywW','singer_007hTX12fOzxX',
+  'singer_008uYI13pAayY','singer_009zJZ14qBzzZ',
+];
+// 从混合池随机挑一张图（专辑优先用全量清单，未加载前回退池）
+function pickMixedItem(albumMids) {
+  const ALBUM_POOL = albumMids && albumMids.length ? albumMids : ALBUM_FALLBACK;
+  const MIXED = [
+    ...ALBUM_POOL.map((id) => ({ id, dir: 'covers', ext: 'jpg' })),
+    ...SINGER_POOL.map((id) => ({ id, dir: 'singers', ext: 'jpg' })),
+  ];
+  return MIXED[Math.floor(Math.random() * MIXED.length)];
+}
+// 闪烁粒子数量（比早期 16 略增，足够丰富又不拥挤）
+const SPARKLE_COUNT = 18;
+// 构建初始粒子（随机散布位置/尺寸/亮度/节奏，原地 twinkle，不位移不滑动）
+function buildSparkles(albumMids) {
+  return Array.from({ length: SPARKLE_COUNT }, (_, i) => {
+    const item = pickMixedItem(albumMids);
+    const isSinger = item.dir === 'singers';
+    return {
+      i,
+      src: `/${item.dir}/${item.id}.${item.ext}`,
+      left: `${3 + Math.random() * 94}%`,
+      top: `${3 + Math.random() * 94}%`,
+      size: 24 + Math.random() * 48,            // 24~72px
+      dur: 4 + Math.random() * 6,              // 4~10s 周期
+      delay: Math.random() * 4,                // 错开入场
+      maxOp: 0.16 + Math.random() * 0.34,      // 最高 0.16~0.50
+      isRound: isSinger,
+      styleVariant: isSinger ? 'ring' : ['plain', 'glow', 'soft'][Math.floor(Math.random() * 3)],
+    };
+  });
+}
+// 周期重排：连位置一起重随机，让光效持续流动；
+// 粒子在缩没的暗态瞬间跳位（CSS 无 transition 即瞬间到位），无滑移、不洒出；
+// 保留 dur/delay 节奏，避免所有粒子同步闪烁
+function refreshSparkles(prev, albumMids) {
+  return prev.map((p) => {
+    const item = pickMixedItem(albumMids);
+    const isSinger = item.dir === 'singers';
+    return {
+      ...p,
+      src: `/${item.dir}/${item.id}.${item.ext}`,
+      left: `${3 + Math.random() * 94}%`,
+      top: `${3 + Math.random() * 94}%`,
+      size: 24 + Math.random() * 48,
+      maxOp: 0.16 + Math.random() * 0.34,
+      isRound: isSinger,
+      styleVariant: isSinger ? 'ring' : ['plain', 'glow', 'soft'][Math.floor(Math.random() * 3)],
+    };
+  });
+}
+
 // 频谱刊头装饰条
 const SPECTRUM = [
   { h: 12 }, { h: 26, on: true }, { h: 18 }, { h: 34 }, { h: 22 }, { h: 40, on: true },
@@ -169,13 +247,19 @@ export default function StartScreen({
     return () => { alive = false; };
   }, [showLanding]);
 
-  // 落地页期间锁定 body 滚动
+  // 落地页闪烁粒子：初始随机散布；落地页可见时定期重排位置（暗态跳位，无滑移不洒出）
+  const [sparkles, setSparkles] = useState(() => buildSparkles(albumMids));
   useEffect(() => {
-    if (showLanding) {
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = ''; };
-    }
-  }, [showLanding]);
+    if (!showLanding) return; // 仅落地页需要流动
+    const t = setInterval(() => setSparkles((prev) => refreshSparkles(prev, albumMids)), 6000);
+    return () => clearInterval(t);
+  }, [showLanding, albumMids]);
+
+  // 锁定 body 滚动：StartScreen 全生命周期（落地页+选择页）由内部容器处理滚动，避免 body 与内部容器同时出现滚动条导致双重滚动条+横向挤压
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   const toggleTheme = () => {
     const current = document.documentElement.getAttribute('data-theme');
@@ -226,72 +310,19 @@ export default function StartScreen({
   })();
 
   // ===== 落地页：全屏霓虹背景 + 音乐动效 =====
-  if (showLanding) {
-    // 专辑封面池：优先用清单里的全量 2758 张，未加载完成前用回退池保证首屏有内容
-    const ALBUM_FALLBACK = [
-      'album_0000aqnu1W874v','album_0000EqNa22DpVs','album_0000O94D3xUAE2',
-      'album_0000S4Lo0ih1Gm','album_0000yBcT1Mpj2J','album_00015ND91csPsf',
-      'album_0001RB271K1UCi','album_0001XCTy3CTFfR','album_00022oZb0ovDXS',
-      'album_00025sx40C850F','album_00035nmy1BI6uT','album_00037Iug3erUp7',
-      'album_0003eYeK30Jk9c','album_0003MBdm1CtWw','album_0003o6Xf2dOJHE',
-      'album_0003q5rY2DB0xE','album_0003qXrA4LBiF','album_0003SeEI1raoZd',
-      'album_005hYMTn2bNxwN','album_006NQxTm8aEoLp','album_007QwZt4cRsM8',
-      'album_008kRPa5dTwuN','album_009mVSa6eUxvO','album_00AnBP7fVywP',
-      'album_00BpCX8gWzxQ','album_00CqDY9hXayR','album_00DrEZ10iYbzS',
-      'album_00FdBa11hRy1W','album_00GhCf22iSz2X','album_00HiDe33jTa3Y',
-      'album_00JkEf44kUb4Z','album_00LmFg55lVc5A','album_00NoGh66mWd6B',
-      'album_00PpHi77nXe7C','album_00QqIj88oYf8D','album_00RrJk99pZg9E',
-      'album_00SsKl00qAh0F','album_00TtLm11rBi1G','album_00UuMn22sCj2H',
-      'album_00VvNo33tDk3I','album_00WwOp44uEl4J','album_00XxPq55vFm5K',
-      'album_00YyQr66wGn6L','album_00ZzSs77xHo7M','album_00AaTt88yIp8N',
-      'album_00BbUu99zJq9O','album_00CcVv00aKr0P','album_00DdWw11bLs1Q',
-    ];
-    const ALBUM_POOL = albumMids && albumMids.length ? albumMids : ALBUM_FALLBACK;
-    const SINGER_POOL = [
-      'singer_000aHmbL2aPXWH','singer_000GGDys0yA0Nk','singer_000Sp0Bz4JXH0o',
-      'singer_000ZVS6E1f6f0d','singer_001BLpXF2DyJe2','singer_001fNHEf1SFEFN',
-      'singer_001JDzPT3JdvqK','singer_001pWERg3vFgg8','singer_0025NhlN2yWrP4',
-      'singer_0027pdHE4STooO','singer_003FQMh5uXisQ','singer_003tKRj6vYjtR',
-      'singer_004WSn7wAkzuS','singer_004oLT8xBavtT','singer_005pMU9yClwuU',
-      'singer_006RV10zDmvV','singer_006gSW11eNywW','singer_007hTX12fOzxX',
-      'singer_008uYI13pAayY','singer_009zJZ14qBzzZ',
-    ];
-    // 合并池子
-    const MIXED_POOL = [
-      ...ALBUM_POOL.map(id => ({ id, dir: 'covers', ext: 'jpg' })),
-      ...SINGER_POOL.map(id => ({ id, dir: 'singers', ext: 'jpg' })),
-    ];
-    // 随机取 10 个（克制数量，原地安静闪烁不漂移）
-    const picked = [...MIXED_POOL].sort(() => Math.random() - 0.5).slice(0, 10);
-    const sparkles = Array.from({ length: 10 }, (_, i) => {
-      const item = picked[i % picked.length];
-      const isSinger = item.dir === 'singers';
-      const sizeBase = 24 + Math.random() * 48; // 24~72px
-      return {
-        i,
-        src: `/${item.dir}/${item.id}.${item.ext}`,
-        left: `${3 + Math.random() * 94}%`,
-        top: `${3 + Math.random() * 94}%`,
-        size: sizeBase,
-        dur: 4 + Math.random() * 6,       // 4~10s 一周期，慢节奏
-        delay: Math.random() * 4,           // 正延迟错开入场，不再负延迟
-        maxOp: 0.12 + Math.random() * 0.28, // 最高 0.12~0.40，克制的亮度
-        isRound: isSinger,
-        styleVariant: isSinger ? 'ring' : ['plain', 'glow', 'soft'][Math.floor(Math.random() * 3)],
-      };
-    });
+  const inTransition = showLanding && isExiting;
 
     const handleStartGame = () => {
       setIsExiting(true);
-      // 等待动画完成后切换页面
-      setTimeout(() => setShowLanding(false), 550);
+      // 滚动过渡 0.6s 完成后切换页面（两页同步上移，无缝衔接）
+      setTimeout(() => setShowLanding(false), 600);
     };
 
-    return (
+  const landingView = (
       <section
-        className={`landing-hero fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden px-4 text-center${isExiting ? ' landing-exiting' : ''}`}
+        className={`landing-hero ${inTransition ? 'absolute' : 'fixed'} inset-0 ${inTransition ? '' : 'z-40'} flex flex-col items-center justify-center overflow-hidden px-4 text-center${inTransition ? ' landing-scroll-out' : ''}`}
       >
-        {/* 专辑封面 + 歌手照片 闪烁粒子（数量增至 24，三档尺寸 + 多样式变体） */}
+        {/* 专辑封面 + 歌手照片 闪烁粒子（18 个，原地 twinkle：缩小→消失→循环，不位移） */}
         {sparkles.map((p) => (
           <img
             key={`s${p.i}`}
@@ -437,10 +468,9 @@ export default function StartScreen({
         </div>
       </section>
     );
-  }
 
-  return (
-  <section className="relative px-2.5 pb-2.5 pt-9 text-center" style={{ animation: 'selectionRise 0.55s ease-out' }}>
+  const selectionView = (
+  <section className={`selection-screen relative px-3.5 pb-8 pt-12 text-center${inTransition ? ' selection-scroll-in' : ''}`}>
     {/* 主题切换按钮 - 右上角 */}
     <button
       className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border-2 border-side-left/30 bg-bg2 text-sm transition-all hover:scale-110 hover:border-side-left/50"
@@ -452,9 +482,10 @@ export default function StartScreen({
       {theme === 'light' ? '🌙' : '☀️'}
     </button>
 
-      {/* Hero · 页面标题（已移除 BrandMark 大图 + 频谱条，更干净） */}
-      <div className="mx-auto flex max-w-[1100px] flex-col items-center">
-        <h1 className="mt-2 mb-1 font-display text-[clamp(24px,4.8vw,40px)] font-black leading-[1.15] tracking-tight text-ink text-balance">
+      {/* Hero · 页面标题（竞技风格） */}
+      <div className="mx-auto flex max-w-[1100px] flex-col items-center pb-8">
+        <h1 className="mt-3 mb-2 font-display text-[clamp(28px,5.5vw,48px)] font-black leading-[1.1] tracking-tight text-ink text-balance"
+            style={{textShadow: '0 2px 20px rgba(124,58,237,0.25), 0 0 40px rgba(139,92,246,0.10)'}}>
           {isCustom
             ? '自选歌曲世界杯'
             : isCrossBattle
@@ -463,7 +494,7 @@ export default function StartScreen({
                 ? '夯到拉排名'
                 : `${singer?.name}歌曲世界杯`}
         </h1>
-        <p className="text-[13px] tracking-wide text-muted">
+        <p className="text-[13.5px] font-medium tracking-widest uppercase text-muted" style={{letterSpacing: '0.18em'}}>
           {isCustom ? (
             <>
               {customBracketSize} 首歌曲 · 单败淘汰 · <b>二选一</b> 决出终极冠军
@@ -495,7 +526,7 @@ export default function StartScreen({
       {/* Classic rules */}
       <div
         className={clsx(
-          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
+          'mx-auto mb-6 max-w-[1100px] rounded-xl border border-white/[0.08] bg-white/[0.02] text-left',
           rulesCollapsed.classic ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isClassic ? 'block' : 'none' }}
@@ -558,7 +589,7 @@ export default function StartScreen({
       {/* WC rules */}
       <div
         className={clsx(
-          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
+          'mx-auto mb-6 max-w-[1100px] rounded-xl border border-white/[0.08] bg-white/[0.02] text-left',
           rulesCollapsed.wc ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: selectedMode === 'wc' ? 'block' : 'none' }}
@@ -602,7 +633,7 @@ export default function StartScreen({
       {/* Custom rules */}
       <div
         className={clsx(
-          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
+          'mx-auto mb-6 max-w-[1100px] rounded-xl border border-white/[0.08] bg-white/[0.02] text-left',
           rulesCollapsed.custom ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isCustom ? 'block' : 'none' }}
@@ -641,7 +672,7 @@ export default function StartScreen({
       {/* Cross-battle rules */}
       <div
         className={clsx(
-          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
+          'mx-auto mb-6 max-w-[1100px] rounded-xl border border-white/[0.08] bg-white/[0.02] text-left',
           rulesCollapsed.cross ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isCrossBattle ? 'block' : 'none' }}
@@ -674,7 +705,7 @@ export default function StartScreen({
       {/* Ranking rules */}
       <div
         className={clsx(
-          'mx-auto mb-6 max-w-[1100px] rounded-2xl border border-white/[0.06] bg-white/[0.015] text-left',
+          'mx-auto mb-6 max-w-[1100px] rounded-xl border border-white/[0.08] bg-white/[0.02] text-left',
           rulesCollapsed.ranking ? 'p-3.5 px-5' : 'p-5 px-5',
         )}
         style={{ display: isRanking ? 'block' : 'none' }}
@@ -1087,5 +1118,21 @@ export default function StartScreen({
         </div>
       )}
     </section>
+  );
+
+  if (inTransition) {
+    return (
+      <div className="screen-scroll-stack fixed inset-0 z-40 overflow-hidden">
+        {landingView}
+        <div className="absolute inset-0">{selectionView}</div>
+      </div>
+    );
+  }
+  if (showLanding) return landingView;
+  // 过渡结束后保持 fixed 容器，避免定位上下文切换导致 reflow 跳变
+  return (
+    <div className="sel-scroll-container fixed inset-0 overflow-y-auto">
+      {selectionView}
+    </div>
   );
 }

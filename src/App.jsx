@@ -853,25 +853,25 @@ const handlePickerPreview = useCallback(
               : '正在加载歌曲数据…'
         }
       />
-      {/* 顶栏 */}
-      <div className="mb-[18px] flex flex-wrap items-center gap-3.5">
-        <div className="flex items-center gap-2.5 font-display font-extrabold tracking-wide">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M7 4h10v3a5 5 0 0 1-10 0V4z" stroke="var(--accent)" strokeWidth="1.8" strokeLinejoin="round" />
-            <path d="M12 12v4M9 20h6M10 16h4v4h-4z" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M17 5h2.5a2 2 0 0 1 0 4H17M7 5H4.5a2 2 0 0 0 0 4H7" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" />
+      {/* 顶栏 — 竞技风格 */}
+      <div className="mb-5 flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-3 font-display font-black tracking-wide">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="drop-shadow-[0_0_8px_rgba(124,58,237,0.4)]">
+            <path d="M7 4h10v3a5 5 0 0 1-10 0V4z" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M12 12v4M9 20h6M10 16h4v4h-4z" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M17 5h2.5a2 2 0 0 1 0 4H17M7 5H4.5a2 2 0 0 0 0 4H7" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          <span>
+          <span className="text-[18px] sm:text-[20px]">
             {singerData.name}歌曲世界杯
-            <small className="text-xs font-semibold tracking-wider text-muted">
-              &nbsp;{singerData.nameEn}&nbsp;CUP
+            <small className="ml-1.5 text-[13px] font-black tracking-[0.2em] text-accent uppercase">
+              {singerData.nameEn} CUP
             </small>
           </span>
         </div>
         <div className="flex-1" />
         {gameStarted && !isChampion && !isRanking && (
           <button
-            className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/10 bg-transparent px-4 py-[9px] text-[13px] font-semibold text-ink transition-all duration-200 hover:border-white/25 hover:bg-white/10 active:scale-[0.96]"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-white/12 bg-white/[0.04] px-4 py-2 text-[13px] font-bold text-ink transition-all duration-200 hover:border-accent/40 hover:bg-accent/10 hover:text-accent active:scale-[0.96]"
             onClick={handleReset}
             type="button"
           >
@@ -979,7 +979,7 @@ const handlePickerPreview = useCallback(
           {canUndo && (
             <div className="mb-2.5 flex justify-center">
               <button
-                className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/15 bg-white/6 px-[18px] py-[7px] text-[13px] font-semibold text-muted transition-all duration-200 hover:border-accent2/40 hover:bg-accent2/15 hover:text-[#ff8aaa] active:scale-[0.96]"
+                className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-white/15 bg-white/6 px-[18px] py-[7px] text-[13px] font-semibold text-muted transition-all duration-200 hover:border-accent2/40 hover:bg-accent2/15 hover:text-[#c4b5fd] active:scale-[0.96]"
                 onClick={handleUndo}
                 type="button"
               >

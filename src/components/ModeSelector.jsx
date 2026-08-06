@@ -9,31 +9,31 @@ import { clsx } from 'clsx';
 // 查表对象：全字面量类名，Tailwind JIT 能正确生成
 const MODE_COLORS = {
   classic: {
-    selected: 'border-accent bg-accent/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
+    selected: 'border-accent bg-accent/[0.15] shadow-[0_0_0_1px_rgba(167,139,250,0.3),0_4px_16px_rgba(124,58,237,0.25)]',
     text: 'text-accent',
     dot: 'bg-accent',
     stroke: 'stroke-accent',
   },
   wc: {
-    selected: 'border-good bg-good/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
+    selected: 'border-good bg-good/[0.15] shadow-[0_0_0_1px_rgba(6,167,125,0.3),0_4px_16px_rgba(6,167,125,0.25)]',
     text: 'text-good',
     dot: 'bg-good',
     stroke: 'stroke-good',
   },
   custom: {
-    selected: 'border-accent2 bg-accent2/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
+    selected: 'border-accent2 bg-accent2/[0.15] shadow-[0_0_0_1px_rgba(124,58,237,0.3),0_4px_16px_rgba(124,58,237,0.25)]',
     text: 'text-accent2',
     dot: 'bg-accent2',
     stroke: 'stroke-accent2',
   },
   'cross-battle': {
-    selected: 'border-side-right bg-side-right/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
+    selected: 'border-side-right bg-side-right/[0.15] shadow-[0_0_0_1px_rgba(255,182,39,0.3),0_4px_16px_rgba(255,182,39,0.25)]',
     text: 'text-side-right',
     dot: 'bg-side-right',
     stroke: 'stroke-side-right',
   },
   ranking: {
-    selected: 'border-accent2 bg-accent2/[0.12] shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
+    selected: 'border-accent2 bg-accent2/[0.15] shadow-[0_0_0_1px_rgba(124,58,237,0.3),0_4px_16px_rgba(124,58,237,0.25)]',
     text: 'text-accent2',
     dot: 'bg-accent2',
     stroke: 'stroke-accent2',
@@ -123,8 +123,8 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
   ];
 
   return (
-    <div className="mx-auto mb-6 w-full max-w-[1100px] px-3">
-      <div className="grid w-full grid-cols-2 gap-1 rounded-2xl border border-white/[0.08] bg-black/[0.28] p-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)] backdrop-blur-sm sm:grid-cols-3 md:grid-cols-5 md:gap-2 md:p-2">
+    <div className="mx-auto mb-6 w-full max-w-[1100px]">
+      <div className="mode-grid grid w-full grid-cols-2 gap-1 rounded-xl border border-white/[0.10] bg-black/[0.35] p-1.5 sm:grid-cols-3 md:grid-cols-5 md:gap-2 md:p-2">
         {modes.map(({ id, title }) => {
           const isSelected = selected === id;
           const colors = MODE_COLORS[id] || MODE_COLORS.classic;
@@ -135,12 +135,12 @@ export default function ModeSelector({ selected, onSelect, bracketSize }) {
               type="button"
               onClick={() => onSelect(id)}
               className={clsx(
-                'group relative flex min-w-0 cursor-pointer items-center gap-2 rounded-xl px-2.5 py-2.5 text-left',
-                'transition-all duration-250 ease-out',
+                'group relative flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border border-transparent px-2.5 py-2.5 text-left',
+                'transition-all duration-200 ease-out',
                 'md:gap-3 md:px-4 md:py-3',
                 isSelected
-                  ? clsx(colors.selected, 'shadow-[0_8px_24px_rgba(0,0,0,0.35)]')
-                  : 'hover:bg-white/[0.04]',
+                  ? colors.selected
+                  : 'hover:bg-white/[0.05] hover:border-white/[0.08]',
               )}
             >
               <Icon

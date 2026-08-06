@@ -73,28 +73,28 @@ const handleImgError = (e) => {
       ? `https://y.qq.com/n/ryqq/albumDetail/${entrant.albumMid}`
       : '';
 
-  // GOAT-style: 实色边框 + 平实阴影，无彩色外发光
+  // GOAT-style: 高对比实色边框 + 竞技级状态反馈
   const cardCls = clsx(
-    // 基础：全高卡片，封面铺满
+    // 基础：全高卡片，封面铺满，更锐利圆角
     'group relative flex min-h-[300px] cursor-pointer flex-col items-end justify-end overflow-hidden sm:min-h-[380px]',
-    'rounded-2xl text-left',
+    'rounded-xl text-left',
     'border-2 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-    // 默认状态：暗色边框 + 平实阴影
-    'border-white/10 bg-bg3 shadow-[0_4px_16px_rgba(0,0,0,0.25)]',
-    // 悬浮效果：边框微亮 + 平实阴影
-    'hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]',
-    side === 'left' && 'hover:border-accent/40',
-    side === 'right' && 'hover:border-side-right/40',
-    // 胜出状态：实色边框 + 浅底色 + 平实阴影（无彩色外发光）
+    // 默认状态：可见边框 + 深沉阴影
+    'border-white/[0.14] bg-bg3 shadow-[0_6px_20px_rgba(0,0,0,0.35)]',
+    // 悬浮：上浮 + 边框亮起
+    'hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(0,0,0,0.4)]',
+    side === 'left' && 'hover:border-accent/60 hover:shadow-[0_12px_30px_rgba(124,58,237,0.15)]',
+    side === 'right' && 'hover:border-side-right/60 hover:shadow-[0_12px_30px_rgba(74,222,128,0.12)]',
+    // 胜出状态：强发光边框 + 底色 + 外发光（聚光灯打在赢家身上）
     state === 'win' &&
       side === 'left' &&
-      'border-accent bg-accent/[0.06] shadow-[0_4px_20px_rgba(0,0,0,0.3)]',
+      'border-accent bg-accent/[0.08] shadow-[0_0_24px_rgba(124,58,237,0.25),0_6px_20px_rgba(0,0,0,0.3)] scale-[1.01]',
     state === 'win' &&
       side === 'right' &&
-      'border-side-right bg-side-right/[0.06] shadow-[0_4px_20px_rgba(0,0,0,0.3)]',
-    // 失败状态：保留可读性，不过度灰暗
-    state === 'lose' && 'scale-[0.97] opacity-60 grayscale-[0.5]',
-    state === 'locked' && 'pointer-events-none',
+      'border-side-right bg-side-right/[0.08] shadow-[0_0_24px_rgba(74,222,128,0.2),0_6px_20px_rgba(0,0,0,0.3)] scale-[1.01]',
+    // 失败状态：重度灰暗（GOAT 风格——败方明显"熄灭"）
+    state === 'lose' && 'scale-[0.96] opacity-50 grayscale-[0.80] border-white/[0.06] shadow-none',
+    state === 'locked' && 'pointer-events-none opacity-70',
     // 种子卡片
     entrant?.isSeed && 'border-accent/30 bg-bg2',
     // 爆冷获胜抖动

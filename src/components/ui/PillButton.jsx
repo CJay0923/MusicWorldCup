@@ -23,19 +23,19 @@ export default function PillButton({
 }) {
   const colorMap = {
     accent: {
-      active: 'border-accent bg-accent/15 text-ink',
+      active: 'border-accent bg-accent/[0.18] text-ink shadow-[0_0_12px_rgba(167,139,250,0.2)]',
       hover: 'hover:border-accent/30 hover:text-ink',
     },
     accent2: {
-      active: 'border-accent2 bg-accent2/15 text-ink',
+      active: 'border-accent2 bg-accent2/[0.18] text-ink shadow-[0_0_12px_rgba(124,58,237,0.2)]',
       hover: 'hover:border-accent2/30 hover:text-ink',
     },
     'side-left': {
-      active: 'border-side-left bg-side-left/15 text-ink',
+      active: 'border-side-left bg-side-left/[0.18] text-ink shadow-[0_0_12px_rgba(167,139,250,0.2)]',
       hover: 'hover:border-side-left/30 hover:text-ink',
     },
     'side-right': {
-      active: 'border-side-right bg-side-right/15 text-ink',
+      active: 'border-side-right bg-side-right/[0.18] text-ink shadow-[0_0_12px_rgba(255,182,39,0.2)]',
       hover: 'hover:border-side-right/30 hover:text-ink',
     },
   };

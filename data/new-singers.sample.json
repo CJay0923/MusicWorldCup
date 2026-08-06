@@ -1,0 +1,33 @@
+[
+  {
+    "mid": "test_singer_a",
+    "name": "测试歌手甲",
+    "bio": "华语流行代表，嗓音独特。",
+    "photo": "https://example.com/a.jpg",
+    "data_source": "manual",
+    "works": [
+      { "name": "代表作一", "albumMid": "am1", "albumName": "首张专辑", "favCount": 900000, "isRepresentative": true },
+      { "name": "代表作二", "albumMid": "am2", "albumName": "二专", "favCount": 300000 },
+      { "name": "伴奏版demo", "albumMid": "am3", "favCount": 100 }
+    ],
+    "albumDescs": { "am1": "首张专辑简介", "am2": "第二张专辑简介" }
+  },
+  {
+    "mid": "test_singer_b",
+    "name": "测试歌手乙",
+    "bio": "独立音乐人。",
+    "works": [
+      { "name": "乙之歌", "favCount": 500000 }
+    ]
+  },
+  {
+    "mid": "Bad Mid!!",
+    "name": "非法 mid 的歌手",
+    "works": [ { "name": "歌" } ]
+  },
+  {
+    "mid": "test_singer_c",
+    "name": "缺歌名歌手",
+    "works": [ { "favCount": 100 } ]
+  }
+]

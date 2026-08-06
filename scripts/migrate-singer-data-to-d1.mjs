@@ -85,6 +85,7 @@ for (const file of files) {
     singerMid,
     raw.singerName || singerMid,
     raw.singerPhoto || '',
+    raw.bio || '', // 歌手简介（手动导入/管理用，无则空）
     0, // source_total_song（JSON 无此字段）
     Object.keys(albumDescs).length,
     entrants.length,
@@ -112,12 +113,19 @@ for (const file of files) {
       s.itunesTrackId ?? null,
       s.pic || '',           // 原 pic（本地封面路径/URL）
       s.miguPreviewUrl || '', // 原 miguPreviewUrl（咪咕试听）
+      s.representative ? 1 : 0, // 是否代表作品（手动导入标记）
       NOW,
     ]);
   });
 
+  const seenDesc = new Set();
   for (const [albumMid, desc] of Object.entries(albumDescs)) {
-    albumDescRows.push([singerMid, albumMid || '', desc || '']);
+    const am = albumMid || '';
+    if (!am) continue; // 跳过空 album_mid，避免 (singer_mid,'') 主键冲突
+    const dkey = singerMid + '\u0000' + am;
+    if (seenDesc.has(dkey)) continue; // 同歌手内去重
+    seenDesc.add(dkey);
+    albumDescRows.push([singerMid, am, desc || '']);
   }
 }
 
@@ -131,7 +139,7 @@ statements = statements.concat(
   chunkInsert(
     'singers',
     [
-      'singer_mid', 'name', 'photo', 'source_total_song', 'source_album_count',
+      'singer_mid', 'name', 'photo', 'bio', 'source_total_song', 'source_album_count',
       'entrant_count', 'data_source', 'preprocessed', 'created_at', 'updated_at',
     ],
     singersRows,
@@ -147,7 +155,8 @@ statements = statements.concat(
     [
       'singer_mid', 'ord', 'song_mid', 'song_id', 'name', 'album_mid', 'album_name',
       'album_date', 'album_type', 'fav_count', 'seed_rank', 'itunes_preview_url',
-      'itunes_track_url', 'itunes_track_id', 'pic', 'migu_preview_url', 'created_at',
+      'itunes_track_url', 'itunes_track_id', 'pic', 'migu_preview_url',
+      'is_representative', 'created_at',
     ],
     songsRows,
     6,
@@ -163,24 +172,29 @@ statements = statements.concat(
     ['singer_mid', 'album_mid', 'description'],
     albumDescRows,
     1,
+    true, // INSERT OR IGNORE：容忍个别重复 (singer_mid,album_mid)，不阻断整轮迁移
   ),
 );
 
 // ---------- 把语句按字节切分为多个 <100KB 的临时文件并执行 ----------
+// 每个文件开头加 PRAGMA foreign_keys = OFF：远程库存在 votes 等 FK 引用表，
+// 直接 DELETE singers 会被外键约束阻止。关掉当前连接的 FK 强制即可安全重建
+// （仅会话级生效，不改动库结构；重建完成后连接关闭，FK 约束自动恢复）。
+const FK_OFF = 'PRAGMA foreign_keys = OFF;\n';
 const groups = [];
 let cur = '';
 let curBytes = 0;
 for (const st of statements) {
   const b = Buffer.byteLength(st, 'utf8');
   if (curBytes > 0 && curBytes + b > FILE_BYTE_LIMIT) {
-    groups.push(cur);
+    groups.push(FK_OFF + cur);
     cur = '';
     curBytes = 0;
   }
   cur += st + '\n';
   curBytes += b + 1;
 }
-if (curBytes > 0) groups.push(cur);
+if (curBytes > 0) groups.push(FK_OFF + cur);
 
 console.log(
   `[migrate] 共 ${statements.length} 条语句，切分为 ${groups.length} 个临时文件（≤${FILE_BYTE_LIMIT}B）`,

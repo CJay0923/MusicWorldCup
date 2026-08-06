@@ -26,10 +26,11 @@ CREATE TABLE IF NOT EXISTS singers (
   singer_mid        TEXT    PRIMARY KEY,   -- 歌手 key (jay/stefanie...)，即文件名
   name              TEXT    NOT NULL,      -- 原 singerName
   photo             TEXT,                  -- 原 singerPhoto (封面URL)
+  bio               TEXT,                  -- 歌手简介（手动导入/管理用，可选）
   source_total_song INTEGER DEFAULT 0,     -- 来源总曲数(仅展示)
   source_album_count INTEGER DEFAULT 0,    -- albumDescs 条数
   entrant_count     INTEGER NOT NULL DEFAULT 0, -- entrants 实际条数(参赛池)
-  data_source       TEXT    DEFAULT 'kugou',   -- 数据来源 (kugou/qq/...)
+  data_source       TEXT    DEFAULT 'kugou',   -- 数据来源 (kugou/qq/manual/...)
   preprocessed      INTEGER NOT NULL DEFAULT 0, -- 原 preprocessed (布尔 → 0/1)
   created_at        INTEGER NOT NULL,
   updated_at        INTEGER NOT NULL
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS singer_songs (
   itunes_track_id   INTEGER,               -- 原 itunesTrackId
   pic               TEXT,                  -- 原 pic (本地封面路径/URL，UI 的 pic 字段)
   migu_preview_url  TEXT,                  -- 原 miguPreviewUrl (咪咕试听)
+  is_representative INTEGER NOT NULL DEFAULT 0, -- 是否代表作品（手动导入标记，0/1）
   created_at        INTEGER NOT NULL,
   FOREIGN KEY (singer_mid) REFERENCES singers(singer_mid) ON DELETE CASCADE,
   UNIQUE (singer_mid, song_mid)

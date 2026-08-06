@@ -20,9 +20,9 @@ export default function TrophySvg({ size = 104 }) {
     >
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ff7a8f" />
-          <stop offset=".5" stopColor="#ff5470" />
-          <stop offset="1" stopColor="#c01f48" />
+          <stop offset="0" stopColor="#c4b5fd" />
+          <stop offset=".5" stopColor="#a78bfa" />
+          <stop offset="1" stopColor="#7c3aed" />
         </linearGradient>
         <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="2.2" result="blur" />

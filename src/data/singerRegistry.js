@@ -1,9 +1,11 @@
 // src/data/singerRegistry.js — 歌手元数据注册表
 // 仅存储元数据，歌曲数据从本地预取 JSON 加载
-// 歌手头像改走同源托管（public/singers/），不再依赖 QQ 音乐 CDN
+// 歌手头像改走同源托管（public/covers/），不再依赖 QQ 音乐 CDN
+//
+// 排序：按华语乐坛国民度/热门度降序（四大天王/天后 > 流量唱作 > 实力派）
 
 export const SINGER_REGISTRY = {
-  // ===== 男歌手：周王陶林 + 方大同 + 陈奕迅 + 五月天 + 李荣浩 =====
+  // ===== 天王天后级（国民度天花板） =====
   jay: {
     name: '周杰伦',
     nameEn: 'JAY',
@@ -11,6 +13,29 @@ export const SINGER_REGISTRY = {
     bracketSize: 128,
     photo: './singers/singer_0025NhlN2yWrP4.jpg',
   },
+  jacky: {
+    name: '张学友',
+    nameEn: 'JACKY',
+    singermid: '3521',
+    bracketSize: 128,
+    photo: './covers/singer_3521.jpg',
+  },
+  faye: {
+    name: '王菲',
+    nameEn: 'FAYE',
+    singermid: '6076',
+    bracketSize: 128,
+    photo: './covers/singer_6076.jpg',
+  },
+  eason: {
+    name: '陈奕迅',
+    nameEn: 'EASON',
+    singermid: '003Nz2So3XXYek',
+    bracketSize: 128,
+    photo: './singers/singer_003Nz2So3XXYek.jpg',
+  },
+
+  // ===== 男歌手：王力宏 + 陶喆 + 林俊杰 + 方大同 + 李荣浩 =====
   leehom: {
     name: '王力宏',
     nameEn: 'LEEHOM',
@@ -39,20 +64,6 @@ export const SINGER_REGISTRY = {
     bracketSize: 128,
     photo: './singers/singer_003zHcYF44FVEV.jpg',
   },
-  eason: {
-    name: '陈奕迅',
-    nameEn: 'EASON',
-    singermid: '003Nz2So3XXYek',
-    bracketSize: 128,
-    photo: './singers/singer_003Nz2So3XXYek.jpg',
-  },
-  mayday: {
-    name: '五月天',
-    nameEn: 'MAYDAY',
-    singermid: '000Sp0Bz4JXH0o',
-    bracketSize: 128,
-    photo: './singers/singer_000Sp0Bz4JXH0o.jpg',
-  },
   lironghao: {
     name: '李荣浩',
     nameEn: 'LI',
@@ -60,6 +71,37 @@ export const SINGER_REGISTRY = {
     bracketSize: 128,
     photo: './singers/singer_000aHmbL2aPXWH.jpg',
   },
+
+  // ===== 唱作人 / 实力派男声 =====
+  vae: {
+    name: '许嵩',
+    nameEn: 'VAE',
+    singermid: '3047',
+    bracketSize: 128,
+    photo: './covers/singer_3047.jpg',
+  },
+  yoga: {
+    name: '林宥嘉',
+    nameEn: 'YOGA',
+    singermid: '1579',
+    bracketSize: 128,
+    photo: './covers/singer_1579.jpg',
+  },
+  'a-yue': {
+    name: '张震岳',
+    nameEn: 'A-YUE',
+    singermid: '3522',
+    bracketSize: 128,
+    photo: './covers/singer_3522.jpg',
+  },
+  crowd: {
+    name: '卢广仲',
+    nameEn: 'CROWD',
+    singermid: '1582',
+    bracketSize: 128,
+    photo: './covers/singer_1582.jpg',
+  },
+
   // ===== 女歌手：四大三小 + SHE + 张惠妹 + 邓紫棋 =====
   // 四大天后
   stefanie: {
@@ -135,12 +177,33 @@ export const SINGER_REGISTRY = {
     photo: './singers/singer_001fNHEf1SFEFN.jpg',
   },
   // 实力派女歌手
+  karen: {
+    name: '莫文蔚',
+    nameEn: 'KAREN',
+    singermid: '5546',
+    bracketSize: 128,
+    photo: './covers/singer_5546.jpg',
+  },
+  tanya: {
+    name: '蔡健雅',
+    nameEn: 'TANYA',
+    singermid: '4247',
+    bracketSize: 128,
+    photo: './covers/singer_4247.jpg',
+  },
   sandy: {
     name: '林忆莲',
     nameEn: 'SANDY',
     singermid: '002u0TJy47WWOj',
     bracketSize: 128,
     photo: './singers/singer_002u0TJy47WWOj.jpg',
+  },
+  claire: {
+    name: '郭静',
+    nameEn: 'CLAIRE',
+    singermid: '4663',
+    bracketSize: 128,
+    photo: './covers/singer_4663.jpg',
   },
   lala: {
     name: '徐佳莹',
@@ -151,5 +214,5 @@ export const SINGER_REGISTRY = {
   },
 };
 
-// 歌手列表 (保持顺序：先男后女)
+// 歌手列表 (保持顺序：热门度降序)
 export const SINGER_LIST = Object.keys(SINGER_REGISTRY);

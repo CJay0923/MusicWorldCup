@@ -29,13 +29,13 @@ const TIER_DESCRIPTIONS = [
   '垫底，体验极差',
 ];
 
-// 每个等级的颜色 — 同色相(accent红)明度递减阶梯
+// 每个等级的颜色 — 同色相(紫色)明度递减阶梯
 const TIER_COLORS = [
-  { bg: '#ff5470', labelBg: 'rgba(255,84,112,0.10)', text: '#ff5470' },   // 夯 - 全饱和莓红
-  { bg: '#C9444F', labelBg: 'rgba(201,68,79,0.10)', text: '#D05862' },    // 顶级 - 中红
-  { bg: '#B05660', labelBg: 'rgba(176,86,96,0.08)', text: '#C0707A' },    // 人上人 - 浅红
-  { bg: '#8E7A80', labelBg: 'rgba(142,122,128,0.06)', text: '#9A8A90' },   // NPC - 红灰
-  { bg: '#7A7075', labelBg: 'rgba(122,112,117,0.05)', text: '#8A8085' },   // 拉完了 - 近中性灰
+  { bg: '#a78bfa', labelBg: 'rgba(167,139,250,0.15)', text: '#a78bfa' },   // 夯 - 亮紫
+  { bg: '#8b5cf6', labelBg: 'rgba(139,92,246,0.12)', text: '#9b7cf6' },    // 顶级 - 中紫
+  { bg: '#7c6eb5', labelBg: 'rgba(124,110,181,0.10)', text: '#8c7ec5' },    // 人上人 - 浅紫
+  { bg: '#6e7a98', labelBg: 'rgba(110,122,152,0.08)', text: '#7e8aa8' },   // NPC - 紫灰
+  { bg: '#6a7078', labelBg: 'rgba(106,112,120,0.06)', text: '#7a8088' },   // 拉完了 - 近中性灰
 ];
 
 // 获取项目唯一标识用于 key

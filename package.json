@@ -13,7 +13,7 @@
     "start": "node server/index.js",
     "build": "vite build",
     "preview": "vite preview --host",
-    "download-data": "node scripts/download-singer-data.js",
+    "download-data": "node scripts/download-kugou-singer-data.js",
     "deploy": "npm run build && SURGE_TOKEN=67ea54e01f532d5372da0bd85eacfaa7 surge ./dist https://song-worldcup.surge.sh",
     "deploy:gh": "bash scripts/deploy-gh-pages.sh",
     "deploy:surge": "bash scripts/deploy-surge.sh",

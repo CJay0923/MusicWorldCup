@@ -63,6 +63,9 @@ const SINGERIDS = {
   karen: 5546,    // 莫文蔚
   tanya: 4247,    // 蔡健雅
   claire: 4663,   // 郭静
+  // 再新增 2 位（用户指定）
+  alin: 3956,     // A-Lin / 黄丽玲
+  cheer: 4246,    // 陈绮贞
 };
 
 const SINGERS = {
@@ -75,6 +78,8 @@ const SINGERS = {
   jacky: '张学友', faye: '王菲', vae: '许嵩', crowd: '卢广仲',
   yoga: '林宥嘉', 'a-yue': '张震岳', karen: '莫文蔚', tanya: '蔡健雅',
   claire: '郭静',
+  alin: 'A-Lin',
+  cheer: '陈绮贞',
 };
 
 // ---------- 工具函数 ----------

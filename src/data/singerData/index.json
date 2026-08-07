@@ -1,38 +1,10 @@
 {
-  "jacky": {
-    "songCount": 458,
-    "total": 2000
+  "alin": {
+    "songCount": 154,
+    "total": 672
   },
-  "faye": {
-    "songCount": 368,
-    "total": 2000
-  },
-  "vae": {
-    "songCount": 160,
-    "total": 601
-  },
-  "crowd": {
-    "songCount": 155,
-    "total": 368
-  },
-  "yoga": {
-    "songCount": 131,
-    "total": 776
-  },
-  "a-yue": {
-    "songCount": 146,
-    "total": 597
-  },
-  "karen": {
-    "songCount": 265,
-    "total": 1079
-  },
-  "tanya": {
-    "songCount": 212,
-    "total": 587
-  },
-  "claire": {
-    "songCount": 153,
-    "total": 329
+  "cheer": {
+    "songCount": 135,
+    "total": 463
   }
 }

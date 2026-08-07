@@ -39,6 +39,9 @@ export const SINGERS = {
   karen: { name: '莫文蔚', nameEn: 'KAREN', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
   tanya: { name: '蔡健雅', nameEn: 'TANYA', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
   claire: { name: '郭静', nameEn: 'CLAIRE', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  // 再新增 2 位（用户指定，2026-08-07）
+  alin: { name: 'A-Lin', nameEn: 'ALIN', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
+  cheer: { name: '陈绮贞', nameEn: 'CHEER', bracketSize: 128, entrants: [], seeds: [], seedRank: {} },
 };
 
 export const STATIC_SINGERS = SINGERS;
@@ -53,6 +56,8 @@ export const SINGER_ICONS = {
   // 新增 9 位
   jacky: '👑', faye: '🦋', vae: '✍️', yoga: '🎤',
   'a-yue': '🏄', crowd: '☀️', karen: '💃', tanya: '🎸', claire: '🌸',
+  // 再新增 2 位
+  alin: '🌹', cheer: '🍃',
 };
 
 // World Cup constants

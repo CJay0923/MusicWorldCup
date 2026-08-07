@@ -213,6 +213,21 @@ export const SINGER_REGISTRY = {
     bracketSize: 128,
     photo: './covers/singer_4663.jpg',
   },
+  // 再新增 2 位（用户指定，2026-08-07）
+  alin: {
+    name: 'A-Lin',
+    nameEn: 'ALIN',
+    singermid: '3956',
+    bracketSize: 128,
+    photo: './covers/singer_3956.jpg',
+  },
+  cheer: {
+    name: '陈绮贞',
+    nameEn: 'CHEER',
+    singermid: '4246',
+    bracketSize: 128,
+    photo: './covers/singer_4246.jpg',
+  },
   lala: {
     name: '徐佳莹',
     nameEn: 'LALA',

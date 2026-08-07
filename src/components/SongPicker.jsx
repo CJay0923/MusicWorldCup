@@ -227,7 +227,7 @@ export default function SongPicker({
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="text-[13px] font-bold text-ink">{albumName}</span>
                   <span className="text-[11px] text-muted">
-                    {albumDate ? `${albumDate} · ` : ''}
+                    {albumDate ? `${albumDate.slice(0, 10)} · ` : ''}
                     {albumSelected}/{alb.songs.length} 首
                   </span>
                 </div>

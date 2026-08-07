@@ -1,24 +1,21 @@
 // 资源 URL 解析中心
 //
-// 封面优先走「同源」（应用自身托管）：
-//   ./covers/album_<mid>.jpg
-// 仓库的 public/covers/*.jpg 随构建复制进 dist/covers/，由部署平台（Vercel / Cloudflare Pages）
-// 直接同源 serve。不走任何外部 CDN，避免 jsDelivr→raw.githubusercontent.com 在部分区域被墙/限速。
+// 封面主来源 = jsDelivr CDN（独立 GitHub 仓库 CJay0923/mwc-assets）：
+//   https://cdn.jsdelivr.net/gh/CJay0923/mwc-assets@main/covers/album_<mid>.jpg
+// 该仓库公开托管所有封面图（~3434 张专辑 + 20 张歌手头像），由 jsDelivr 全球 CDN 分发。
 //
 // 构建期开关（.env / vite 注入）：
-//  - VITE_COVER_BASE：设为 R2 / 自定义对象存储基址时，优先走它（覆盖同源）。
-//                      例如 VITE_COVER_BASE=https://<acct>.r2.cloudflarestorage.com/covers
-//  - VITE_COVER_REF ：jsDelivr 兜底用的 git ref，默认 v1.0.0。
+//  - VITE_COVER_BASE：jsDelivr 基址（默认指向 mwc-assets@main）。
+//                      留空则退回同源 ./covers/（开发模式 / 离线兜底）。
+//  - VITE_COVER_REF ：jsDelivr 用的 git ref，默认 main。
 //
 // 设计要点：
-//  - 封面主来源 = 同源（应用主机），不依赖任何外部音乐 API（QQ/酷狗）或外部 CDN。
-//  - onError 兜底链：同源 → jsDelivr → 隐藏图片显示占位背景。
-//  - 全部 927 个被引用的 album_mid 均有对应文件在 public/covers/（覆盖率 100%），
-//    并由 slimPublic 插件复制进 dist/covers/ 随站发布。
-//  - localCoverUrl() 与 coverUrl() 同源，提供 dist 自带封面的兜底。
+//  - 封面主来源 = jsDelivr CDN（全球节点，国内可达），不依赖七牛/Worker 代理。
+//  - onError 兜底链：jsDelivr → 同源（dist 内置副本）→ 隐藏图片。
+//  - 同源副本仍随构建打包进 dist/covers/（slimPublic 复制），作为离线/降级兜底。
 
-const REPO = 'CJay0923/MusicWorldCup';
-const DEFAULT_REF = 'v1.0.0';
+const REPO = 'CJay0923/mwc-assets';
+const DEFAULT_REF = 'main';
 
 const RAW_BASE =
   typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_COVER_BASE
@@ -54,14 +51,14 @@ export function isSameOriginCover(url) {
 }
 
 /**
- * 专辑封面主 URL（同源优先）。
+ * 专辑封面主 URL（jsDelivr CDN 优先，同源兜底）。
  * @param {string} albumMid 专辑 ID；空值返回 ''
- * @returns {string} 自定义基址路径（R2） / 同源相对路径
+ * @returns {string} jsDelivr CDN 路径（VITE_COVER_BASE 设定时） / 同源相对路径
  */
 export function coverUrl(albumMid) {
   if (!albumMid) return '';
   if (COVER_BASE) return `${COVER_BASE}/covers/album_${albumMid}.jpg`;
-  // 同源：由部署平台直接 serve dist/covers/，免外部 CDN（避免国内 raw.githubusercontent 被墙）
+  // 同源兜底：dist/covers/ 内置副本（开发模式 / 离线降级）
   return `./covers/album_${albumMid}.jpg`;
 }
 
@@ -72,21 +69,21 @@ export function localCoverUrl(albumMid) {
 }
 
 /**
- * jsDelivr GitHub CDN 兜底（同源封面失败时的降级方案）。
- * 注意：jsDelivr 对 tag/branch 引用会 301 到 raw.githubusercontent.com，后者在部分区域不可达；
- * 因此仅作为同源主来源的兜底，正常情况下不应触发。
+ * jsDelivr CDN 封面 URL（独立资产仓库 mwc-assets）。
+ * 正常路径：coverUrl() 已直接返回 jsDelivr URL（当 VITE_COVER_BASE 设定时）。
+ * 此函数供 onError 降级链显式调用。
  */
 export function jsDelivrCoverUrl(albumMid) {
   if (!albumMid) return '';
-  return `https://cdn.jsdelivr.net/gh/${REPO}@${COVER_REF}/public/covers/album_${albumMid}.jpg`;
+  return `https://cdn.jsdelivr.net/gh/${REPO}@${COVER_REF}/covers/album_${albumMid}.jpg`;
 }
 
 // ── 歌手头像（与封面同策略：同源优先 → jsDelivr 兜底） ──────────────────────
 
 /**
- * 歌手头像主 URL（同源优先）。
- * @param {string} singermid QQ 音乐歌手 ID；空值返回 ''
- * @returns {string} 同源相对路径 ./singers/singer_<mid>.jpg
+ * 歌手头像主 URL（jsDelivr CDN 优先，同源兜底）。
+ * @param {string} singermid 歌手 ID（酷狗 singerid / QQ mid）；空值返回 ''
+ * @returns {string} jsDelivr 路径 / 同源相对路径
  */
 export function singerPhotoUrl(singermid) {
   if (!singermid) return '';
@@ -94,10 +91,10 @@ export function singerPhotoUrl(singermid) {
   return `./singers/singer_${singermid}.jpg`;
 }
 
-/** jsDelivr 歌手头像兜底 */
+/** jsDelivr 歌手头像（独立资产仓库 mwc-assets） */
 export function jsDelivrSingerUrl(singermid) {
   if (!singermid) return '';
-  return `https://cdn.jsdelivr.net/gh/${REPO}@${COVER_REF}/public/singers/singer_${singermid}.jpg`;
+  return `https://cdn.jsdelivr.net/gh/${REPO}@${COVER_REF}/singers/singer_${singermid}.jpg`;
 }
 
 /**

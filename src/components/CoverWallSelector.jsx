@@ -64,7 +64,7 @@ export default function CoverWallSelector({
     closeModal();
   };
 
-  // ---------- 渲染：选中动态歌手 / 加载中 / 内联搜索框 ----------
+  // ---------- 渲染：已选动态歌手 / 加载中（搜索入口在歌手墙末尾按钮）----------
   const inlineBlock = hasSearch
     ? dynamicSinger
       ? (
@@ -128,59 +128,7 @@ export default function CoverWallSelector({
               </div>
             </div>
           )
-        : (
-            <div className="relative mx-auto mt-4 max-w-[480px]">
-              <input
-                className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] px-5 py-3 text-sm text-ink outline-none transition-all duration-200 placeholder:text-[13px] placeholder:text-white/40 focus:border-accent focus:ring-2 focus:ring-accent/40"
-                type="text"
-                value={searchKeyword}
-                placeholder="搜索任意歌手（如：王菲、五月天、邓紫棋）"
-                onChange={(e) => onSearch(e.target.value)}
-              />
-              {isSearching && (
-                <span className="pointer-events-none absolute right-4 top-1/2 inline-flex -translate-y-1/2 items-center gap-1.5 text-xs text-muted">
-                  <i className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-white/18 border-t-accent" />
-                  搜索中…
-                </span>
-              )}
-              {!isSearching && searchResults.length > 0 && (
-                <div className="mt-2.5 grid max-h-70 grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2 overflow-y-auto rounded-xl border border-white/[0.08] bg-bg2 p-1">
-                  {searchResults.map((r) => (
-                    <button
-                      key={r.mid}
-                      className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-left text-[13px] font-semibold text-ink transition-all duration-200 animate-[cardIn_0.3s_cubic-bezier(0.2,0.8,0.2,1)_both] hover:-translate-y-0.5 hover:border-accent/45 hover:bg-white/[0.06] active:scale-[0.97]"
-                      type="button"
-                      onClick={() => onLoadSinger && onLoadSinger(r)}
-                    >
-                      {r.photo ? (
-                        <img
-                          className="h-8 w-8 shrink-0 rounded-full border-[1.5px] border-white/15 object-cover"
-                          src={r.photo}
-                          alt=""
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const next = e.currentTarget.nextElementSibling;
-                            if (next) next.style.display = '';
-                          }}
-                        />
-                      ) : null}
-                      <span
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/8 text-base"
-                        style={{ display: r.photo ? 'none' : '' }}
-                      >
-                        🎤
-                      </span>
-                      <span className="min-w-0 truncate">{r.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-              {!isSearching && searchKeyword.trim() && searchResults.length === 0 && (
-                <div className="mt-2 text-center text-xs text-muted">未找到匹配的歌手</div>
-              )}
-            </div>
-          )
+        : null /* 搜索入口已移至歌手墙末尾按钮，不渲染内联搜索框 */
     : null;
 
   return (
